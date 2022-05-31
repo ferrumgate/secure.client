@@ -1,0 +1,36 @@
+{
+  "name": "secure.client",
+  "version": "1.0.0",
+  "description": "cross platform client for ferrumgate servers",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test",
+    "build": "tsc && cp ./src/index.html ./build/src/ && cp ./src/index.css ./build/src/ && cp -R ./src/assets ./build/src/",
+    "start": "npm run build && cd ./build/src &&  ../../node_modules/electron/dist/electron ./main.js",
+    "package": "electron-packager ./ --platform=darwin --arch=x64 --out=out --icon=./icon.icns --overwrite"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ferrumgate/secure.client.git"
+  },
+  "keywords": [
+    "zero",
+    "trust",
+    "application",
+    "access"
+  ],
+  "author": "devferrum",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/ferrumgate/secure.client/issues"
+  },
+  "homepage": "https://github.com/ferrumgate/secure.client#readme",
+  "devDependencies": {
+    "electron-packager": "^15.5.1",
+    "ts-node": "^10.8.0",
+    "typescript": "^4.7.2"
+  },
+  "dependencies": {
+    "electron": "^19.0.1"
+  }
+}
