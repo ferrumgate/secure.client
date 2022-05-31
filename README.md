@@ -1,2 +1,2 @@
 # secure.client
-ssh based client for secure.server
+ssh based electronjs client for secure.server
