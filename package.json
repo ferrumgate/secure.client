@@ -4,8 +4,8 @@
   "description": "cross platform client for ferrumgate servers",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test",
-    "build": "tsc && cp ./src/index.html ./build/src/ && cp ./src/index.css ./build/src/ && cp -R ./src/assets ./build/src/",
+    "test": "NODE_ENV=development node ./node_modules/electron-mocha/bin/electron-mocha --exit --timeout 30000 --require ts-node/register test/**/*.spec.ts",
+    "build": "tsc && cp ./src/ui/*.html ./build/src/ui/ && cp ./src/ui/*.css ./build/src/ui/ && cp -R ./src/assets ./build/src/",
     "start": "npm run build && cd ./build/src &&  ../../node_modules/electron/dist/electron ./main.js",
     "package": "electron-packager ./ --platform=darwin --arch=x64 --out=out --icon=./icon.icns --overwrite"
   },
@@ -26,7 +26,12 @@
   },
   "homepage": "https://github.com/ferrumgate/secure.client#readme",
   "devDependencies": {
+    "@types/chai": "^4.3.1",
+    "@types/mocha": "^9.1.1",
+    "chai": "^4.3.6",
+    "electron-mocha": "^11.0.2",
     "electron-packager": "^15.5.1",
+    "mocha": "^10.0.0",
     "ts-node": "^10.8.0",
     "typescript": "^4.7.2"
   },

@@ -8,7 +8,8 @@ export class EventService extends EventEmitter {
      * @summary supported known events
      * @example ['tunnelOpened', 'tunnelClosed']
      */
-    protected knownEvents = ['tunnelOpened', 'tunnelClosed'];
+
+    protected knownEvents = ['tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow', 'closeTunnel', 'showOptions'];
     /**
      *
      */
@@ -21,7 +22,7 @@ export class EventService extends EventEmitter {
      * @param listener 
      * @returns 
      */
-    on(eventName: string, listener: (...args: any[]) => void): this {
+    override on(eventName: string, listener: (...args: any[]) => void): this {
         if (!this.knownEvents.includes(eventName))
             throw new Error('not known event');
         return super.on(eventName, listener);
@@ -33,10 +34,10 @@ export class EventService extends EventEmitter {
      * @param args 
      * @returns 
      */
-    emit(eventName: string, ...args: any[]): boolean {
+    override emit(eventName: string, ...args: any[]): boolean {
         if (!this.knownEvents.includes(eventName))
             throw new Error('not known event');
-        return super.emit(eventName, args);
+        return super.emit(eventName, ...args);
     }
 
 }

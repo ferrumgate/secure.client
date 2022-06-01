@@ -19,8 +19,16 @@ let configUI: ConfigUI;
 app.dock?.hide()
 
 app.on('ready', () => {
+    events = new EventService();
     tray = new TrayUI(events);
+    tunnel = new TunnelService(events);
     configUI = new ConfigUI(events);
+    events.on("appExit", () => {
+        events.emit("closeTunnel");
+        events.emit("closeWindow");
+
+    })
+
 
 })
 

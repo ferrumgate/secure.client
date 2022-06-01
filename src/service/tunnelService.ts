@@ -12,8 +12,7 @@ export class TunnelService {
     /**
      *
      */
-    constructor() {
-
+    constructor(private events: EventService) {
 
     }
 }

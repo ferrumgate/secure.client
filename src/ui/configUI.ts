@@ -9,6 +9,12 @@ export class ConfigUI {
      */
     constructor(private events: EventService) {
         this.window = this.createWindow();
+        events.on("closeWindow", () => {
+            this.closeWindow();
+        })
+        events.on("showOptions", () => {
+            this.showWindow();
+        })
 
     }
     private getWindowPosition() {
@@ -19,7 +25,7 @@ export class ConfigUI {
         const x = Math.round(clickPoint.x + (trayBounds.width / 2) - (windowBounds.width / 2))
 
         // Position window 4 pixels vertically below the tray icon
-        const y = Math.round(clickPoint.y + trayBounds.height + 4)
+        const y = Math.round(clickPoint.y + trayBounds.height)
 
         return { x: x, y: y }
     }
@@ -39,7 +45,7 @@ export class ConfigUI {
                 backgroundThrottling: false
             }
         })
-        window.loadURL(`file://${path.join(__dirname, 'index.html')}`)
+        window.loadURL(`file://${path.join(__dirname, 'config.html')}`)
 
         // Hide the window when it loses focus
         window.on('blur', () => {
@@ -58,10 +64,14 @@ export class ConfigUI {
         }
     }
 
-    showWindow = () => {
+    showWindow() {
         const position = this.getWindowPosition()
         this.window.setPosition(position.x, position.y, false)
         this.window.show()
         this.window.focus()
+    }
+
+    closeWindow() {
+        this.window.close();
     }
 }

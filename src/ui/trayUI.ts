@@ -7,12 +7,13 @@ import { TunnelService } from '../service/tunnelService';
  * @summary Traybar functionality 
  */
 export class TrayUI {
-    tray: Tray;
+    protected tray: Tray;
     constructor(private events: EventService) {
         this.tray = this.createTray();
     }
     private createTray() {
-        const assetsDirectory = path.join(__dirname, 'assets')
+        const assetsDirectory = path.join(app.getAppPath(), 'assets')
+        console.log(assetsDirectory);
         const tray = new Tray(path.join(assetsDirectory, 'img', 'logo-red.png'))
         const contextMenu = Menu.buildFromTemplate([
             {
@@ -24,19 +25,23 @@ export class TrayUI {
             },
             {
                 label: 'Options', type: 'normal',
-                icon: path.join(assetsDirectory, 'img', 'settings.png'), click: () => { }
+                icon: path.join(assetsDirectory, 'img', 'settings.png'), click: () => {
+                    this.events.emit("showOptions");
+                }
             },
             {
                 label: 'Quit', type: 'normal',
-                icon: path.join(assetsDirectory, 'img', 'close.png'), click: () => { }
+                icon: path.join(assetsDirectory, 'img', 'close.png'), click: () => {
+                    this.events.emit("appExit");
+                }
             },
 
         ]);
-        this.events.on('opened', () => {
+        this.events.on('tunnelOpened', () => {
             contextMenu.items[0].visible = false;
             contextMenu.items[1].visible = true;
         })
-        this.events.on('closed', () => {
+        this.events.on('tunnelClosed', () => {
             contextMenu.items[0].visible = true;
             contextMenu.items[1].visible = false;
         })
