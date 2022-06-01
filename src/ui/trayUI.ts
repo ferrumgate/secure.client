@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, Tray, screen, Menu } from 'electron';
 import path from 'path';
 import { EventService } from '../service/eventsService';
-import { TunnelService } from '../service/tunnelService';
+
 
 /**
  * @summary Traybar functionality 

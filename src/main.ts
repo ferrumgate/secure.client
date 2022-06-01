@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Tray, screen, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, Tray, screen, Menu, shell, Notification } from 'electron';
 import path from 'path';
 import { TunnelService } from './service/tunnelService';
 import { EventService } from './service/eventsService';
@@ -27,9 +27,16 @@ app.on('ready', () => {
         events.emit("closeTunnel");
         events.emit("closeWindow");
 
+    });
+
+    events.on("openLink", (link: string) => {
+
+        shell.openExternal(link);
     })
+    events.on("notify", (data: { type: string, msg: string }) => {
 
-
+        new Notification({ title: 'FerrumGate', body: data.msg }).show();
+    })
 })
 
 // Quit the app when the window is closed

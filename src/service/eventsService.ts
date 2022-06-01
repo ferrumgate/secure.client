@@ -9,7 +9,8 @@ export class EventService extends EventEmitter {
      * @example ['tunnelOpened', 'tunnelClosed']
      */
 
-    protected knownEvents = ['tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow', 'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow'];
+    protected knownEvents = ['tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow',
+        'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow', "openLink", "notify"];
     /**
      *
      */
@@ -17,7 +18,7 @@ export class EventService extends EventEmitter {
         super();
         // resend all render events to listeners
         this.knownEvents.forEach(x => {
-            ipcMain.on(x, (...args: any[]) => {
+            ipcMain.on(x, (ignore: any, ...args: any[]) => {
                 this.emit(x, ...args);
             })
         })

@@ -39,16 +39,16 @@ export class ConfigUI {
             width: 300,
             height: 450,
             show: false,
-            frame: false,
+            frame: true,
             fullscreenable: false,
-            resizable: false,
+            resizable: true,
             transparent: true,
 
             webPreferences: {
                 // Prevents renderer process code from not running when window is
                 // hidden
                 backgroundThrottling: false,
-                preload: path.join(__dirname, 'configpreload.js')
+                preload: path.join(__dirname, 'configPreload.js')
             }
         })
         window.loadURL(`file://${path.join(__dirname, 'config.html')}`)

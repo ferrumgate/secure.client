@@ -3,10 +3,10 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Weather</title>
+    <title>FerrumGate</title>
     <link rel="stylesheet" href="../assets/css/photon.css" media="screen" charset="utf-8">
     <link rel="stylesheet" href="./config.css" media="screen" charset="utf-8">
-    <script charset="utf-8" src="./configjs.js"></script>
+    <script charset="utf-8" src="./configHtml.js"></script>
 
 </head>
 
@@ -14,13 +14,9 @@
     <div class="header-arrow"></div>
     <div class="window">
         <header class="toolbar toolbar-header">
-            <h1 class="title">The Weather <span class="js-update-time"></span></h1>
+            <h1 class="title">FerrumGate<span class="js-update-time"></span></h1>
             <div class="toolbar-actions pull-right">
                 <div class="btn-group">
-                    <button class="btn btn-default js-refresh-action">
-                        <span class="icon icon-arrows-ccw js-refresh-action" title="Refresh"></span>
-                    </button>
-
                     <button class="btn btn-default js-quit-action" onclick="closeWindow()">
                         <span class="icon icon-cancel js-quit-action" title="Quit"></span>
                     </button>
@@ -28,88 +24,47 @@
             </div>
         </header>
 
-        <div class="window-content">
-            <div class="pane">
+        <div class="window-content content">
+            <div class="tab-group">
+                <div class="tab-item">
 
-                <div class="summary js-summary">Loading&hellip;</div>
-
-                <div>
-                    <div class="column">
-                        <div class="reading js-temperature">&nbsp;</div>
-                        <div class="description">temperature</div>
-                    </div>
-                    <div class="column">
-                        <div class="reading js-apparent">&nbsp;</div>
-                        <div class="description">feels like</div>
+                    <div class="tab-content">
+                        Tab
                     </div>
                 </div>
-
-                <div>
-                    <div class="column">
-                        <div class="reading js-wind">&nbsp;</div>
-                        <div class="description">wind speed</div>
-                    </div>
-                    <div class="column">
-                        <div class="reading js-wind-direction">&nbsp;</div>
-                        <div class="description">wind direction</div>
-                    </div>
+                <div class="tab-item active">
+                    <span class="icon icon-cancel icon-close-tab"></span>
+                    Tab active
                 </div>
-
-                <div>
-                    <div class="column">
-                        <div class="reading reading js-humidity">&nbsp;</div>
-                        <div class="description">humidity</div>
-                    </div>
-
-                    <div class="column">
-                        <div class="reading js-dewpoint">&nbsp;</div>
-                        <div class="description">dew point</div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="column">
-                        <div class="reading js-visibility">&nbsp;</div>
-                        <div class="description">visibility</div>
-                    </div>
-
-                    <div class="column">
-                        <div class="reading js-cloud-cover">&nbsp;</div>
-                        <div class="description">cloud cover</div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="column">
-                        <div class="reading js-precipitation-chance">&nbsp;</div>
-                        <div class="description">precipitation</div>
-                    </div>
-
-                    <div class="column">
-                        <div class="reading js-precipitation-rate">&nbsp;</div>
-                        <div class="description">inches per hour</div>
-                    </div>
-                </div>
-
+                <!--   <div class="tab-item">
+                    <span class="icon icon-cancel icon-close-tab"></span>
+                    Tab
+                </div> -->
+                <!-- <div class="tab-item tab-item-fixed">
+                    <span class="icon icon-plus"></span>
+                </div> -->
             </div>
         </div>
 
         <footer class="toolbar toolbar-footer">
 
             <div class="footer-link">
-                Powered by <a href="http://forecast.io">Forecast</a>
+                <div onclick="openFerrumGate()">
+                    Powered by <a>FerrumGate </a>
+                </div>
+                <span id="el_version">
+                    Version:
+                </span>
             </div>
 
             <div class="toolbar-actions pull-right">
-                <div class="btn-group">
-                    <button class="btn btn-default js-refresh-action">
-                        <span class="icon icon-arrows-ccw js-refresh-action" title="Refresh"></span>
-                    </button>
 
-                    <button class="btn btn-default js-quit-action">
-                        <span class="icon icon-cancel js-quit-action" title="Quit"></span>
+                <div class="toolbar-actions" onclick="notify({type:'info',msg:'test'})">
+                    <button class="btn btn-primary pull-right">
+                        Save
                     </button>
                 </div>
+
             </div>
 
         </footer>

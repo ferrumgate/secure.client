@@ -4,6 +4,12 @@ function closeWindow() {
 
     windowx.electronAPI.closeWindow();
 }
+function openFerrumGate() {
+    windowx.electronAPI.openLink('https://ferrumgate.com');
+}
+function notify(data: { type: string, msg: string }) {
+    windowx.electronAPI.notify(data);
+}
 /* 
 let previousWeather = undefined
 let voice = undefined
