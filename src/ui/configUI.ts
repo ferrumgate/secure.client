@@ -12,9 +12,13 @@ export class ConfigUI {
         events.on("closeWindow", () => {
             this.closeWindow();
         })
-        events.on("showOptions", () => {
+        events.on("showOptionsWindow", () => {
             this.showWindow();
         })
+        events.on("closeOptionsWindow", () => {
+            this.toggleWindow();
+        })
+
 
     }
     private getWindowPosition() {
@@ -39,14 +43,16 @@ export class ConfigUI {
             fullscreenable: false,
             resizable: false,
             transparent: true,
+
             webPreferences: {
                 // Prevents renderer process code from not running when window is
                 // hidden
-                backgroundThrottling: false
+                backgroundThrottling: false,
+                preload: path.join(__dirname, 'configpreload.js')
             }
         })
         window.loadURL(`file://${path.join(__dirname, 'config.html')}`)
-
+        window.webContents.openDevTools();
         // Hide the window when it loses focus
         window.on('blur', () => {
             if (!window.webContents.isDevToolsOpened()) {

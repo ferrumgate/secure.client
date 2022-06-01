@@ -6,7 +6,8 @@
     <title>Weather</title>
     <link rel="stylesheet" href="../assets/css/photon.css" media="screen" charset="utf-8">
     <link rel="stylesheet" href="./config.css" media="screen" charset="utf-8">
-    <script charset="utf-8">require('./configjs')</script>
+    <script charset="utf-8" src="./configjs.js"></script>
+
 </head>
 
 <body>
@@ -14,6 +15,17 @@
     <div class="window">
         <header class="toolbar toolbar-header">
             <h1 class="title">The Weather <span class="js-update-time"></span></h1>
+            <div class="toolbar-actions pull-right">
+                <div class="btn-group">
+                    <button class="btn btn-default js-refresh-action">
+                        <span class="icon icon-arrows-ccw js-refresh-action" title="Refresh"></span>
+                    </button>
+
+                    <button class="btn btn-default js-quit-action" onclick="closeWindow()">
+                        <span class="icon icon-cancel js-quit-action" title="Quit"></span>
+                    </button>
+                </div>
+            </div>
         </header>
 
         <div class="window-content">
@@ -103,5 +115,6 @@
         </footer>
     </div>
 </body>
+
 
 </html>

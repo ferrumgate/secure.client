@@ -26,7 +26,7 @@ export class TrayUI {
             {
                 label: 'Options', type: 'normal',
                 icon: path.join(assetsDirectory, 'img', 'settings.png'), click: () => {
-                    this.events.emit("showOptions");
+                    this.events.emit("showOptionsWindow");
                 }
             },
             {

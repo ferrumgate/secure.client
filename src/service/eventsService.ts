@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-
+import { ipcMain } from 'electron';
 /**
  * @summary inherits @EventEmitter nodejs class for supporting determined event names;
  */
@@ -9,12 +9,18 @@ export class EventService extends EventEmitter {
      * @example ['tunnelOpened', 'tunnelClosed']
      */
 
-    protected knownEvents = ['tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow', 'closeTunnel', 'showOptions'];
+    protected knownEvents = ['tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow', 'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow'];
     /**
      *
      */
     constructor() {
         super();
+        // resend all render events to listeners
+        this.knownEvents.forEach(x => {
+            ipcMain.on(x, (...args: any[]) => {
+                this.emit(x, ...args);
+            })
+        })
     }
     /**
      * 

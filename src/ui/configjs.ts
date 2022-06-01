@@ -1,6 +1,9 @@
-import { Event } from "electron"
+const windowx = window as any;
+windowx.electronAPI.loadPreferences()
+function closeWindow() {
 
-const { ipcRenderer, shell } = require('electron')
+    windowx.electronAPI.closeWindow();
+}
 /* 
 let previousWeather = undefined
 let voice = undefined
