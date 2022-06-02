@@ -49,6 +49,20 @@
 
 }
 
+.tab-content {
+    flex: 1;
+
+}
+
+.tab-content form {
+    padding: 20px;
+
+}
+
+.tab-item {
+    cursor: pointer;
+}
+
 .footer-link div {
 
     cursor: pointer;
@@ -59,4 +73,26 @@
     color: var(--text-color);
     cursor: pointer;
     text-decoration: underline;
+}
+
+.ferrum-form-group {
+    margin: 0px;
+    line-height: 1;
+}
+
+.ferrum-form-group label {
+    margin: 0px;
+    padding-left: 10px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+}
+
+.ferrum-error {
+    color: #c52424;
+
+}
+
+.ferrum-display-none {
+    display: none;
+
 }

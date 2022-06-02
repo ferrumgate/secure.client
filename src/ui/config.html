@@ -26,23 +26,29 @@
 
         <div class="window-content content">
             <div class="tab-group">
-                <div class="tab-item">
-
+                <div class="tab-item active">
                     <div class="tab-content">
-                        Tab
+                        General
                     </div>
                 </div>
-                <div class="tab-item active">
-                    <span class="icon icon-cancel icon-close-tab"></span>
-                    Tab active
+
+            </div>
+            <div id="tab-content-general" class="tab-content">
+                <div class="tab-content">
+                    <form>
+                        <div class="form-group ferrum-form-group">
+                            <label>Server</label>
+                            <input type="text" class="form-control" placeholder="Ip or Hostname"
+                                oninput="hostChanged($event)">
+                            <div class="ferrum-error ferrum-display-none"
+                                style="padding-top: 10px; padding-left: 10px;">
+                                <span class="icon icon-alert">
+                                    <span id="server-error">error</span>
+                                </span>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <!--   <div class="tab-item">
-                    <span class="icon icon-cancel icon-close-tab"></span>
-                    Tab
-                </div> -->
-                <!-- <div class="tab-item tab-item-fixed">
-                    <span class="icon icon-plus"></span>
-                </div> -->
             </div>
         </div>
 

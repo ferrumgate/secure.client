@@ -1,3 +1,4 @@
+
 const windowx = window as any;
 windowx.electronAPI.loadPreferences()
 function closeWindow() {
@@ -8,7 +9,12 @@ function openFerrumGate() {
     windowx.electronAPI.openLink('https://ferrumgate.com');
 }
 function notify(data: { type: string, msg: string }) {
+
     windowx.electronAPI.notify(data);
+}
+
+function hostChanged(event: any) {
+
 }
 /* 
 let previousWeather = undefined
