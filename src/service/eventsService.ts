@@ -1,7 +1,8 @@
 import { EventEmitter } from 'events';
-import { ipcMain } from 'electron';
+import { ipcMain, ipcRenderer } from 'electron';
 /**
- * @summary inherits @EventEmitter nodejs class for supporting determined event names;
+ * @summary inherits @EventEmitter nodejs class for supporting determined event names,
+ * also emits events that comes from ipcrenderer
  */
 export class EventService extends EventEmitter {
     /**
@@ -10,17 +11,19 @@ export class EventService extends EventEmitter {
      */
 
     protected knownEvents = ['tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow',
-        'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow', "openLink", "notify"];
+        'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow',
+        "openLink", "notify", "appVersion", "config", "saveConfig"];
     /**
      *
      */
     constructor() {
         super();
-        // resend all render events to listeners
+        // resend all render events to listeners, they willnot reply
         this.knownEvents.forEach(x => {
-            ipcMain.on(x, (ignore: any, ...args: any[]) => {
-                this.emit(x, ...args);
+            ipcMain.on(x, (event: any, ...args: any[]) => {
+                super.emit(x, ...args);
             })
+
         })
     }
     /**
@@ -46,5 +49,7 @@ export class EventService extends EventEmitter {
             throw new Error('not known event');
         return super.emit(eventName, ...args);
     }
+
+
 
 }

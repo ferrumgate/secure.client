@@ -17,7 +17,7 @@
             <h1 class="title">FerrumGate<span class="js-update-time"></span></h1>
             <div class="toolbar-actions pull-right">
                 <div class="btn-group">
-                    <button class="btn btn-default js-quit-action" onclick="closeWindow()">
+                    <button class="btn btn-default js-quit-action" id="el-close-window">
                         <span class="icon icon-cancel js-quit-action" title="Quit"></span>
                     </button>
                 </div>
@@ -38,8 +38,7 @@
                     <form>
                         <div class="form-group ferrum-form-group">
                             <label>Server</label>
-                            <input type="text" class="form-control" placeholder="Ip or Hostname"
-                                oninput="hostChanged($event)">
+                            <input type="text" id="el-server" class="form-control" placeholder="Ip or Hostname">
                             <div class="ferrum-error ferrum-display-none"
                                 style="padding-top: 10px; padding-left: 10px;">
                                 <span class="icon icon-alert">
@@ -55,18 +54,21 @@
         <footer class="toolbar toolbar-footer">
 
             <div class="footer-link">
-                <div onclick="openFerrumGate()">
+                <div id="el-link-ferrumgate">
                     Powered by <a>FerrumGate </a>
                 </div>
-                <span id="el_version">
-                    Version:
+                <span id="el-version">
                 </span>
             </div>
 
             <div class="toolbar-actions pull-right">
-
-                <div class="toolbar-actions" onclick="notify({type:'info',msg:'test'})">
+                <div class="toolbar-actions" id="test-button" onclick="testme()">
                     <button class="btn btn-primary pull-right">
+                        Test
+                    </button>
+                </div>
+                <div class="toolbar-actions">
+                    <button class="btn btn-primary pull-right" id="el-save-config">
                         Save
                     </button>
                 </div>
@@ -76,6 +78,5 @@
         </footer>
     </div>
 </body>
-
 
 </html>

@@ -1,21 +1,56 @@
-
 const windowx = window as any;
-windowx.electronAPI.loadPreferences()
-function closeWindow() {
 
-    windowx.electronAPI.closeWindow();
-}
-function openFerrumGate() {
-    windowx.electronAPI.openLink('https://ferrumgate.com');
-}
+
 function notify(data: { type: string, msg: string }) {
 
-    windowx.electronAPI.notify(data);
+    windowx.electronAPI.emit('notify', data);
 }
 
-function hostChanged(event: any) {
 
+
+
+let config: { host: string } = { host: '' };
+function configInit() {
+    document.querySelector('#el-server')?.addEventListener('input', (e: any) => {
+
+        config.host = e.target.value;
+    })
+
+
+    document.querySelector('#el-close-window')?.addEventListener('click', () => {
+        windowx.electronAPI.emit('closeOptionsWindow');
+    })
+
+    document.querySelector('#el-link-ferrumgate')?.addEventListener('click', () => {
+        windowx.electronAPI.emit('openLink', 'https://ferrumgate.com');
+    })
+
+    document.querySelector('#el-save-config')?.addEventListener('click', () => {
+        windowx.electronAPI.emit('saveConfig', config);
+    })
+
+    windowx.electronAPI.on('replyAppVersion', (data: any) => {
+        const versionEl = document.querySelector('#el-version');
+        if (versionEl)
+            versionEl.textContent = data;
+    })
+
+    windowx.electronAPI.emit('appVersion');
+
+    windowx.electronAPI.on('replyConfig', (data: { host: string }) => {
+        config = data;
+        const inputServer = document.querySelector('#el-server') as HTMLInputElement;
+        if (inputServer && config.host)
+            inputServer.value = config.host;
+    })
+    windowx.electronAPI.emit('config');
 }
+
+function testme() {
+    windowx.electronAPI.emit('appVersion');
+}
+
+
 /* 
 let previousWeather = undefined
 let voice = undefined
@@ -162,4 +197,6 @@ const tenMinutes = 10 * 60 * 1000
 setInterval(updateWeather, tenMinutes)
 
 // Update initial weather when loaded
-document.addEventListener('DOMContentLoaded', updateWeather)
+document.addEventListener('DOMContentLoaded', () => {
+    configInit();
+})

@@ -2,10 +2,14 @@
 
 import { contextBridge, ipcRenderer } from "electron";
 
+
 contextBridge.exposeInMainWorld('electronAPI', {
-    closeWindow: () => ipcRenderer.send('closeOptionsWindow'),
-    openLink: (link: string) => ipcRenderer.send('openLink', link),
-    notify: (data: { type: string, msg: string }) => ipcRenderer.send('notify', data)
-})
+
+    on: (channel: string, fn: (...args: any[]) => void) => {
+        ipcRenderer.on(channel, (event, ...args: any[]) => fn(...args))
+    },
+    emit: (channel: string, ...data: any[]) => ipcRenderer.send(channel, ...data)
+
+});
 
 

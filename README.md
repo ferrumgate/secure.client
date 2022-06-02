@@ -7,6 +7,10 @@ ssh based electronjs client for secure.server
 > npm run build
 
 ### test
+before testing start chromedriver with below command
+> npm run preparefortest
+
+then run test with
 > npm run test
 
 ### start

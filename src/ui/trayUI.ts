@@ -12,8 +12,8 @@ export class TrayUI {
         this.tray = this.createTray();
     }
     private createTray() {
-        const assetsDirectory = path.join(app.getAppPath(), 'assets')
-        console.log(assetsDirectory);
+        const assetsDirectory = path.join(__dirname, '../', 'assets')
+
         const tray = new Tray(path.join(assetsDirectory, 'img', 'logo-red.png'))
         const contextMenu = Menu.buildFromTemplate([
             {

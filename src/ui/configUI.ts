@@ -36,12 +36,13 @@ export class ConfigUI {
 
     createWindow() {
         const window = new BrowserWindow({
-            width: 300,
-            height: 450,
-            show: false,
-            frame: true,
+            width: 300 * (process.env.NODE_ENV == 'development' ? 4 : 1),
+            height: 450 * (process.env.NODE_ENV == 'development' ? 4 : 1),
+            icon: __dirname + '../assets/img/logo.ico',
+            show: process.env.NODE_ENV == 'development',
+            frame: process.env.NODE_ENV == 'development',
             fullscreenable: false,
-            resizable: true,
+            resizable: process.env.NODE_ENV == 'development',
             transparent: true,
 
             webPreferences: {
@@ -52,7 +53,8 @@ export class ConfigUI {
             }
         })
         window.loadURL(`file://${path.join(__dirname, 'config.html')}`)
-        window.webContents.openDevTools();
+        if (process.env.NODE_ENV == 'development')
+            window.webContents.openDevTools();
         // Hide the window when it loses focus
         window.on('blur', () => {
             if (!window.webContents.isDevToolsOpened()) {
