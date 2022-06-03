@@ -16,6 +16,7 @@ describe('configService ', async () => {
 
     it('filename and directory name', async () => {
         const configService = new ConfigService();
+        //on every platform directory names changed, because of this check only known variables
         expect(configService.filename).to.includes('ferrum.json');
         expect(configService.folder).to.includes('ferrumgate');
     })
@@ -27,6 +28,7 @@ describe('configService ', async () => {
     it('saveConfig', async () => {
         const configService = new ConfigService();
         await configService.saveConfig({ host: 'test' });
+        //get again and verify
         const config1 = await configService.getConfig();
         expect(config1).to.be.not.null;
         expect(config1?.host).to.equal('test');
