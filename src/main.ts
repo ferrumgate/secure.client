@@ -8,16 +8,7 @@ import fs from 'fs';
 import fspromise from 'fs/promises';
 import { ConfigService } from './service/configService';
 import * as unhandled from 'electron-unhandled';
-
-
-const assetsDirectory = path.join(__dirname, 'assets')
-
-unhandled.default({
-    logger: () => {
-        console.error();
-    },
-    showDialog: true
-})
+import { LogService } from './service/logService';
 
 
 
@@ -26,16 +17,41 @@ let tunnel: TunnelService;
 let tray: TrayUI;
 let configUI: ConfigUI;
 let config: ConfigService;
+let log: LogService;
+
+const assetsDirectory = path.join(__dirname, 'assets')
+
+
+
+
 
 // Don't show the app in the doc
 app.dock?.hide()
 
-app.on('ready', () => {
-
+export function init() {
     events = new EventService();
     config = new ConfigService();
+    log = new LogService();
+
+
+    // catch all unhandled exceptions
+    unhandled.default({
+        logger: (error) => {
+            console.log(`unhandled error: ${error}`);
+            log.write('error', error.stack || error.message || 'unknown');
+
+        },
+        showDialog: true
+    })
+
+
+
+    events.on("log", (type: string, msg: string) => {
+        log.write(type, msg);
+    })
 
     events.on("appExit", () => {
+        events.emit("log", 'info', 'closing app');
         events.emit("closeTunnel");
         events.emit("closeWindow");
 
@@ -50,8 +66,9 @@ app.on('ready', () => {
     })
 
     ipcMain.on('appVersion', async (event: Electron.IpcMainEvent, ...args: any[]) => {
-
-        const packageFile = JSON.parse((await fspromise.readFile('package.json')).toString()) as any;
+        var filePath = path.join(app.getAppPath(), 'package.json');
+        console.log(filePath);
+        const packageFile = JSON.parse((await fspromise.readFile(filePath)).toString()) as any;
         event.reply('replyAppVersion', packageFile.version || 'unknown');
 
     })
@@ -64,11 +81,25 @@ app.on('ready', () => {
         await config.saveConfig(data);
         new Notification({ title: 'FerrumGate', body: 'Config saved' }).show();
         events.emit('closeOptionsWindow');
+        events.emit("log", 'info', 'saving config');
+    })
+    events.on('throwError', (msg: string) => {
+        throw new Error(msg);
     })
 
+    app.setName('Ferrum Gate');
+    events.emit("log", 'info', 'starting app');
     tray = new TrayUI(events);
     tunnel = new TunnelService(events);
     configUI = new ConfigUI(events);
+    return { log, events };
+
+}
+//when app ready, init
+app.on('ready', () => {
+    init();
+
+
 })
 
 // Quit the app when the window is closed

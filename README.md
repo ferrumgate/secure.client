@@ -16,3 +16,7 @@ then run test with
 ### start
 > npm run start
 
+### linux package
+> npm run pack
+### dist
+> npm run build && npm run dist

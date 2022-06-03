@@ -8,14 +8,60 @@
     "test": "npm run build && NODE_ENV=development node ./node_modules/electron-mocha/bin/electron-mocha --exit --timeout 30000 --require ts-node/register test/**/*.spec.ts",
     "build": "tsc && cp package.json ./build/src/ && cp ./src/ui/*.html ./build/src/ui/ && cp ./src/ui/*.css ./build/src/ui/ && cp -R ./src/assets ./build/src/",
     "start": "npm run build && NODE_ENV=development ./node_modules/electron/dist/electron ./build/src/main.js",
-    "package": "electron-packager ./build/src --platform=linux --arch=x64 --out=dist --icon=./build/src/assets/img/logo.png --overwrite",
-    "pack": "npx electron-builder --dir",
-    "dist": "npx electron-builder"
+    "pack": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src --platform=linux --arch=x64 --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
+    "dist": "npx electron-builder build --linux --x64",
+    "showasar": "npx asar l dist/linux-unpacked/resources/app.asar"
   },
   "build": {
-    "appId": "your.id",
+    "extraMetadata": {
+      "main": "main.js",
+      "name": "ferrumgate"
+    },
+    "appId": "com.ferrumgate.client",
+    "productName": "Ferrum Gate",
+    "extends": null,
+    "compression": "store",
+    "generateUpdatesFilesForAllChannels": true,
+    "files": [
+      {
+        "from": "build/src",
+        "to": ".",
+        "filter": [
+          "**/*",
+          "!foo/*.js"
+        ]
+      }
+    ],
+    "directories": {
+      "buildResources": "build/src/assets/img",
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        "zip"
+      ]
+    },
     "mac": {
-      "category": "your.app.category.type"
+      "target": [
+        "zip",
+        "dmg"
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "linux": {
+      "target": [
+        "deb",
+        "zip"
+      ],
+      "category": "Network"
     }
   },
   "repository": {
@@ -28,7 +74,10 @@
     "application",
     "access"
   ],
-  "author": "devferrum",
+  "author": {
+    "name": "devferrum",
+    "email": "dev@ferrumgate.com"
+  },
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/ferrumgate/secure.client/issues"
@@ -39,6 +88,7 @@
     "@types/chai": "^4.3.1",
     "@types/mocha": "^9.1.1",
     "@types/selenium-webdriver": "^4.1.1",
+    "asar": "^3.1.0",
     "chai": "^4.3.6",
     "electron": "^19.0.1",
     "electron-builder": "^23.0.3",
@@ -51,6 +101,7 @@
     "typescript": "^4.7.2"
   },
   "dependencies": {
+    "electron-log": "^4.4.7",
     "electron-unhandled": "^4.0.1"
   }
 }

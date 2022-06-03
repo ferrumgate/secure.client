@@ -1,4 +1,4 @@
-import { BrowserWindow, screen } from "electron";
+import { BrowserWindow, nativeImage, screen } from "electron";
 import { EventService } from "../service/eventsService";
 import path from 'path';
 
@@ -36,11 +36,12 @@ export class ConfigUI {
 
     createWindow() {
         const window = new BrowserWindow({
+            title: 'Ferrum Gate',
             width: 300 * (process.env.NODE_ENV == 'development' ? 4 : 1),
             height: 450 * (process.env.NODE_ENV == 'development' ? 4 : 1),
-            icon: __dirname + '../assets/img/logo.ico',
+            icon: path.join(__dirname, '../assets/img/logo-transparent2.png'),
             show: process.env.NODE_ENV == 'development',
-            frame: process.env.NODE_ENV == 'development',
+            frame: false,//process.env.NODE_ENV == 'development',
             fullscreenable: false,
             resizable: process.env.NODE_ENV == 'development',
             transparent: true,
@@ -49,9 +50,11 @@ export class ConfigUI {
                 // Prevents renderer process code from not running when window is
                 // hidden
                 backgroundThrottling: false,
-                preload: path.join(__dirname, 'configPreload.js')
+                preload: path.join(__dirname, 'configPreload.js'),
             }
         })
+        //const overlay = nativeImage.createFromPath(path.join(__dirname, '../assets/img/logo-transparent.png'));
+        //window.setOverlayIcon(overlay, 'Description for overlay')
         window.loadURL(`file://${path.join(__dirname, 'config.html')}`)
         if (process.env.NODE_ENV == 'development')
             window.webContents.openDevTools();
