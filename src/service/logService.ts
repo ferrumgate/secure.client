@@ -1,6 +1,10 @@
 import * as log from 'electron-log';
 import path from 'path';
 import fs from 'fs';
+
+/**
+ * @summary logger service
+ */
 export class LogService {
     protected _filename: string = '';
     public get logfile() {
@@ -12,7 +16,6 @@ export class LogService {
     constructor() {
         //init log options
         log.transports.file.sync = true;
-
         log.transports.file.resolvePath = (variables) => {
             const logfilename = path.join(variables.appData, 'ferrumgate', 'logs', 'ferrumgate.log');
             this._filename = logfilename;

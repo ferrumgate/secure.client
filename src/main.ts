@@ -38,7 +38,7 @@ export function init() {
     unhandled.default({
         logger: (error) => {
             console.log(`unhandled error: ${error}`);
-            log.write('error', error.stack || error.message || 'unknown message');
+            log.write('error', error.stack || error.message || 'unknown');
 
         },
         showDialog: true
@@ -51,7 +51,7 @@ export function init() {
     })
 
     events.on("appExit", () => {
-        events.emit("log", { type: 'info', msg: 'closing app' });
+        events.emit("log", 'info', 'closing app');
         events.emit("closeTunnel");
         events.emit("closeWindow");
 
@@ -66,8 +66,9 @@ export function init() {
     })
 
     ipcMain.on('appVersion', async (event: Electron.IpcMainEvent, ...args: any[]) => {
-
-        const packageFile = JSON.parse((await fspromise.readFile('package.json')).toString()) as any;
+        var filePath = path.join(app.getAppPath(), 'package.json');
+        console.log(filePath);
+        const packageFile = JSON.parse((await fspromise.readFile(filePath)).toString()) as any;
         event.reply('replyAppVersion', packageFile.version || 'unknown');
 
     })
@@ -80,13 +81,13 @@ export function init() {
         await config.saveConfig(data);
         new Notification({ title: 'FerrumGate', body: 'Config saved' }).show();
         events.emit('closeOptionsWindow');
-        events.emit("log", { type: 'info', msg: 'saving config' });
+        events.emit("log", 'info', 'saving config');
     })
     events.on('throwError', (msg: string) => {
         throw new Error(msg);
     })
 
-
+    app.setName('Ferrum Gate');
     events.emit("log", 'info', 'starting app');
     tray = new TrayUI(events);
     tunnel = new TunnelService(events);
@@ -97,6 +98,7 @@ export function init() {
 //when app ready, init
 app.on('ready', () => {
     init();
+
 
 })
 
