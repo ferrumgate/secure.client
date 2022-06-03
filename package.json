@@ -33,11 +33,10 @@
       }
     ],
     "directories": {
-      "buildResources": "src/assets/img",
+      "buildResources": "build/src/assets/img",
       "output": "dist"
     },
     "win": {
-      "icon": "src/assets/img/logo.ico",
       "target": [
         {
           "target": "nsis",
@@ -50,7 +49,6 @@
       ]
     },
     "mac": {
-      "icon": "src/assets/img/logo.icns",
       "target": [
         "zip",
         "dmg"
@@ -63,8 +61,7 @@
         "deb",
         "zip"
       ],
-      "category": "Network",
-      "icon": "logo-transparent.png"
+      "category": "Network"
     }
   },
   "repository": {
