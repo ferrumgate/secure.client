@@ -98,9 +98,17 @@ export function init() {
     tunnel = new TunnelService(events);
     configUI = new ConfigUI(events);
     loadingUI = new LoadingUI(events);
-    loadingUI.showWindow();
-    events.on('loadingWindowClosed', () => {
-
+    loadingUI.showWindow();//show loading window for user interaction
+    //when loading window closed, open config window if app not configured
+    events.on('loadingWindowClosed', async () => {
+        try {
+            const conf = await config.getConfig();
+            if (!conf?.host) {
+                events.emit('showOptionsWindow', 'centerScreen');
+            }
+        } catch (err: any) {
+            events.emit("log", 'err', err.toString());
+        }
     })
     return { log, events };
 

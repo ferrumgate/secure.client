@@ -33,7 +33,8 @@ describe('updateService ', async () => {
         class MockEventService extends EventService {
             isEmitted = false;
             emit(eventName: string, ...args: any[]): boolean {
-                this.isEmitted = true;
+                if (eventName == 'release')
+                    this.isEmitted = true;
                 return true;
             }
         }
@@ -91,7 +92,8 @@ describe('updateService ', async () => {
         class MockEventService extends EventService {
             isEmitted = false;
             emit(eventName: string, ...args: any[]): boolean {
-                this.isEmitted = true;
+                if (eventName == 'release')
+                    this.isEmitted = true;
                 return true;
             }
         }
@@ -146,7 +148,8 @@ describe('updateService ', async () => {
         class MockEventService extends EventService {
             isEmitted = false;
             emit(eventName: string, ...args: any[]): boolean {
-                this.isEmitted = true;
+                if (eventName == 'release')
+                    this.isEmitted = true;
                 return true;
             }
         }

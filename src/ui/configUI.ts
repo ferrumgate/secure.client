@@ -12,8 +12,10 @@ export class ConfigUI {
         events.on("closeWindow", () => {
             this.closeWindow();
         })
-        events.on("showOptionsWindow", () => {
-            this.showWindow();
+        events.on("showOptionsWindow", (position?: string) => {
+
+            this.showWindow(position);
+
         })
         events.on("closeOptionsWindow", () => {
             this.toggleWindow();
@@ -46,12 +48,24 @@ export class ConfigUI {
 
         return { x: x, y: y }
     }
+    private getScreenWindowPosition() {
+        const windowBounds = this.window.getBounds()
 
+        // Center window horizontally below the tray icon
+        const x = Math.round(windowBounds.x + windowBounds.width / 2 - this.width / 2)
+
+        // Position window 4 pixels vertically below the tray icon
+        const y = Math.round(windowBounds.y + windowBounds.height / 2 - this.height / 2)
+
+        return { x: x, y: y }
+    }
+    width = 300 * (process.env.NODE_ENV == 'development' ? 4 : 1);
+    height = 450 * (process.env.NODE_ENV == 'development' ? 4 : 1);
     createWindow() {
         const window = new BrowserWindow({
             title: 'Ferrum Gate',
-            width: 300 * (process.env.NODE_ENV == 'development' ? 4 : 1),
-            height: 450 * (process.env.NODE_ENV == 'development' ? 4 : 1),
+            width: this.width,
+            height: this.height,
             icon: path.join(__dirname, '../assets/img/logo-transparent2.png'),
             show: process.env.NODE_ENV == 'development',
             frame: false,//process.env.NODE_ENV == 'development',
@@ -88,8 +102,8 @@ export class ConfigUI {
         }
     }
 
-    showWindow() {
-        const position = this.getWindowPosition()
+    showWindow(pos?: string) {
+        const position = pos ? this.getScreenWindowPosition() : this.getWindowPosition()
         this.window.setPosition(position.x, position.y, false)
         this.window.show()
         this.window.focus()
