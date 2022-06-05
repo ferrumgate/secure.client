@@ -26,8 +26,8 @@ export class LoadingUI {
 
         return { x: x, y: y }
     }
-    width = 400 * (process.env.NODE_ENV == 'development' ? 4 : 1);
-    height = 300 * (process.env.NODE_ENV == 'development' ? 4 : 1);
+    width = 550 * (process.env.NODE_ENV == 'development' ? 4 : 1);
+    height = 360 * (process.env.NODE_ENV == 'development' ? 4 : 1);
     createWindow() {
         const window = new BrowserWindow({
             title: 'Ferrum Gate',
