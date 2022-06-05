@@ -10,6 +10,7 @@ import { ConfigService } from './service/configService';
 import * as unhandled from 'electron-unhandled';
 import { LogService } from './service/logService';
 import { Util } from './service/util';
+import { LoadingUI } from './ui/loadingUI';
 
 
 
@@ -19,6 +20,7 @@ let tray: TrayUI;
 let configUI: ConfigUI;
 let config: ConfigService;
 let log: LogService;
+let loadingUI: LoadingUI;
 
 const assetsDirectory = path.join(__dirname, 'assets')
 
@@ -89,12 +91,17 @@ export function init() {
 
     app.setName('Ferrum Gate');
     events.emit("log", 'info', 'starting app');
+
+
+
     tray = new TrayUI(events);
     tunnel = new TunnelService(events);
     configUI = new ConfigUI(events);
-    setInterval(() => {
-        events.emit('release', 'v0.0.0');
-    }, 30000)
+    loadingUI = new LoadingUI(events);
+    loadingUI.showWindow();
+    events.on('loadingWindowClosed', () => {
+
+    })
     return { log, events };
 
 }
