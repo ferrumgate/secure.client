@@ -1,4 +1,4 @@
-import { BrowserWindow, nativeImage, screen } from "electron";
+import { BrowserWindow, nativeImage, Rectangle, screen } from "electron";
 import { EventService } from "../service/eventsService";
 import path from 'path';
 
@@ -21,10 +21,23 @@ export class ConfigUI {
 
 
     }
+    /*     private getWindowPosition() {
+            const windowBounds = this.window.getBounds()
+            const trayBounds = { width: 10, height: 10 };// tray.getBounds()
+            const clickPoint = screen.getCursorScreenPoint();
+            // Center window horizontally below the tray icon
+            const x = Math.round(clickPoint.x + (trayBounds.width / 2) - (windowBounds.width / 2))
+    
+            // Position window 4 pixels vertically below the tray icon
+            const y = Math.round(clickPoint.y + trayBounds.height)
+    
+            return { x: x, y: y }
+        } */
     private getWindowPosition() {
         const windowBounds = this.window.getBounds()
         const trayBounds = { width: 10, height: 10 };// tray.getBounds()
         const clickPoint = screen.getCursorScreenPoint();
+
         // Center window horizontally below the tray icon
         const x = Math.round(clickPoint.x + (trayBounds.width / 2) - (windowBounds.width / 2))
 
