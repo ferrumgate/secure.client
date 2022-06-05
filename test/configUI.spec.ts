@@ -31,6 +31,8 @@ describe('configUI ', async () => {
         await driver.close();
     })
     beforeEach(async () => {
+
+        //delete configservice file for resetting
         if (fs.existsSync(configService.filename))
             fs.unlinkSync(configService.filename);
     })
@@ -46,6 +48,7 @@ describe('configUI ', async () => {
         const version = await driver.findElement(webdriver.By.id('el-version'));
         const value = await version.getText();
         expect(value).exist;
+
         expect(value.startsWith('1.')).to.be.true;
 
     })

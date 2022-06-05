@@ -9,6 +9,7 @@ import fspromise from 'fs/promises';
 import { ConfigService } from './service/configService';
 import * as unhandled from 'electron-unhandled';
 import { LogService } from './service/logService';
+import { Util } from './service/util';
 
 
 
@@ -66,10 +67,9 @@ export function init() {
     })
 
     ipcMain.on('appVersion', async (event: Electron.IpcMainEvent, ...args: any[]) => {
-        var filePath = path.join(app.getAppPath(), 'package.json');
-        console.log(filePath);
-        const packageFile = JSON.parse((await fspromise.readFile(filePath)).toString()) as any;
-        event.reply('replyAppVersion', packageFile.version || 'unknown');
+
+        const version = await Util.getAppVersion();
+        event.reply('replyAppVersion', version || 'unknown');
 
     })
 
@@ -92,6 +92,9 @@ export function init() {
     tray = new TrayUI(events);
     tunnel = new TunnelService(events);
     configUI = new ConfigUI(events);
+    setInterval(() => {
+        events.emit('release', 'v0.0.0');
+    }, 30000)
     return { log, events };
 
 }
