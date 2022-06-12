@@ -19,7 +19,9 @@ export class UnixTunnelService extends TunnelService {
             if (parts.length > 1)
                 port = parts[1];
         }
-
+        this.sudoOptions.onstdout = (data: any) => {
+            console.log(data);
+        }
         const all = `${sshFile} ${parameters.join(' ')} ferrum@${host} -p${port}`;
         console.log(all);
         await new Promise((resolve, reject) => {
@@ -31,15 +33,8 @@ export class UnixTunnelService extends TunnelService {
                         reject(stderr.toString());
                     else
                         if (stdout) {
-                            let output = (stdout as Buffer).toString();
-                            const parts = output.split('\n');
-                            if (parts.length) {
-
-                            }
+                            resolve(stdout);
                         }
-
-
-
 
             })
         })

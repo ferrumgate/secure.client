@@ -13,7 +13,8 @@ export class TunnelService extends BaseService {
     }
 
     protected sudoOptions = {
-        name: 'Ferrum Gate'
+        name: 'Ferrum Gate',
+        onstdout: (data: any) => { }
     };
     /**
      *

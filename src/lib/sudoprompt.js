@@ -1,6 +1,10 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
+
+//this project is copied from https://github.com/jorangreef/sudo-prompt
+// for adapting long running process
+
 var Node = {
     child: require('child_process'),
     crypto: require('crypto'),
@@ -159,7 +163,7 @@ function Linux(instance, end) {
                 '"'
             );
             command = command.join(' ');
-            Node.child.exec(command, { encoding: 'utf-8', maxBuffer: MAX_BUFFER },
+            const child = Node.child.exec(command, { encoding: 'utf-8', maxBuffer: MAX_BUFFER },
                 function (error, stdout, stderr) {
                     // ISSUE 88:
                     // We must distinguish between elevation errors and command errors.
@@ -194,6 +198,12 @@ function Linux(instance, end) {
                     end(error, stdout, stderr);
                 }
             );
+            //ferrum added
+            child.stdout.on('data', (data) => {
+                instance.options.onstdout(data);
+            })
+
+
         }
     );
 }
@@ -346,7 +356,12 @@ function MacOpen(instance, end) {
     };
     // We use the relative path rather than the absolute path. The instance.path
     // may contain spaces which the cwd can handle, but which exec() cannot.
-    Node.child.exec('./' + Node.path.basename(binary), options, end);
+    const child = Node.child.exec('./' + Node.path.basename(binary), options, end);
+
+    //ferrum addded
+    child.stdout.on('data', (data) => {
+        instance.options.onstdout(data);
+    })
 }
 
 function MacPropertyList(instance, end) {
@@ -539,6 +554,12 @@ function WindowsElevate(instance, end) {
         }
     );
     child.stdin.end(); // Otherwise PowerShell waits indefinitely on Windows 7.
+
+    //ferrum added
+    child.stdout.on('data', (data) => {
+        instance.options.onstdout(data);
+    })
+
 }
 
 function WindowsResult(instance, end) {
