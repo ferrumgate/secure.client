@@ -2,6 +2,9 @@ import { BrowserWindow, nativeImage, Rectangle, screen } from "electron";
 import { EventService } from "../service/eventsService";
 import path from 'path';
 
+/**
+ * @summary configuration ui for settings some options like host
+ */
 export class ConfigUI {
     window: BrowserWindow
     /**

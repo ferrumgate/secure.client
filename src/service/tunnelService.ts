@@ -1,6 +1,10 @@
 import { EventEmitter } from 'events';
+import { BaseService } from './baseService';
+import { ConfigService } from './configService';
 import { EventService } from './eventsService';
-export class TunnelService {
+
+
+export class TunnelService extends BaseService {
     /**
      * @summary tunnel status
      */
@@ -8,11 +12,28 @@ export class TunnelService {
         isOpened: false
     }
 
-
+    protected sudoOptions = {
+        name: 'Ferrum Gate'
+    };
     /**
      *
      */
-    constructor(private events: EventService) {
+    constructor(protected events: EventService, protected config: ConfigService) {
+        super(events);
+
+        this.events.on('openTunnel', async () => {
+            try {
+                await this.openTunnel();
+            } catch (err: any) {
+                this.logError(err.toString());
+            }
+        });
+    }
+
+    public async openTunnel() {
 
     }
+
+
+
 }

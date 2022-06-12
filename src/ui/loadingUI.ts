@@ -2,6 +2,10 @@ import { BrowserWindow, nativeImage, Rectangle, screen } from "electron";
 import { EventService } from "../service/eventsService";
 import path from 'path';
 
+
+/**
+ * @summary loading window at application start
+ */
 export class LoadingUI {
     window: BrowserWindow
     /**

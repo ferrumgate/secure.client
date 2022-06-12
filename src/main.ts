@@ -95,7 +95,7 @@ export function init() {
 
 
     tray = new TrayUI(events);
-    tunnel = new TunnelService(events);
+    tunnel = new TunnelService(events, config);
     configUI = new ConfigUI(events);
     loadingUI = new LoadingUI(events);
     loadingUI.showWindow();//show loading window for user interaction

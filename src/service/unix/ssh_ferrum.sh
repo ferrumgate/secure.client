@@ -1,0 +1,1 @@
+./ssh -c none -N -F ./ssh_config -w any  -o "StrictHostKeyChecking no"  ferrum@192.168.88.243 -p3333

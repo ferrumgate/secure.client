@@ -1,0 +1,6 @@
+{
+    "mochaExplorer.env": {
+        "VSCODE_VERSION": "insiders",
+        "ELECTRON_RUN_AS_NODE": null
+    }
+}

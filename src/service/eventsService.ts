@@ -12,7 +12,8 @@ export class EventService extends EventEmitter {
 
     protected knownEvents = ['tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow',
         'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow',
-        "openLink", "notify", "appVersion", "config", "saveConfig", "log", "throwError", 'release', 'loadingWindowClosed'];
+        "openLink", "notify", "appVersion", "config", "saveConfig", "log", "throwError", 'release',
+        'loadingWindowClosed', 'openTunnel', 'openTunnelSuccess'];
     /**
      *
      */

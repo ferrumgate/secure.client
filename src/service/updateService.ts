@@ -1,4 +1,5 @@
 import { net } from "electron";
+import { BaseService } from "./baseService";
 import { EventService } from "./eventsService";
 import { Util } from "./util";
 
@@ -13,9 +14,10 @@ export interface ReleaseItem {
 /**
  * @summary update check service, if a new version exits on github
  */
-export class UpdateService {
+export class UpdateService extends BaseService {
 
-    constructor(private events: EventService) {
+    constructor(protected events: EventService) {
+        super(events);
         this.startChecking();
     }
 
@@ -92,15 +94,7 @@ export class UpdateService {
             }
         }, 1 * 60 * 60 * 1000);
     }
-    logInfo(msg: string) {
-        this.events.emit('log', 'info', msg);
-    }
-    logError(msg: string) {
-        this.events.emit('log', 'error', msg);
-    }
-    logWarn(msg: string) {
-        this.events.emit('log', 'warn', msg);
-    }
+
 
     async check(): Promise<{ name: string }[] | null> {
         const currentVersion = await Util.getAppVersion();

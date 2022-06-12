@@ -33,13 +33,13 @@ export class ConfigService {
 
     async getConfig() {
         if (!fs.existsSync(this.filename)) return null;
-        console.log(`reading config file ${this.filename}`);
+        //console.log(`reading config file ${this.filename}`);
         const file = (await fspromise.readFile(this.filename)).toString();
         return JSON.parse(file) as Config;
     }
     async saveConfig(config: Config) {
         await fspromise.mkdir(this.folder, { recursive: true });
-        console.log(`saving config file ${this.filename}`);
+        //console.log(`saving config file ${this.filename}`);
         await fspromise.writeFile(this.filename, JSON.stringify(config));
     }
 

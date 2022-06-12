@@ -63,6 +63,12 @@
         "zip"
       ],
       "category": "Network"
+    },
+    "deb": {
+      "depends": [
+        "libssl",
+        "zlib1g"
+      ]
     }
   },
   "repository": {
