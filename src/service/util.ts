@@ -2,6 +2,7 @@ import path from 'path';
 import fspromise from 'fs/promises';
 import fs from 'fs';
 import { app } from 'electron';
+import childprocess from 'child_process';
 
 /**
  * @summary util functions
@@ -43,6 +44,28 @@ export class Util {
         const arch = process.arch;
         return arch;
     }
+    static async sleep(ms: number) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve('')
+            }, ms);
+        })
+    }
+
+    static async exec(cmd: string) {
+        return new Promise((resolve, reject) => {
+            childprocess.exec(cmd, (error, stdout, stderr) => {
+                if (error)
+                    reject(error);
+                if (stderr)
+                    reject(stderr);
+                if (stdout)
+                    resolve(stdout);
+            })
+        })
+    }
+
+
 
 
 

@@ -22,13 +22,15 @@ export class TrayUI {
         //some menu items
         const connect: MenuItem = {
             id: 'connect',
-            label: 'Connect', type: 'normal', icon: path.join(assetsDirectory, 'img', 'connect.png')
+            label: 'Connect', type: 'normal', icon: path.join(assetsDirectory, 'img', 'connect.png'),
+            click: () => { this.events.emit('openTunnel') }
+
         } as unknown as MenuItem;
         const disconnect: MenuItem = {
             id: 'disconnect',
             label: 'Disconnect', type: 'normal', visible: false,
             icon: path.join(assetsDirectory, 'img', 'disconnect.png'),
-            click: () => { }
+            click: () => { this.events.emit('closeTunnel') }
         } as unknown as MenuItem;
         const update: MenuItem = {
             id: 'update',

@@ -1,5 +1,5 @@
 
-import chai from 'chai';
+import chai, { util } from 'chai';
 import { Util } from '../src/service/util';
 const expect = chai.expect;
 
@@ -30,5 +30,10 @@ describe('util ', async () => {
         const version5 = await Util.convertAppVersionToNumber("3.10.9");
         expect(version5).to.equal(30001000009);
 
+    })
+
+    it('exec', async () => {
+        const output = await Util.exec('ls');
+        expect(output).exist;
     })
 })

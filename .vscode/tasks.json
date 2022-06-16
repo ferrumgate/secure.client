@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"label": "build",
+			"detail": "tsc && cp package.json ./build/src/ && cp ./src/ui/*.html ./build/src/ui/ && cp ./src/ui/*.css ./build/src/ui/ && cp -R ./src/assets ./build/src/"
+		}
+	]
+}

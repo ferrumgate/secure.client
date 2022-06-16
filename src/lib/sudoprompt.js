@@ -199,9 +199,11 @@ function Linux(instance, end) {
                 }
             );
             //ferrum added
+            instance.options.child = child;
             child.stdout.on('data', (data) => {
                 instance.options.onstdout(data);
             })
+
 
 
         }
@@ -359,6 +361,7 @@ function MacOpen(instance, end) {
     const child = Node.child.exec('./' + Node.path.basename(binary), options, end);
 
     //ferrum addded
+    instance.options.child = child;
     child.stdout.on('data', (data) => {
         instance.options.onstdout(data);
     })
@@ -556,9 +559,14 @@ function WindowsElevate(instance, end) {
     child.stdin.end(); // Otherwise PowerShell waits indefinitely on Windows 7.
 
     //ferrum added
+    instance.options.child = child;
     child.stdout.on('data', (data) => {
         instance.options.onstdout(data);
     })
+    child.stderr.on('data', (data) => {
+        instance.options.onstderr(data);
+    })
+
 
 }
 
