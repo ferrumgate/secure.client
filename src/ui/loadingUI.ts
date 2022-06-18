@@ -79,8 +79,9 @@ export class LoadingUI {
     }
 
     closeWindow() {
-
-        this.window.close();
-        this.events.emit('loadingWindowClosed');
+        if (this.window && !this.window.isDestroyed()) {
+            this.window.close();
+            this.events.emit('loadingWindowClosed');
+        }
     }
 }
