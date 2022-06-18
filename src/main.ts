@@ -11,6 +11,7 @@ import * as unhandled from 'electron-unhandled';
 import { LogService } from './service/logService';
 import { Util } from './service/util';
 import { LoadingUI } from './ui/loadingUI';
+import { UnixTunnelService } from './service/unix/UnixTunnelService';
 
 
 
@@ -95,7 +96,15 @@ export function init() {
 
 
     tray = new TrayUI(events);
-    tunnel = new TunnelService(events);
+    const platform = Util.getPlatform()
+    switch (platform) {
+        case 'linux':
+        case 'netbsd':
+        case 'freebsd':
+            tunnel = new UnixTunnelService(events, config); break;
+        default:
+            tunnel = new TunnelService(events, config); break;
+    }
     configUI = new ConfigUI(events);
     loadingUI = new LoadingUI(events);
     loadingUI.showWindow();//show loading window for user interaction
@@ -122,7 +131,10 @@ app.on('ready', () => {
 
 // Quit the app when the window is closed
 app.on('window-all-closed', () => {
-    app.quit()
+    if (Util.getPlatform() !== 'darwin') {
+        app.quit();
+    }
+
 })
 
 

@@ -10,9 +10,10 @@ export class EventService extends EventEmitter {
      * @example ['tunnelOpened', 'tunnelClosed']
      */
 
-    protected knownEvents = ['tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow',
+    protected knownEvents = ['tunnelOpening', 'tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow',
         'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow',
-        "openLink", "notify", "appVersion", "config", "saveConfig", "log", "throwError", 'release', 'loadingWindowClosed'];
+        "openLink", "notify", "appVersion", "config", "saveConfig", "log", "throwError", 'release',
+        'loadingWindowClosed', 'openTunnel', 'closeTunnel'];
     /**
      *
      */

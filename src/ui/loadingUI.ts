@@ -2,8 +2,13 @@ import { BrowserWindow, nativeImage, Rectangle, screen } from "electron";
 import { EventService } from "../service/eventsService";
 import path from 'path';
 
+
+/**
+ * @summary loading window at application start
+ */
 export class LoadingUI {
     window: BrowserWindow
+    isClosed = false;
     /**
      *
      */
@@ -16,6 +21,7 @@ export class LoadingUI {
     }
 
     private getWindowPosition() {
+        if (!this.window || this.window.isDestroyed()) return null;
         const windowBounds = this.window.getBounds()
 
         // Center window horizontally below the tray icon
@@ -26,8 +32,8 @@ export class LoadingUI {
 
         return { x: x, y: y }
     }
-    width = 400 * (process.env.NODE_ENV == 'development' ? 4 : 1);
-    height = 300 * (process.env.NODE_ENV == 'development' ? 4 : 1);
+    width = 550 * (process.env.NODE_ENV == 'development' ? 4 : 1);
+    height = 460 * (process.env.NODE_ENV == 'development' ? 4 : 1);
     createWindow() {
         const window = new BrowserWindow({
             title: 'Ferrum Gate',
@@ -38,7 +44,8 @@ export class LoadingUI {
             frame: false,//process.env.NODE_ENV == 'development',
             fullscreenable: false,
             resizable: process.env.NODE_ENV == 'development',
-            transparent: false,
+            transparent: true,
+            alwaysOnTop: true,
             webPreferences: {
                 // Prevents renderer process code from not running when window is
                 // hidden
@@ -50,12 +57,13 @@ export class LoadingUI {
         window.loadURL(`file://${path.join(__dirname, 'loading.html')}`)
         if (process.env.NODE_ENV == 'development')
             window.webContents.openDevTools();
-        // Hide the window when it loses focus
-        window.on('blur', () => {
-            if (!window.webContents.isDevToolsOpened()) {
-                window.close()
-            }
-        })
+        /*  // Hide the window when it loses focus
+         window.on('blur', () => {
+             if (!window.webContents.isDevToolsOpened()) {
+                 this.isClosed = true;
+                 window.close()
+             }
+         }) */
         return window;
     }
 
@@ -63,13 +71,17 @@ export class LoadingUI {
 
     showWindow() {
         const position = this.getWindowPosition()
-        this.window.setPosition(position.x, position.y, false)
-        this.window.show()
-        this.window.focus()
+        if (position && this.window && !this.window.isDestroyed()) {
+            this.window.setPosition(position.x, position.y, false)
+            this.window.show()
+            this.window.focus()
+        }
     }
 
     closeWindow() {
-        this.window.close();
-        this.events.emit('loadingWindowClosed');
+        if (this.window && !this.window.isDestroyed()) {
+            this.window.close();
+            this.events.emit('loadingWindowClosed');
+        }
     }
 }
