@@ -200,8 +200,13 @@ function Linux(instance, end) {
             );
             //ferrum added
             instance.options.child = child;
+            instance.options.child = child;
             child.stdout.on('data', (data) => {
                 instance.options.onstdout(data);
+            })
+            child.stderr.on('data', (data) => {
+                instance.options.onstdout(data);
+                instance.options.onstderr(data);
             })
 
 
@@ -362,8 +367,13 @@ function MacOpen(instance, end) {
 
     //ferrum addded
     instance.options.child = child;
+    instance.options.child = child;
     child.stdout.on('data', (data) => {
         instance.options.onstdout(data);
+    })
+    child.stderr.on('data', (data) => {
+        instance.options.onstdout(data);
+        instance.options.onstderr(data);
     })
 }
 
@@ -564,6 +574,7 @@ function WindowsElevate(instance, end) {
         instance.options.onstdout(data);
     })
     child.stderr.on('data', (data) => {
+        instance.options.onstdout(data);
         instance.options.onstderr(data);
     })
 

@@ -5,11 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
+            overflow: hidden;
+        }
+
+        .container {
             background-color: #252526;
             color: #cccccc;
             font-size: 14px;
-            width: 100%;
-            height: 100%;
+            border-radius: 50px;
+            transform: scale(0.94);
+            /* width: 100vh;
+            height: 100vh; */
+            margin: 10px;
+            width: 550px;
+            height: 360px;
+
+
         }
 
 
@@ -141,8 +152,9 @@
     </style>
 </head>
 
-<body onload="myFunction()" style="margin:0;">
-    <div style="display:flex;flex-direction: column;align-items: center;align-content: center; padding-top:20px">
+<body style="margin:0;">
+    <div class="container"
+        style="display:flex;flex-direction: column;align-items: center;align-content: center; padding-top:20px">
         <div class="row">
             <span>
                 <img class="animate-bottom" height="150px" src="../assets/img/logo-transparent.png">

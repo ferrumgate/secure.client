@@ -19,11 +19,18 @@ export class TrayUI {
 
         const tray = new Tray(path.join(assetsDirectory, 'img', 'logo-red.png'))
 
+
         //some menu items
         const connect: MenuItem = {
             id: 'connect',
             label: 'Connect', type: 'normal', icon: path.join(assetsDirectory, 'img', 'connect.png'),
             click: () => { this.events.emit('openTunnel') }
+
+        } as unknown as MenuItem;
+        const connecting: MenuItem = {
+            id: 'connect',
+            label: 'Connecting', type: 'normal', icon: path.join(assetsDirectory, 'img', 'connect.png'),
+            click: () => { }
 
         } as unknown as MenuItem;
         const disconnect: MenuItem = {
@@ -65,22 +72,45 @@ export class TrayUI {
         ]);
 
 
+        this.events.on('tunnelOpening', () => {
 
+            connect.visible = false;
+            connecting.visible = true;
+            disconnect.visible = false;
+            const contextMenu = Menu.buildFromTemplate([
+                connect, connecting, disconnect, options, quit, seperator, update
+            ]);
+            tray.setContextMenu(contextMenu);
+            tray.setImage(path.join(assetsDirectory, 'img', 'logo-yellow.png'));
+
+        })
 
         this.events.on('tunnelOpened', () => {
             connect.visible = false;
+            connecting.visible = false;
             disconnect.visible = true;
+            const contextMenu = Menu.buildFromTemplate([
+                connect, connecting, disconnect, options, quit, seperator, update
+            ]);
+            tray.setContextMenu(contextMenu);
+            tray.setImage(path.join(assetsDirectory, 'img', 'logo-green.png'));
         })
         this.events.on('tunnelClosed', () => {
             connect.visible = true;
+            connecting.visible = false;
             disconnect.visible = false;
+            const contextMenu = Menu.buildFromTemplate([
+                connect, connecting, disconnect, options, quit, seperator, update
+            ]);
+            tray.setContextMenu(contextMenu);
+            tray.setImage(path.join(assetsDirectory, 'img', 'logo-red.png'));
         })
 
 
         this.events.on('release', (release) => {
             update.visible = true;
             const contextMenu = Menu.buildFromTemplate([
-                connect, options, quit, seperator, update
+                connect, connecting, disconnect, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
             if (this.latestFoundedRelease != release) {
