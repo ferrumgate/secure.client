@@ -17,11 +17,12 @@ export class UnixTunnelService extends TunnelService {
     isTunnelCreated = false;
     iamAliveInterval: any;
     isSSHTunnelStarting: any;
+    //checkTunnelIsWorkingInterval: any;
     public async init() {
 
         const sshFile = path.join(__dirname, 'ssh_ferrum');
         const sshConfigFile = path.join(__dirname, 'ssh_config');
-        const parameters = ['-N', '-F', sshConfigFile, "-w", "any", "-o", '"StrictHostKeyChecking no"']
+        const parameters = ['-N', '-F', `"${sshConfigFile}"`, "-w", "any", "-o", '"StrictHostKeyChecking no"']
         const config = await this.config.getConfig();
         let port = '22';
         let host = 'localhost';
@@ -32,7 +33,7 @@ export class UnixTunnelService extends TunnelService {
             if (parts.length > 1)
                 port = parts[1];
         }
-        this.sshCommand = `${sshFile} ${parameters.join(' ')} ferrum@${host} -p${port}`;
+        this.sshCommand = `"${sshFile}" ${parameters.join(' ')} ferrum@${host} -p${port}`;
         if (this.isInitted) return;
         /////
 
@@ -52,8 +53,9 @@ export class UnixTunnelService extends TunnelService {
                 if (data.includes('ferrum_pid:')) {
                     const items = data.split('\n');
                     const pidItem = items.find(x => x.startsWith('ferrum_pid:'))
-                    if (pidItem)
+                    if (pidItem) {
                         this.sshPID = pidItem.replace('ferrum_pid:', '').replace('\n', '');
+                    }
                 }
                 if (data.includes('ferrum_open:')) {
                     const items = data.split('\n');
@@ -100,7 +102,7 @@ export class UnixTunnelService extends TunnelService {
                         this.logInfo(`tunnel ${tun} created and configured successfully`);
                     }
                 }
-                if (data.includes('ferrum_exit:') || data.includes('Terminated')) {
+                if (data.includes('ferrum_exit:') || data.includes('Terminated') || data.includes('No route to host')) {
                     this.sshPID = '';
                     this.isTunnelCreated = false;
                     this.notifyError('Ferrum disconnected');
@@ -145,6 +147,18 @@ export class UnixTunnelService extends TunnelService {
         if (rootShell) {
             this.events.emit('tunnelOpening');
             rootShell.stdin?.write(`${this.sshCommand} & \n`);
+            if (this.isSSHTunnelStarting)
+                clearTimeout(this.isSSHTunnelStarting);
+            this.isSSHTunnelStarting = setTimeout(async () => {
+                if (!this.isTunnelCreated) {
+                    this.notifyError('Connecting timeout');
+                    await this.tryKillSSHFerrumProcess();
+                }
+            }, 45000);
+            /*             setTimeout(() => {
+                            rootShell.stdin?.write(`echo "ferrum_process_count:$(ps -aux|grep ssh_ferrum|wc -l)"\n`)
+                        }, 1000) */
+
         }
     }
     public async executeOnRootShell(cmd: string) {
