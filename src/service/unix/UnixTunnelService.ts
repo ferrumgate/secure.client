@@ -86,7 +86,7 @@ export class UnixTunnelService extends TunnelService {
                         const iplist = await this.getTunnelAndServiceIpList();
 
 
-                        this.logInfo(`configuring tunnel: ${tun} with ${iplist}`)
+                        this.logInfo(`configuring tunnel: ${tun} with ${JSON.stringify(iplist)}`)
                         // prepare network for connection
                         await this.executeOnRootShell(`ip addr add ${iplist.assignedIp}/32 dev ${tun}`)
                         await this.executeOnRootShell(`ip link set ${tun} up`);
