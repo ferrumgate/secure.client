@@ -20,3 +20,11 @@ then run test with
 > npm run pack
 ### dist
 > npm run build && npm run dist
+
+### windows package
+setting bash for npm run build
+> npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
+if you want to revert script-shell
+> npm config delete script-shell
+### dist
+> npm run build && npm run distwin32

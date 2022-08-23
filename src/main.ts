@@ -12,6 +12,7 @@ import { LogService } from './service/logService';
 import { Util } from './service/util';
 import { LoadingUI } from './ui/loadingUI';
 import { UnixTunnelService } from './service/unix/UnixTunnelService';
+import { Win32TunnelService } from './service/win32/Win32TunnelService';
 
 
 
@@ -102,6 +103,8 @@ export function init() {
         case 'netbsd':
         case 'freebsd':
             tunnel = new UnixTunnelService(events, config); break;
+        case 'win32':
+            tunnel = new Win32TunnelService(events, config); break;
         default:
             tunnel = new TunnelService(events, config); break;
     }
