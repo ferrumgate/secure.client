@@ -63,7 +63,6 @@ export function init() {
     });
 
     events.on("openLink", (link: string) => {
-
         shell.openExternal(link);
     })
     events.on("notify", (data: { type: string, msg: string }) => {
@@ -127,7 +126,12 @@ export function init() {
 }
 //when app ready, init
 app.on('ready', () => {
-    init();
+    const gotTheLock = app.requestSingleInstanceLock()
+
+    if (!gotTheLock) {
+        app.quit()
+    } else
+        init();
 
 
 })

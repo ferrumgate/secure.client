@@ -45,7 +45,7 @@ export class UnixTunnelService extends TunnelService {
         this.sudoOptions.onstdout = async (data: string) => {
             try {
                 this.processLastOutput = data;
-                console.log(data);
+                //console.log(data);
                 this.logInfo(`process data: ${data}`);
                 if (data.startsWith("SUDOPROMPT")) {
                     await this.startNewSSHFerrum();

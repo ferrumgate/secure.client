@@ -64,8 +64,8 @@ export class ConfigUI {
 
         return { x: x, y: y }
     }
-    width = 300 * (process.env.NODE_ENV == 'development' ? 4 : 1);
-    height = 450 * (process.env.NODE_ENV == 'development' ? 4 : 1);
+    width = 300 * (process.env.NODE_ENV == 'development' ? 2 : 1);
+    height = 450 * (process.env.NODE_ENV == 'development' ? 2 : 1);
     createWindow() {
         const window = new BrowserWindow({
             title: 'Ferrum Gate',

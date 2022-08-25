@@ -25,6 +25,7 @@ function configInit() {
         windowx.electronAPI.emit('openLink', 'https://ferrumgate.com');
     })
 
+
     document.querySelector('#el-save-config')?.addEventListener('click', () => {
         windowx.electronAPI.emit('saveConfig', config);
     })
@@ -63,38 +64,6 @@ function testError2() {
 }
 
 
-/* 
-
-
-const getGeoLocation = () => {
-    return new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject)
-    })
-}
-
-const getWeather = (position) => {
-    // FIXME replace with your own API key
-    // Register for one at https://developer.forecast.io/register
-    const apiKey = '781969e20c5d295ae9bd8da62df0d3f7'
-
-    const location = `${position.coords.latitude},${position.coords.longitude}`
-    console.log(`Getting weather for ${location}`)
-    const url = `https://api.forecast.io/forecast/${apiKey}/${location}`
-
-    return window.fetch(url).then((response) => {
-        return response.json()
-    })
-}
-
-*/
-
-const updateWeather = () => {
-
-}
-
-// Refresh weather every 10 minutes
-const tenMinutes = 10 * 60 * 1000
-setInterval(updateWeather, tenMinutes);
 
 window.onerror = function myErrorHandler(errorMsg, url, lineNumber) {
     const msg = `Something went wrong at file: ${url}  line: ${lineNumber} msg:${errorMsg}`;
