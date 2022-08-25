@@ -1,4 +1,4 @@
-import { BrowserWindow, nativeImage, Rectangle, screen } from "electron";
+import { BrowserWindow, nativeImage, Rectangle, screen, Tray } from "electron";
 import { EventService } from "../service/eventsService";
 import path from 'path';
 
@@ -10,7 +10,7 @@ export class ConfigUI {
     /**
      *
      */
-    constructor(private events: EventService) {
+    constructor(private events: EventService, private tray: Tray) {
         this.window = this.createWindow();
         events.on("closeWindow", () => {
             this.closeWindow();
@@ -54,16 +54,62 @@ export class ConfigUI {
         return { x: x, y: y }
     }
     private getScreenWindowPosition() {
-        const windowBounds = this.window.getBounds()
+        const screenBounds = screen.getPrimaryDisplay().size;
 
         // Center window horizontally below the tray icon
-        const x = Math.round(windowBounds.x + windowBounds.width / 2 - this.width / 2)
+        const x = Math.round(screenBounds.width / 2 - this.width / 2)
 
         // Position window 4 pixels vertically below the tray icon
-        const y = Math.round(windowBounds.y + windowBounds.height / 2 - this.height / 2)
+        const y = Math.round(screenBounds.height / 2 - this.height / 2)
 
         return { x: x, y: y }
     }
+
+    private calculateWindowPosition(width: number, height: number) {
+        const screenBounds = screen.getPrimaryDisplay().size;
+        const trayBounds = this.tray.getBounds();
+
+        //where is the icon on the screen?
+        let trayPos = 4; // 1:top-left 2:top-right 3:bottom-left 4.bottom-right
+        trayPos = trayBounds.y > screenBounds.height / 2 ? trayPos : trayPos / 2;
+        trayPos = trayBounds.x > screenBounds.width / 2 ? trayPos : trayPos - 1;
+
+        let DEFAULT_MARGIN = { x: 50, y: 50 };
+        let x, y;
+        //calculate the new window position
+        switch (trayPos) {
+            case 1: // for TOP - LEFT
+                x = Math.floor(trayBounds.x + DEFAULT_MARGIN.x + trayBounds.width / 2);
+                y = Math.floor(trayBounds.y + DEFAULT_MARGIN.y + trayBounds.height / 2);
+                break;
+
+            case 2: // for TOP - RIGHT
+                x = Math.floor(
+                    trayBounds.x - width - DEFAULT_MARGIN.x + trayBounds.width / 2
+                );
+                y = Math.floor(trayBounds.y + DEFAULT_MARGIN.y + trayBounds.height / 2);
+                break;
+
+            case 3: // for BOTTOM - LEFT
+                x = Math.floor(trayBounds.x + DEFAULT_MARGIN.x + trayBounds.width / 2);
+                y = Math.floor(
+                    trayBounds.y - height - DEFAULT_MARGIN.y + trayBounds.height / 2
+                );
+                break;
+
+            case 4: // for BOTTOM - RIGHT
+                x = Math.floor(
+                    trayBounds.x - width - DEFAULT_MARGIN.x + trayBounds.width / 2
+                );
+                y = Math.floor(
+                    trayBounds.y - height - DEFAULT_MARGIN.y + trayBounds.height / 2
+                );
+                break;
+        }
+
+        return { x: x, y: y };
+    }
+
     width = 300 * (process.env.NODE_ENV == 'development' ? 2 : 1);
     height = 450 * (process.env.NODE_ENV == 'development' ? 2 : 1);
     createWindow() {
@@ -108,8 +154,15 @@ export class ConfigUI {
     }
 
     showWindow(pos?: string) {
-        const position = pos ? this.getScreenWindowPosition() : this.getScreenWindowPosition();
-        this.window.setPosition(position.x, position.y, false)
+        //const position = pos ? this.getScreenWindowPosition() : this.getScreenWindowPosition();
+        //this.window.setPosition(position.x, position.y, false)
+        const position = this.calculateWindowPosition(this.width, this.height);
+        if (position.x && position.y)
+            this.window.setPosition(position.x, position.y, false);
+        else {
+            const position = pos ? this.getScreenWindowPosition() : this.getScreenWindowPosition();
+            this.window.setPosition(position.x, position.y, false);
+        }
         this.window.show()
         this.window.focus()
     }

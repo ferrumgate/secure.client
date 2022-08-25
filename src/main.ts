@@ -66,7 +66,7 @@ export function init() {
         shell.openExternal(link);
     })
     events.on("notify", (data: { type: string, msg: string }) => {
-        new Notification({ title: 'FerrumGate', body: data.msg }).show();
+        new Notification({ title: 'Ferrum Gate', body: data.msg }).show();
     })
 
     ipcMain.on('appVersion', async (event: Electron.IpcMainEvent, ...args: any[]) => {
@@ -82,7 +82,7 @@ export function init() {
 
     events.on('saveConfig', async (data: any) => {
         await config.saveConfig(data);
-        new Notification({ title: 'FerrumGate', body: 'Config saved' }).show();
+        new Notification({ title: 'Ferrum Gate', body: 'Config saved' }).show();
         events.emit('closeOptionsWindow');
         events.emit("log", 'info', 'saving config');
     })
@@ -107,7 +107,7 @@ export function init() {
         default:
             tunnel = new TunnelService(events, config); break;
     }
-    configUI = new ConfigUI(events);
+    configUI = new ConfigUI(events, tray.tray);
     loadingUI = new LoadingUI(events);
     loadingUI.showWindow();//show loading window for user interaction
     //when loading window closed, open config window if app not configured

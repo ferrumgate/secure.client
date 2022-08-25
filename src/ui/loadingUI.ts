@@ -20,20 +20,21 @@ export class LoadingUI {
 
     }
 
-    private getWindowPosition() {
+
+    private getScreenWindowPosition() {
         if (!this.window || this.window.isDestroyed()) return null;
-        const windowBounds = this.window.getBounds()
+        const screenBounds = screen.getPrimaryDisplay().size;
 
         // Center window horizontally below the tray icon
-        const x = Math.round(windowBounds.x + windowBounds.width / 2 - this.width / 2)
+        const x = Math.round(screenBounds.width / 2 - this.width / 2)
 
         // Position window 4 pixels vertically below the tray icon
-        const y = Math.round(windowBounds.y + windowBounds.height / 2 - this.height / 2)
+        const y = Math.round(screenBounds.height / 2 - this.height / 2)
 
         return { x: x, y: y }
     }
-    width = 550 * (process.env.NODE_ENV == 'development' ? 4 : 1);
-    height = 460 * (process.env.NODE_ENV == 'development' ? 4 : 1);
+    width = 550 * (process.env.NODE_ENV == 'development' ? 2 : 1);
+    height = 460 * (process.env.NODE_ENV == 'development' ? 2 : 1);
     createWindow() {
         const window = new BrowserWindow({
             title: 'Ferrum Gate',
@@ -70,7 +71,7 @@ export class LoadingUI {
 
 
     showWindow() {
-        const position = this.getWindowPosition()
+        const position = this.getScreenWindowPosition()
         if (position && this.window && !this.window.isDestroyed()) {
             this.window.setPosition(position.x, position.y, false)
             this.window.show()
