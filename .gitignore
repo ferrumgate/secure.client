@@ -105,3 +105,4 @@ dist
 build/
 dist/
 pack/
+src_installer/wix311-binaries

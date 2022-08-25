@@ -42,7 +42,9 @@ export class ConfigUI {
         const windowBounds = this.window.getBounds()
         const trayBounds = { width: 10, height: 10 };// tray.getBounds()
         const clickPoint = screen.getCursorScreenPoint();
-
+        const mainDisplay = screen.getPrimaryDisplay().bounds;
+        console.log(`click point ${clickPoint}`);
+        console.log(mainDisplay);
         // Center window horizontally below the tray icon
         const x = Math.round(clickPoint.x + (trayBounds.width / 2) - (windowBounds.width / 2))
 
@@ -106,7 +108,7 @@ export class ConfigUI {
     }
 
     showWindow(pos?: string) {
-        const position = pos ? this.getScreenWindowPosition() : this.getWindowPosition()
+        const position = pos ? this.getScreenWindowPosition() : this.getScreenWindowPosition();
         this.window.setPosition(position.x, position.y, false)
         this.window.show()
         this.window.focus()
