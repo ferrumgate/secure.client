@@ -92,7 +92,7 @@ export class TunnelService extends BaseService {
             });
             request.setHeader("TunnelKey", this.tunnelKey);
             this.prepareRequest(request, resolve, reject);
-            request.setHeader('Accept', "Accept: application/json");
+            request.setHeader('Accept', "application/json");
             request.end();
         });
         return JSON.parse(response.toString()) as { assignedIp: string, serviceNetwork: string }
@@ -112,7 +112,7 @@ export class TunnelService extends BaseService {
             });
             request.setHeader("TunnelKey", this.tunnelKey);
             this.prepareRequest(request, resolve, reject);
-            request.setHeader('Accept', "Accept: application/json");
+            request.setHeader('Accept', "application/json");
             request.end();
         });
         return JSON.parse(response.toString()) as {};

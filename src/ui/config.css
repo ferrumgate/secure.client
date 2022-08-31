@@ -46,6 +46,7 @@
     font-size: calc(var(--font-size) - 4px);
     float: left;
     cursor: pointer;
+    -webkit-app-region: no-drag;
 
 }
 

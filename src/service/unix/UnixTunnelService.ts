@@ -45,7 +45,7 @@ export class UnixTunnelService extends TunnelService {
         this.sudoOptions.onstdout = async (data: string) => {
             try {
                 this.processLastOutput = data;
-                console.log(data);
+                //console.log(data);
                 this.logInfo(`process data: ${data}`);
                 if (data.startsWith("SUDOPROMPT")) {
                     await this.startNewSSHFerrum();
@@ -102,7 +102,7 @@ export class UnixTunnelService extends TunnelService {
                         this.logInfo(`tunnel ${tun} created and configured successfully`);
                     }
                 }
-                if (data.includes('ferrum_exit:') || data.includes('Terminated') || data.includes('No route to host')) {
+                if (data.includes('ferrum_exit:') || data.includes('Terminated') || data.includes('No route to host') || data.includes('Connection refused')) {
                     this.sshPID = '';
                     this.isTunnelCreated = false;
                     this.notifyError('Ferrum disconnected');

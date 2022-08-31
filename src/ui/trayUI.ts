@@ -7,7 +7,7 @@ import { EventService } from '../service/eventsService';
  * @summary Traybar functionality 
  */
 export class TrayUI {
-    protected tray: Tray;
+    public tray: Tray;
     private latestFoundedRelease = null;
     constructor(private events: EventService) {
         this.tray = this.createTray();
@@ -17,7 +17,7 @@ export class TrayUI {
     private createTray() {
         const assetsDirectory = path.join(__dirname, '../', 'assets')
 
-        const tray = new Tray(path.join(assetsDirectory, 'img', 'logo-red.png'))
+        const tray = new Tray(path.join(assetsDirectory, 'img', 'logo-red-16.png'))
 
 
         //some menu items
@@ -49,13 +49,13 @@ export class TrayUI {
 
         const options = {
             label: 'Options', type: 'normal',
-            icon: path.join(assetsDirectory, 'img', 'settings.png'), click: () => {
+            icon: path.join(assetsDirectory, 'img', 'settings-14.png'), click: () => {
                 this.events.emit("showOptionsWindow");
             }
         } as unknown as MenuItem;
         const quit = {
             label: 'Quit', type: 'normal',
-            icon: path.join(assetsDirectory, 'img', 'close.png'), click: () => {
+            icon: path.join(assetsDirectory, 'img', 'close-14.png'), click: () => {
                 this.events.emit("appExit");
             }
         } as unknown as MenuItem;
@@ -81,7 +81,7 @@ export class TrayUI {
                 connect, connecting, disconnect, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
-            tray.setImage(path.join(assetsDirectory, 'img', 'logo-yellow.png'));
+            tray.setImage(path.join(assetsDirectory, 'img', 'logo-yellow-16.png'));
 
         })
 
@@ -93,7 +93,7 @@ export class TrayUI {
                 connect, connecting, disconnect, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
-            tray.setImage(path.join(assetsDirectory, 'img', 'logo-green.png'));
+            tray.setImage(path.join(assetsDirectory, 'img', 'logo-green-16.png'));
         })
         this.events.on('tunnelClosed', () => {
             connect.visible = true;
@@ -103,7 +103,7 @@ export class TrayUI {
                 connect, connecting, disconnect, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
-            tray.setImage(path.join(assetsDirectory, 'img', 'logo-red.png'));
+            tray.setImage(path.join(assetsDirectory, 'img', 'logo-red-16.png'));
         })
 
 
@@ -122,6 +122,7 @@ export class TrayUI {
         tray.setToolTip('Zero trust access')
         tray.setTitle('Ferrum Gate')
         tray.setContextMenu(contextMenu);
+        tray.setIgnoreDoubleClickEvents(true);
 
 
         return tray;

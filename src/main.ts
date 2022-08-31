@@ -12,6 +12,7 @@ import { LogService } from './service/logService';
 import { Util } from './service/util';
 import { LoadingUI } from './ui/loadingUI';
 import { UnixTunnelService } from './service/unix/UnixTunnelService';
+import { Win32TunnelService } from './service/win32/Win32TunnelService';
 
 
 
@@ -62,11 +63,10 @@ export function init() {
     });
 
     events.on("openLink", (link: string) => {
-
         shell.openExternal(link);
     })
     events.on("notify", (data: { type: string, msg: string }) => {
-        new Notification({ title: 'FerrumGate', body: data.msg }).show();
+        new Notification({ title: 'Ferrum Gate', body: data.msg }).show();
     })
 
     ipcMain.on('appVersion', async (event: Electron.IpcMainEvent, ...args: any[]) => {
@@ -82,7 +82,7 @@ export function init() {
 
     events.on('saveConfig', async (data: any) => {
         await config.saveConfig(data);
-        new Notification({ title: 'FerrumGate', body: 'Config saved' }).show();
+        new Notification({ title: 'Ferrum Gate', body: 'Config saved' }).show();
         events.emit('closeOptionsWindow');
         events.emit("log", 'info', 'saving config');
     })
@@ -102,10 +102,12 @@ export function init() {
         case 'netbsd':
         case 'freebsd':
             tunnel = new UnixTunnelService(events, config); break;
+        case 'win32':
+            tunnel = new Win32TunnelService(events, config); break;
         default:
             tunnel = new TunnelService(events, config); break;
     }
-    configUI = new ConfigUI(events);
+    configUI = new ConfigUI(events, tray.tray);
     loadingUI = new LoadingUI(events);
     loadingUI.showWindow();//show loading window for user interaction
     //when loading window closed, open config window if app not configured
@@ -124,7 +126,12 @@ export function init() {
 }
 //when app ready, init
 app.on('ready', () => {
-    init();
+    const gotTheLock = app.requestSingleInstanceLock()
+
+    if (!gotTheLock) {
+        app.quit()
+    } else
+        init();
 
 
 })
