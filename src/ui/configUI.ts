@@ -64,7 +64,7 @@ export class ConfigUI {
 
         return { x: x, y: y }
     }
-
+    DEFAULT_MARGIN = { x: 50, y: 50 };
     private calculateWindowPosition(width: number, height: number) {
         const screenBounds = screen.getPrimaryDisplay().size;
         const trayBounds = this.tray.getBounds();
@@ -74,35 +74,35 @@ export class ConfigUI {
         trayPos = trayBounds.y > screenBounds.height / 2 ? trayPos : trayPos / 2;
         trayPos = trayBounds.x > screenBounds.width / 2 ? trayPos : trayPos - 1;
 
-        let DEFAULT_MARGIN = { x: 50, y: 50 };
+
         let x, y;
         //calculate the new window position
         switch (trayPos) {
             case 1: // for TOP - LEFT
-                x = Math.floor(trayBounds.x + DEFAULT_MARGIN.x + trayBounds.width / 2);
-                y = Math.floor(trayBounds.y + DEFAULT_MARGIN.y + trayBounds.height / 2);
+                x = Math.floor(trayBounds.x + this.DEFAULT_MARGIN.x + trayBounds.width / 2);
+                y = Math.floor(trayBounds.y + this.DEFAULT_MARGIN.y + trayBounds.height / 2);
                 break;
 
             case 2: // for TOP - RIGHT
                 x = Math.floor(
-                    trayBounds.x - width - DEFAULT_MARGIN.x + trayBounds.width / 2
+                    trayBounds.x - width - this.DEFAULT_MARGIN.x + trayBounds.width / 2
                 );
-                y = Math.floor(trayBounds.y + DEFAULT_MARGIN.y + trayBounds.height / 2);
+                y = Math.floor(trayBounds.y + this.DEFAULT_MARGIN.y + trayBounds.height / 2);
                 break;
 
             case 3: // for BOTTOM - LEFT
-                x = Math.floor(trayBounds.x + DEFAULT_MARGIN.x + trayBounds.width / 2);
+                x = Math.floor(trayBounds.x + this.DEFAULT_MARGIN.x + trayBounds.width / 2);
                 y = Math.floor(
-                    trayBounds.y - height - DEFAULT_MARGIN.y + trayBounds.height / 2
+                    trayBounds.y - height - this.DEFAULT_MARGIN.y + trayBounds.height / 2
                 );
                 break;
 
             case 4: // for BOTTOM - RIGHT
                 x = Math.floor(
-                    trayBounds.x - width - DEFAULT_MARGIN.x + trayBounds.width / 2
+                    trayBounds.x - width - this.DEFAULT_MARGIN.x + trayBounds.width / 2
                 );
                 y = Math.floor(
-                    trayBounds.y - height - DEFAULT_MARGIN.y + trayBounds.height / 2
+                    trayBounds.y - height - this.DEFAULT_MARGIN.y + trayBounds.height / 2
                 );
                 break;
         }
@@ -157,7 +157,7 @@ export class ConfigUI {
         //const position = pos ? this.getScreenWindowPosition() : this.getScreenWindowPosition();
         //this.window.setPosition(position.x, position.y, false)
         const position = this.calculateWindowPosition(this.width, this.height);
-        if (position.x && position.y)
+        if (position.x && position.y && position.x != this.DEFAULT_MARGIN.x && position.y != this.DEFAULT_MARGIN.y)
             this.window.setPosition(position.x, position.y, false);
         else {
             const position = pos ? this.getScreenWindowPosition() : this.getScreenWindowPosition();

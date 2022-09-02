@@ -9,7 +9,7 @@
     "build": "tsc && cp package.json ./build/src/ && cp ./src/ui/*.html ./build/src/ui/ && cp ./src/ui/*.css ./build/src/ui/ && cp -R ./src/assets ./build/src/ && cp ./src/service/unix/ssh* build/src/service/unix/ && cp -R ./src/service/win32/svc build/src/service/win32/svc",
     "clean": "rm -rf ./build ./dist ./pack",
     "start": "npm run build && NODE_ENV=development ./node_modules/electron/dist/electron ./build/src/main.js",
-    "pack": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src --platform=linux --arch=x64 --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
+    "packlinux": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src --platform=linux --arch=x64 --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
     "distlinux": "npx electron-builder build --linux --x64",
     "packwin32": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src FerrumGateUI --platform=win32 --arch=x64 --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
     "distwin32": "node ./src_installer/wix.js",
@@ -53,13 +53,6 @@
           ]
         }
       ]
-    },
-    "msi": {
-      "oneClick": false,
-      "perMachine": false,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "include": "nsis.nsh"
     },
     "mac": {
       "target": [

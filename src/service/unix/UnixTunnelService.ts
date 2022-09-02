@@ -22,7 +22,7 @@ export class UnixTunnelService extends TunnelService {
 
         const sshFile = path.join(__dirname, 'ssh_ferrum');
         const sshConfigFile = path.join(__dirname, 'ssh_config');
-        const parameters = ['-N', '-F', `"${sshConfigFile}"`, "-w", "any", "-o", '"StrictHostKeyChecking no"', "-o", "UserKnownHostsFile /dev/null"]
+        const parameters = ['-N', '-F', `"${sshConfigFile}"`, "-w", "any", "-o", '"StrictHostKeyChecking no"', "-o", '"UserKnownHostsFile /dev/null"']
         const config = await this.config.getConfig();
         let port = '22';
         let host = 'localhost';
