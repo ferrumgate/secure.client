@@ -57,10 +57,14 @@ export class Util {
             childprocess.exec(cmd, (error, stdout, stderr) => {
                 if (error)
                     reject(error);
-                if (stderr)
-                    reject(stderr);
-                if (stdout)
-                    resolve(stdout);
+                else
+                    if (stderr)
+                        reject(stderr);
+                    else
+                        if (stdout)
+                            resolve(stdout);
+                        else
+                            resolve('')
             })
         })
     }
