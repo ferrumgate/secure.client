@@ -18,7 +18,7 @@
 # ssh_config(5) man page.
 
 Host *
-#    RequestTTY no
+#   RequestTTY no
 #   ForwardAgent no
 #   ForwardX11 no
 #   PasswordAuthentication yes
@@ -35,7 +35,7 @@ Host *
 #   IdentityFile ~/.ssh/id_ecdsa
 #   IdentityFile ~/.ssh/id_ed25519
 #   Port 22
-#    Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-cbc,3des-cbc,none
+#   Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-cbc,3des-cbc,none
 #   MACs hmac-md5,hmac-sha1,umac-64@openssh.com
 #   EscapeChar ~
 #   Tunnel no

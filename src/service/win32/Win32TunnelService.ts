@@ -150,6 +150,9 @@ export class Win32TunnelService extends TunnelService {
                         await this.pipeMain?.close();
                         await this.pipeChild?.close();
                         this.isDisconnected = true;
+                        if (this.isSSHTunnelStarting)
+                            clearTimeout(this.isSSHTunnelStarting);
+                        this.isSSHTunnelStarting = null;
                     }
                 }
             } catch (err: any) {

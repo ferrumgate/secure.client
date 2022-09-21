@@ -108,6 +108,9 @@ export class UnixTunnelService extends TunnelService {
                     this.notifyError('Ferrum disconnected');
                     this.events.emit('tunnelClosed');
                     this.logInfo(`tunnel closed`);
+                    if (this.isSSHTunnelStarting)
+                        clearTimeout(this.isSSHTunnelStarting);
+                    this.isSSHTunnelStarting = null;
                 }
             } catch (err: any) {
                 this.logError(err.message || err.toString());
