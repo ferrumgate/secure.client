@@ -24,7 +24,7 @@ export class TrayUI {
         const connect: MenuItem = {
             id: 'connect',
             label: 'Connect', type: 'normal', icon: path.join(assetsDirectory, 'img', 'connect.png'),
-            click: () => { this.events.emit('openTunnel') }
+            click: () => { this.events.emit('openSession') }
 
         } as unknown as MenuItem;
         const connecting: MenuItem = {
@@ -33,11 +33,17 @@ export class TrayUI {
             click: () => { }
 
         } as unknown as MenuItem;
+        const status: MenuItem = {
+            id: 'status',
+            label: 'Status', type: 'normal', icon: path.join(assetsDirectory, 'img', 'connect.png'),
+            click: () => { }
+
+        } as unknown as MenuItem;
         const disconnect: MenuItem = {
             id: 'disconnect',
             label: 'Disconnect', type: 'normal', visible: false,
             icon: path.join(assetsDirectory, 'img', 'disconnect.png'),
-            click: () => { this.events.emit('closeTunnel') }
+            click: () => { this.events.emit('closeSession') }
         } as unknown as MenuItem;
         const update: MenuItem = {
             id: 'update',
@@ -72,7 +78,7 @@ export class TrayUI {
         ]);
 
 
-        this.events.on('tunnelOpening', () => {
+        this.events.on('sessionOpening', () => {
 
             connect.visible = false;
             connecting.visible = true;
@@ -120,7 +126,7 @@ export class TrayUI {
         })
 
         tray.setToolTip('Zero trust access')
-        tray.setTitle('Ferrum Gate')
+        tray.setTitle('FerrumGate')
         tray.setContextMenu(contextMenu);
         tray.setIgnoreDoubleClickEvents(true);
 

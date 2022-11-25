@@ -55,7 +55,7 @@ describe('configUI ', async () => {
 
     it('set server host and save', async () => {
 
-        const version = await driver.findElement(webdriver.By.id('el-server'));
+        const version = await driver.findElement(webdriver.By.id('el-login'));
         const value = await version.getText();
         expect(value).to.equal('');
         await version.clear();

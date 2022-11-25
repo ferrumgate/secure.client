@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 
 /**
- * @summary logger service
+ * @summary logger service, used over eventemitter
  */
 export class LogService {
     protected _filename: string = '';

@@ -11,7 +11,7 @@ function notify(data: { type: string, msg: string }) {
 
 let config: { host: string } = { host: '' };
 function configInit() {
-    document.querySelector('#el-server')?.addEventListener('input', (e: any) => {
+    document.querySelector('#el-login')?.addEventListener('input', (e: any) => {
 
         config.host = e.target.value;
     })
@@ -40,7 +40,7 @@ function configInit() {
 
     windowx.electronAPI.on('replyConfig', (data: { host: string }) => {
         config = data;
-        const inputServer = document.querySelector('#el-server') as HTMLInputElement;
+        const inputServer = document.querySelector('#el-login') as HTMLInputElement;
         if (inputServer && config.host)
             inputServer.value = config.host;
     })

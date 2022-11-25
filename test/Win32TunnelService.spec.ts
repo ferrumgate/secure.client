@@ -3,13 +3,14 @@ import chai from 'chai';
 import { shell } from 'electron';
 import { ConfigService } from '../src/service/configService';
 import { EventService } from '../src/service/eventsService';
-import { Win32TunnelService } from '../src/service/win32/Win32TunnelService';
+import { Win32TunnelService } from '../src/service/win32/win32TunnelService';
 const expect = chai.expect;
 import chprocess from 'child_process'
 import { Util } from '../src/service/util';
 import child_process from 'child_process';
 import { until } from 'selenium-webdriver';
 import Axios from 'axios';
+import { ApiService } from '../src/service/apiService';
 
 describe('win32TunnelService ', async () => {
 
@@ -30,27 +31,22 @@ describe('win32TunnelService ', async () => {
                 // open(args[0]);
             }
         } as EventService;
-        const config = {
-            getConfig: () => {
-                return { host: '192.168.88.243:3333' }
-            }
-        } as unknown as ConfigService;
 
 
-        class Win32MockService extends Win32TunnelService {
-            public override async getTunnelAndServiceIpList(): Promise<{ assignedIp: string; serviceNetwork: string; }> {
+        class MockApiService extends ApiService {
+            public override async getTunnelAndServiceIpList(tunnelKey: string): Promise<{ assignedIp: string; serviceNetwork: string; }> {
                 let response = await Axios.get('http://192.168.88.10:8080/api/client/tunnel/ip', {
                     headers: {
-                        "TunnelKey": this.tunnelKey,
+                        "TunnelKey": tunnelKey,
                         "Accept": "application/json"
                     }
                 });
                 return response.data;
             }
-            public override async confirmTunnel(): Promise<{ assignedIp: string; serviceNetwork: string; }> {
+            public override async confirmTunnel(tunnelKey: string): Promise<{ assignedIp: string; serviceNetwork: string; }> {
                 let response = await Axios.post('http://192.168.88.10:8080/api/client/tunnel/confirm', {}, {
                     headers: {
-                        "TunnelKey": this.tunnelKey,
+                        "TunnelKey": tunnelKey,
                         "Accept": "application/json"
                     }
                 });
@@ -60,7 +56,8 @@ describe('win32TunnelService ', async () => {
 
 
 
-        const tunnel = new Win32MockService(events, config);
+
+        const tunnel = new Win32TunnelService({} as any, events, new MockApiService('localhost:9000', events));
         await tunnel.openTunnel();
         await Util.sleep(600000);
 
@@ -71,16 +68,18 @@ describe('win32TunnelService ', async () => {
         if (Util.getPlatform() != 'win32')
             return;
         //mock services
-        const configService = {
-            getConfig: () => { return { host: 'localhost:10000' } }
-        } as unknown as ConfigService;
+
 
         const eventService = {
             on: () => { }
         } as unknown as EventService;
 
+        const apiService = {
+
+        } as unknown as ApiService;
+
         // lets create
-        const win32 = new Win32TunnelService(eventService, configService);
+        const win32 = new Win32TunnelService({} as any, eventService, apiService);
 
         await win32.openTunnel(false);
         await child_process.exec(`sleep 10`)

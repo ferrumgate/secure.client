@@ -1,10 +1,12 @@
-import { TunnelService } from "../tunnelService";
+import { TunnelService } from "../worker/tunnelService";
 import path from 'path';
-const sudo = require('../../lib/sudoprompt')
 import child_process from 'child_process';
 import { EventService } from "../eventsService";
 import { Logger } from "selenium-webdriver/lib/logging"
-import { PipeClient } from "./PipeClient";
+import { PipeClient } from "./pipeClient";
+import { ApiService } from "../apiService";
+import { Network } from "../worker/models";
+import { clearIntervalAsync, setIntervalAsync } from "set-interval-async";
 
 /**
  * @summary windows tunnel controller
@@ -23,7 +25,23 @@ export class Win32TunnelService extends TunnelService {
     pipeMain: PipeClient | null = null;
     pipeChild: PipeClient | null = null;
 
+    port = '2223';
+    host = 'localhost';
+    net: Network | null = null;
 
+    onstderr = async (data: string) => { };
+    onstdout = async (data: string) => { };
+    constructor(net: Network, event: EventService, api: ApiService) {
+        super(event, api);
+        this.net = net;
+        if (net.sshHost) {
+            let parts = net.sshHost.split(':');
+            if (parts.length)
+                this.host = parts[0];
+            if (parts.length > 1)
+                this.port = parts[1];
+        }
+    }
     /**
      * @brief connects to named pipe server that allready opened by windows service
      */
@@ -42,23 +60,15 @@ export class Win32TunnelService extends TunnelService {
 
         const sshConfigFile = 'ssh_config';
         const parameters = ['-N', '-F', `${sshConfigFile}`, "-w", "any", "-o", '"StrictHostKeyChecking no"']
-        const config = await this.config.getConfig();
-        let port = '22';
-        let host = 'localhost';
-        if (config?.host) {
-            let parts = config.host.split(':');
-            if (parts.length)
-                host = parts[0];
-            if (parts.length > 1)
-                port = parts[1];
-        }
-        this.sshCommand = `${parameters.join(' ')} ferrum@${host} -p${port}`;
+
+        this.sshCommand = `${parameters.join(' ')} ferrum@${this.host} -p${this.port}`;
         if (this.pipeMain)
             await this.pipeMain.close();
         this.pipeMain = null;
-        if (this.iamAliveInterval)
-            clearInterval(this.iamAliveInterval);
-        this.iamAliveInterval = null;
+        if (this.iamAliveInterval) {
+            clearIntervalAsync(this.iamAliveInterval);
+            this.iamAliveInterval = null;
+        }
         /////
         this.pipeMain = new PipeClient();
 
@@ -83,7 +93,6 @@ export class Win32TunnelService extends TunnelService {
                             await this.pipeMain?.close();
                     }
 
-                    this.events.emit('tunnelOpening');
                     await this.pipeChild?.connect(`ferrumgate_${childpipename}`);
 
 
@@ -109,9 +118,9 @@ export class Win32TunnelService extends TunnelService {
                             this.tunnelKey = parts[1];
                         }
                         const url = new URL(link);
-                        this.host = url.hostname;
-                        this.protocol = url.protocol;
-                        this.port = url.port;
+                        /*  this.host = url.hostname;
+                         this.protocol = url.protocol;
+                         this.port = url.port; */
                     }
 
                 }
@@ -123,7 +132,7 @@ export class Win32TunnelService extends TunnelService {
                         //create tun interface name
                         const tun = items[1].replace('\n', '');
                         // get assigned ip and service network
-                        const iplist = await this.getTunnelAndServiceIpList();
+                        const iplist = await this.api.getTunnelAndServiceIpList(this.tunnelKey);
 
 
                         this.logInfo(`configuring tunnel: ${tun} with ${JSON.stringify(iplist)}`)
@@ -133,10 +142,9 @@ export class Win32TunnelService extends TunnelService {
                     }
                 }
                 if (data.includes("network ok")) {
-                    await this.confirmTunnel();
+                    await this.api.confirmTunnel(this.tunnelKey);
                     ////
-                    this.events.emit("tunnelOpened");
-                    this.notifyInfo(`Connected successfully`);
+                    this.events.emit("tunnelOpened", this.net?.id);
                     this.isTunnelCreated = true;
                     this.logInfo(`tunnel created and configured successfully`);
                 }
@@ -144,8 +152,7 @@ export class Win32TunnelService extends TunnelService {
                     if (!this.isDisconnected) {
                         this.sshPID = '';
                         this.isTunnelCreated = false;
-                        this.notifyError('Ferrum disconnected');
-                        this.events.emit('tunnelClosed');
+                        this.events.emit('tunnelClosed', this.net?.id);
                         this.logInfo(`tunnel closed`);
                         await this.pipeMain?.close();
                         await this.pipeChild?.close();
@@ -157,12 +164,12 @@ export class Win32TunnelService extends TunnelService {
                 }
             } catch (err: any) {
                 this.logError(err.message || err.toString());
-                this.notifyError(`Could not connect:${err.message}`);
+                this.events.emit('tunnelFailed', `Could not connect:${err.message}`);
                 await this.tryKillSSHFerrumProcess();
             }
         }
 
-        this.iamAliveInterval = setInterval(async () => {
+        this.iamAliveInterval = setIntervalAsync(async () => {
             await this.sendIAmAlive();
         }, 30000)
         this.isInitted = true;
@@ -178,7 +185,7 @@ export class Win32TunnelService extends TunnelService {
         try {
             if (this.isTunnelCreated) {
                 this.logInfo('sending I am alive');
-                await this.iAmAlive();
+                await this.api.iAmAlive(this.tunnelKey);
             }
         } catch (err: any) {
             this.logError(err.toString())
@@ -189,13 +196,13 @@ export class Win32TunnelService extends TunnelService {
         this.logInfo(`starting new tunnel ${this.sshCommand}`);
         await this.tryKillSSHFerrumProcess();
 
-        this.events.emit('tunnelOpening');
+
         await this.pipeMain?.write(`connect ${this.sshCommand}`);
         if (this.isSSHTunnelStarting)
             clearTimeout(this.isSSHTunnelStarting);
         this.isSSHTunnelStarting = setTimeout(async () => {
             if (!this.isTunnelCreated) {
-                this.notifyError('Connecting timeout');
+                this.events.emit('tunnelFailed', this.net?.id);
                 await this.tryKillSSHFerrumProcess();
             }
         }, 45000);

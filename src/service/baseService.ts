@@ -28,3 +28,45 @@ export class BaseService {
         this.events.emit('notify', { type: 'error', msg: msg });
     }
 }
+
+
+export class BaseHttpService extends BaseService {
+    /**
+    *
+    */
+    constructor(protected events: EventService) {
+        super(events);
+
+    }
+    protected prepareRequest(request: Electron.ClientRequest, resolve: any, reject: any) {
+
+        const buflist: Buffer[] = [];
+        request.on('response', (response) => {
+            if (response.statusCode == 200) {
+                response.on('data', (chunk) => {
+                    buflist.push(Buffer.from(chunk));
+                });
+                response.on('aborted', () => {
+                    reject(new Error('response aborted'))
+                })
+                response.on('error', () => {
+                    reject(new Error('response error'));
+                })
+                response.on('end', () => {
+                    resolve(Buffer.concat(buflist));
+                })
+            } else
+                reject(new Error(`http response status code: ${response.statusCode}`))
+
+
+        });
+
+        request.on('abort', () => {
+            reject(new Error('aborted'));
+        });
+        request.on('error', (error) => {
+            reject(error);
+        });
+
+    }
+}

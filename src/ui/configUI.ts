@@ -114,7 +114,7 @@ export class ConfigUI {
     height = 450 * (process.env.NODE_ENV == 'development' ? 2 : 1);
     createWindow() {
         const window = new BrowserWindow({
-            title: 'Ferrum Gate',
+            title: 'FerrumGate',
             width: this.width,
             height: this.height,
             icon: path.join(__dirname, '../assets/img/logo-transparent2.png'),

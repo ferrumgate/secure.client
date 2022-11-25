@@ -1,4 +1,4 @@
-import { TunnelService } from "../tunnelService";
+import { TunnelService } from "../worker/tunnelService";
 
 export class OsxTunnelService extends TunnelService {
 

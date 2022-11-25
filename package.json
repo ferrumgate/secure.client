@@ -117,6 +117,8 @@
   },
   "dependencies": {
     "electron-log": "^4.4.7",
-    "electron-unhandled": "^4.0.1"
+    "electron-unhandled": "^4.0.1",
+    "set-interval-async": "^3.0.2",
+    "yargs": "^17.6.2"
   }
 }
