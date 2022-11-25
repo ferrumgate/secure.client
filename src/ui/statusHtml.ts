@@ -31,13 +31,13 @@
         function getRow(name: string, css0: string, css1: string, css2: string, css3: string, why: string) {
             return `
             <li class="list-group-item">
-            <img class="img-circle media-object pull-left" src="../assets/img/network-32.png"
-                width="24" height="24">
+          
             <div class="ferrum-status-network-item ${escapeHtml(css0)}">
 
-
+            <img class="img-circle media-object pull-left" src="../assets/img/logo.png"
+            width="24" height="24">
                 <div class="ferrum-status-network-item-name">${escapeHtml(name)}</div>
-                <div>
+                <div class="ferrum-status-network-item-status">
                     <span style="padding-left: 10px;">${escapeHtml(why)}</span>
                     <span class="icon icon-check ${escapeHtml(css1)}" style="color:green ;font-size: 18px;"></span>
                     <span class="icon icon-cancel ${escapeHtml(css2)}"" style="color:red ;font-size: 18px;"></span>
@@ -109,7 +109,7 @@
 
         })
 
-
+        windowx.electronAPI.emit('networkStatusRequest');
         windowx.electronAPI.on('replyAppVersion', (data: any) => {
             const versionEl = document.querySelector('#el-version');
             if (versionEl)
@@ -117,6 +117,9 @@
         })
 
         windowx.electronAPI.emit('appVersion');
+        setInterval(() => {
+            windowx.electronAPI.emit('networkStatusRequest');
+        }, 5000)
 
     }
 

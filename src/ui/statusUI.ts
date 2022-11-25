@@ -26,6 +26,10 @@ export class StatusUI extends WindowUI {
         events.on('networkStatus', (data: any) => {
             this.window.webContents.send('networkStatus', data);
         })
+        ipcMain.on('networkStatusRequest', () => {
+            this.events.emit('networkStatusRequest');
+        })
+
 
     }
 

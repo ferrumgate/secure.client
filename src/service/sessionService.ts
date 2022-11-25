@@ -76,6 +76,9 @@ export class SessionService extends BaseHttpService {
             //await this.closeSession();
             this.ipcClient = null;
         })
+        this.events.on('networkStatusRequest', async () => {
+            await this.writeToWorker({ type: 'networkStatusRequest', data: {} })
+        })
 
 
     }
@@ -122,19 +125,20 @@ export class SessionService extends BaseHttpService {
                         this.events.emit('workerDisconnected');
                     })
                     this.ipcClient?.on('data', async (data: Buffer) => {
-
                         let bufs = [this.socketReadBuffer, data];
                         this.socketReadBuffer = Buffer.concat(bufs);
-                        if (this.socketReadBuffer.length <= 4)
-                            return;
-                        let len = this.socketReadBuffer.readInt32BE(0);
-                        if (this.socketReadBuffer.length < len + 4)// not enough body
-                            return;
-                        const msg = this.socketReadBuffer.slice(4, 4 + len).toString('utf-8');
-                        this.socketReadBuffer = this.socketReadBuffer.slice(4 + len);
-                        //this.logInfo(`data received on parent ${msg}`);
-                        await this.executeCommand(msg);
+                        while (true) {
 
+                            if (this.socketReadBuffer.length <= 4)
+                                return;
+                            let len = this.socketReadBuffer.readInt32BE(0);
+                            if (this.socketReadBuffer.length < len + 4)// not enough body
+                                return;
+                            const msg = this.socketReadBuffer.slice(4, 4 + len).toString('utf-8');
+                            this.socketReadBuffer = this.socketReadBuffer.slice(4 + len);
+                            //this.logInfo(`data received on parent ${msg}`);
+                            await this.executeCommand(msg);
+                        }
                     })
                 })
                 this.ipcServer.listen(this.pipeName);
@@ -244,8 +248,10 @@ export class SessionService extends BaseHttpService {
     }
     async continueToOpenSession() {
         try {
+
             if (!this.exchangeToken)
                 throw new Error("no exchange token");
+            this.events.emit('sessionOpening');
             const url = `${(await this.config.getConf())?.host}/login?exchange=${this.exchangeToken}`;
             this.logInfo(`open link ${url}`);
             this.events.emit('openLink', url);
@@ -265,7 +271,7 @@ export class SessionService extends BaseHttpService {
 
     async checkIfSessionIsReady() {
         try {
-            this.events.emit('sessionOpening');
+
             if (this.isTokenChecking) return;
             if (new Date().getTime() - this.tokenCheckStart > 60000) {//1 minute elapsed
                 if (this.tokenCheckInterval)
@@ -298,7 +304,7 @@ export class SessionService extends BaseHttpService {
         } catch (err: any) {
 
             this.logError(err.message || err.toString());
-            this.events.emit('sessionClosed');
+            //this.events.emit('sessionClosed');
         }
         this.isTokenChecking = false;
     }

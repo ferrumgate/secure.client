@@ -1,6 +1,8 @@
 import { app, BrowserWindow, ipcMain, Tray, screen, Menu, MenuItem } from 'electron';
 import path from 'path';
 import { EventService } from '../service/eventsService';
+import { ConfigUI } from './configUI';
+import { StatusUI } from './statusUI';
 
 
 /**
@@ -9,6 +11,8 @@ import { EventService } from '../service/eventsService';
 export class TrayUI {
     public tray: Tray;
     private latestFoundedRelease = null;
+    configUI: ConfigUI | null = null;
+    statusUI: StatusUI | null = null;
     constructor(private events: EventService) {
         this.tray = this.createTray();
 
@@ -17,7 +21,7 @@ export class TrayUI {
     private createTray() {
         const assetsDirectory = path.join(__dirname, '../', 'assets')
 
-        const tray = new Tray(path.join(assetsDirectory, 'img', 'logo-red-16.png'))
+        const tray = new Tray(path.join(assetsDirectory, 'img', 'logo-red.png'))
 
 
         //some menu items
@@ -51,14 +55,18 @@ export class TrayUI {
 
         const status: MenuItem = {
             id: 'status',
-            label: 'Status', type: 'normal', icon: path.join(assetsDirectory, 'img', 'connect.png'),
-            click: () => { this.events.emit("showStatusWindow"); }
+            label: 'Status', type: 'normal', icon: path.join(assetsDirectory, 'img', 'status.png'),
+            click: () => {
+                this.statusUI = new StatusUI(this.events, this.tray);
+                this.events.emit("showStatusWindow");
+            }
 
         } as unknown as MenuItem;
 
         const options = {
             label: 'Options', type: 'normal',
             icon: path.join(assetsDirectory, 'img', 'settings-14.png'), click: () => {
+                this.configUI = new ConfigUI(this.events, this.tray);
                 this.events.emit("showOptionsWindow");
             }
         } as unknown as MenuItem;
@@ -91,7 +99,7 @@ export class TrayUI {
                 connect, connecting, disconnect, status, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
-            tray.setImage(path.join(assetsDirectory, 'img', 'logo-yellow-16.png'));
+            tray.setImage(path.join(assetsDirectory, 'img', 'logo-yellow.png'));
 
         })
 
@@ -104,7 +112,7 @@ export class TrayUI {
                 connect, connecting, disconnect, status, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
-            tray.setImage(path.join(assetsDirectory, 'img', 'logo-green-16.png'));
+            tray.setImage(path.join(assetsDirectory, 'img', 'logo-green.png'));
         })
         this.events.on('sessionClosed', () => {
             connect.visible = true;
@@ -115,7 +123,7 @@ export class TrayUI {
                 connect, connecting, disconnect, status, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
-            tray.setImage(path.join(assetsDirectory, 'img', 'logo-red-16.png'));
+            tray.setImage(path.join(assetsDirectory, 'img', 'logo-red.png'));
         })
 
 

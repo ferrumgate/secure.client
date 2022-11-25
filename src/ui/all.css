@@ -100,7 +100,8 @@
 
 
 .ferrum-status-network-list {
-    font-size: 14px
+    font-size: 16px;
+    padding: 10px;
 }
 
 .ferrum-status-network-item {
@@ -114,7 +115,15 @@
 .ferrum-status-network-item-name {
 
     flex-grow: 1;
+    font-size: 14px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
 
+.ferrum-status-network-item-status {
+
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 

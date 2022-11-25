@@ -81,7 +81,7 @@ export class LoadingUI {
 
     closeWindow() {
         if (this.window && !this.window.isDestroyed()) {
-            this.window.close();
+            this.window.hide();
             this.events.emit('loadingWindowClosed');
         }
     }

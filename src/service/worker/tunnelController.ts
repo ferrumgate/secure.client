@@ -70,15 +70,18 @@ export class TunnelController {
 
                 let bufs = [this.socketReadBuffer, data];
                 this.socketReadBuffer = Buffer.concat(bufs);
-                if (this.socketReadBuffer.length <= 4)
-                    return;
-                let len = this.socketReadBuffer.readInt32BE(0);
-                if (this.socketReadBuffer.length < len + 4)// not enough body
-                    return;
-                const msg = this.socketReadBuffer.slice(4, 4 + len).toString('utf-8');
-                this.socketReadBuffer = this.socketReadBuffer.slice(4 + len);
-                //this.logInfo(`data received on worker`);
-                await this.executeCommand(msg);
+                while (true) {
+                    if (this.socketReadBuffer.length <= 4)
+                        return;
+                    let len = this.socketReadBuffer.readInt32BE(0);
+                    if (this.socketReadBuffer.length < (len + 4))// not enough body
+                        return;
+                    const msg = this.socketReadBuffer.slice(4, 4 + len).toString('utf-8');
+                    this.socketReadBuffer = this.socketReadBuffer.slice(4 + len);
+                    //this.logInfo(`data received on worker`);
+                    await this.executeCommand(msg);
+                }
+
             })
         }
     }
@@ -140,7 +143,7 @@ export class TunnelController {
             this.lastErrorOccured = 0;
             if ((new Date().getTime() - this.networksLastCheck) > 30000) {
                 this.networksLastCheck = new Date().getTime();
-                await this.syncNetworkStatus();
+
             }
 
 
@@ -160,7 +163,7 @@ export class TunnelController {
             if (!network.tunnel.process.isWorking) {
                 this.logError(`no tunnel created for ${network.name}`);
                 await network.tunnel.process.openTunnel();
-                await this.syncNetworkStatus();
+
             }
             network.tunnel.isWorking = network.tunnel.process.isWorking;
             network.tunnel.lastError = network.tunnel.process.lastError;
@@ -169,7 +172,7 @@ export class TunnelController {
 
             network.tunnel.tryCount++;
             network.tunnel.lastError = err.message || err.toString();
-            await this.syncNetworkStatus();
+
 
         } finally {
             network.tunnel.lastTryTime = new Date().getTime();
@@ -213,6 +216,11 @@ export class TunnelController {
             switch (cmd.type) {
                 case 'tokenResponse':
                     await this.executeTokenResponse(cmd.data);
+                    break;
+                case 'networkStatusRequest':
+                    await this.executeNetworkInfo(cmd.data);
+                    break;
+
                 default:
                     break;
             }
@@ -226,18 +234,23 @@ export class TunnelController {
         this.accessToken = data.accessToken;
         this.refreshToken = data.refreshToken;
     }
+    async executeNetworkInfo(data: {}) {
+
+        await this.syncNetworkStatus()
+    }
 
 
     async writeToParent(msg: Cmd) {
-        if (this.ipcClient) {
-            let data = Buffer.from(JSON.stringify(msg), 'utf-8');
-            let tmp = Buffer.from([0, 0, 0, 0]).slice(0, 4);
-            let buffers = [tmp, data];
-            let enhancedData = Buffer.concat(buffers)
-            let len = data.length;
-            enhancedData.writeInt32BE(len);//write how many bytes
-            this.ipcClient.write(enhancedData);
-        }
+
+        let data = Buffer.from(JSON.stringify(msg), 'utf-8');
+        let tmp = Buffer.from([0, 0, 0, 0]).slice(0, 4);
+        let buffers = [tmp, data];
+        let enhancedData = Buffer.concat(buffers)
+        let len = data.length;
+        enhancedData.writeInt32BE(len);//write how many bytes
+        this.ipcClient?.write(enhancedData);
+
+
     }
 
 

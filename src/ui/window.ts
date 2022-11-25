@@ -129,6 +129,7 @@ export class WindowUI {
             if (!window.webContents.isDevToolsOpened()) {
                 window.hide()
             }
+
         })
         return window;
     }
@@ -154,6 +155,7 @@ export class WindowUI {
         this.window.show()
         this.window.focus()
     }
+
 
     closeWindow() {
         this.window.close();

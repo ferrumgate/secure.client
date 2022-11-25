@@ -53,15 +53,17 @@ export class PipeClient {
         this.socket.on('data', (data: Buffer) => {
             let bufs = [this.buffer, data];
             this.buffer = Buffer.concat(bufs);
-            if (this.buffer.length <= 4)
-                return;
-            let len = this.buffer.readInt32BE(0);
-            if (this.buffer.length < len + 4)// not enough body
-                return;
-            const msglist = this.buffer.slice(4, 4 + len).toString('utf-8');
-            this.buffer = this.buffer.slice(4 + len);
+            while (true) {
+                if (this.buffer.length <= 4)
+                    return;
+                let len = this.buffer.readInt32BE(0);
+                if (this.buffer.length < len + 4)// not enough body
+                    return;
+                const msglist = this.buffer.slice(4, 4 + len).toString('utf-8');
+                this.buffer = this.buffer.slice(4 + len);
 
-            this.onStdout(msglist);
+                this.onStdout(msglist);
+            }
 
         });
 

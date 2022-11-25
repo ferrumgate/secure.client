@@ -24,6 +24,7 @@ export class ConfigUI extends WindowUI {
             this.toggleWindow();
         })
 
+
     }
 
 }

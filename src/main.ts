@@ -22,8 +22,8 @@ import { StatusUI } from './ui/statusUI';
 
 let events: EventService;
 let tray: TrayUI;
-let configUI: ConfigUI;
-let statusUI: StatusUI;
+
+
 let config: ConfigService;
 let log: LogService;
 let api: ApiService;
@@ -105,8 +105,6 @@ export async function init() {
     })
 
 
-
-
     events.on('saveConfig', async (data: Config) => {
         await config.saveConfig(data);
         new Notification({ title: 'FerrumGate', body: 'Config saved' }).show();
@@ -126,8 +124,7 @@ export async function init() {
 
     tray = new TrayUI(events);
 
-    configUI = new ConfigUI(events, tray.tray);
-    statusUI = new StatusUI(events, tray.tray);
+
     loadingUI = new LoadingUI(events);
     loadingUI.showWindow();//show loading window for user interaction
     //when loading window closed, open config window if app not configured
@@ -135,6 +132,7 @@ export async function init() {
         try {
             const conf = await config.getConfig();
             if (!conf?.host) {
+                const ui = new ConfigUI(events, tray.tray);
                 events.emit('showOptionsWindow', 'centerScreen');
             }
         } catch (err: any) {
