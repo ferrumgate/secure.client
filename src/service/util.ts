@@ -17,7 +17,7 @@ export class Util {
         var filePath = path.join(__dirname, '../', 'package.json');
         if (!fs.existsSync(filePath))
             filePath = path.join(__dirname, '../../', 'package.json');
-        console.log(filePath);
+
         const packageFile = JSON.parse((await fspromise.readFile(filePath)).toString()) as any;
         return packageFile.version;
     }

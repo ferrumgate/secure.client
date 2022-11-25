@@ -16,22 +16,22 @@ export class EventService extends EventEmitter {
      */
 
     protected knownEvents = ['openSession', 'closeSession', 'sessionOpening', 'sessionOpened', 'sessionClosed', 'tunnelFailed', 'tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow',
-        'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow',
+        'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow', 'showStatusWindow', 'closeStatusWindow',
         "openLink", "notify", "appVersion", "config", "configChanged", "saveConfig", "log", "throwError", 'release',
-        'loadingWindowClosed', 'openTunnel', 'closeTunnel', 'sudoIsReady', 'sudoFailed', 'workerConnected', 'workerDisconnected'];
+        'loadingWindowClosed', 'openTunnel', 'closeTunnel', 'sudoIsReady', 'sudoFailed', 'workerConnected', 'workerDisconnected', 'networkStatus'];
     /**
      *
      */
     constructor(headless = false) {
         super();
         // resend all render events to listeners, they willnot reply
-        if (!headless)
-            this.knownEvents.forEach(x => {
-                ipcMain.on(x, (event: any, ...args: any[]) => {
-                    super.emit(x, ...args);
-                })
-
-            })
+        /*  if (!headless)
+             this.knownEvents.forEach(x => {
+                 ipcMain.on(x, (event: any, ...args: any[]) => {
+                     super.emit(x, ...args);
+                 })
+ 
+             }) */
     }
     /**
      * 

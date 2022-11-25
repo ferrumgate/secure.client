@@ -1,4 +1,5 @@
-import { app, BrowserWindow, ipcMain, Tray, screen, Menu, shell, Notification } from 'electron';
+import { app, BrowserWindow, ipcMain, Tray, screen, Menu, shell, Notification, ipcRenderer } from 'electron';
+
 import path from 'path';
 import { EventService } from './service/eventsService';
 import { TrayUI } from './ui/trayUI';
@@ -13,6 +14,8 @@ import { LoadingUI } from './ui/loadingUI';
 import { ApiService } from './service/apiService';
 import { SessionService } from './service/sessionService';
 import { SudoService } from './service/sudoService';
+import { WindowUI } from './ui/window';
+import { StatusUI } from './ui/statusUI';
 
 
 
@@ -20,6 +23,7 @@ import { SudoService } from './service/sudoService';
 let events: EventService;
 let tray: TrayUI;
 let configUI: ConfigUI;
+let statusUI: StatusUI;
 let config: ConfigService;
 let log: LogService;
 let api: ApiService;
@@ -96,6 +100,12 @@ export async function init() {
     ipcMain.on('config', async (event: Electron.IpcMainEvent, ...args: any[]) => {
         event.reply('replyConfig', await config.getConfig() || {});
     })
+    ipcMain.on('saveConfig', async (event: Electron.IpcMainEvent, ...args: any[]) => {
+        events.emit('saveConfig', ...args);
+    })
+
+
+
 
     events.on('saveConfig', async (data: Config) => {
         await config.saveConfig(data);
@@ -117,6 +127,7 @@ export async function init() {
     tray = new TrayUI(events);
 
     configUI = new ConfigUI(events, tray.tray);
+    statusUI = new StatusUI(events, tray.tray);
     loadingUI = new LoadingUI(events);
     loadingUI.showWindow();//show loading window for user interaction
     //when loading window closed, open config window if app not configured

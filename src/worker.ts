@@ -2,30 +2,24 @@ import { app } from 'electron';
 import { EventService } from './service/eventsService';
 import { Util } from './service/util';
 import { ApiService } from './service/apiService';
-import { BaseWorker } from './service/worker/baseWorker';
+import { TunnelController } from './service/worker/tunnelController';
 import yargs from 'yargs';
+import { UnixTunnelService } from './service/unix/unixTunnelService';
 
-
-
-
-
-
-
-
-let events: EventService;
-let api: ApiService;
-let worker: BaseWorker;
-// Don't show the app in the doc
 
 
 export async function init(url: string, pipename: string) {
+    let events: EventService;
+    let api: ApiService;
+    let controller: TunnelController;
 
     events = new EventService(true);
     api = new ApiService(url, events, true);
 
-    worker = new BaseWorker(pipename, events, api);
-    worker.logInfo('starting worker');
-    await worker.start();
+    controller = new TunnelController(pipename, events, api);
+    controller.logInfo('starting worker');
+    await controller.start();
+
 }
 
 async function main() {

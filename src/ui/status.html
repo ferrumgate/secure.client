@@ -6,7 +6,7 @@
     <title>FerrumGate</title>
     <link rel="stylesheet" href="../assets/css/photon.css" media="screen" charset="utf-8">
     <link rel="stylesheet" href="./all.css" media="screen" charset="utf-8">
-    <script charset="utf-8" src="./configHtml.js"></script>
+    <script charset="utf-8" src="./statusHtml.js"></script>
 
 </head>
 
@@ -28,26 +28,42 @@
             <div class="tab-group">
                 <div class="tab-item active">
                     <div class="tab-content">
-                        General
+                        Network
                     </div>
                 </div>
 
             </div>
             <div id="tab-content-general" class="tab-content">
                 <div class="tab-content">
-                    <form>
-                        <div class="form-group ferrum-form-group">
-                            <label>Login</label>
-                            <input type="text" id="el-login" class="form-control"
-                                placeholder="https://secure.ferrumgate.com">
-                            <div class="ferrum-error ferrum-display-none"
-                                style="padding-top: 10px; padding-left: 10px;">
-                                <span class="icon icon-alert">
-                                    <span id="server-error">error</span>
-                                </span>
-                            </div>
-                        </div>
-                    </form>
+
+                    <div class="form-group ferrum-status">
+                        <ul class="list-group" class="ferrum-status-network-list " id="el-ferrum-status-net-list">
+
+                            <li class="list-group-item">
+                                <img class="img-circle media-object pull-left" src="../assets/img/network-32.png"
+                                    width="24" height="24">
+                                <div class="ferrum-status-network-item">
+
+
+                                    <div class="ferrum-status-network-item-name">adfafd</div>
+                                    <div>
+                                        <span style="padding-left: 10px;">why</span>
+                                        <span class="icon icon-check" style="color:green ;font-size: 18px;"></span>
+                                        <span class="icon icon-cancel" style="color:red ;font-size: 18px;"></span>
+                                        <span class="icon icon-help" style="color:red ;font-size: 14px;"></span>
+
+                                    </div>
+
+
+
+                                </div>
+                            </li>
+
+
+                        </ul>
+
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -60,25 +76,6 @@
                 </div>
                 <span id="el-version">
                 </span>
-            </div>
-
-            <div class="toolbar-actions pull-right">
-                <div class="toolbar-actions el-test-button" onclick="testError()">
-                    <button class="btn btn-primary pull-right">
-                        Test Error
-                    </button>
-                </div>
-                <div class="toolbar-actions el-test-button" onclick="testError2()">
-                    <button class="btn btn-primary pull-right">
-                        Test Error2
-                    </button>
-                </div>
-                <div class="toolbar-actions">
-                    <button class="btn btn-primary pull-right" id="el-save-config">
-                        Save
-                    </button>
-                </div>
-
             </div>
 
         </footer>

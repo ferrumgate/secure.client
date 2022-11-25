@@ -97,3 +97,36 @@
     display: none;
 
 }
+
+
+.ferrum-status-network-list {
+    font-size: 14px
+}
+
+.ferrum-status-network-item {
+    display: flex;
+    flex-flow: row;
+    flex-grow: 1;
+    flex-shrink: 1;
+    align-items: center;
+}
+
+.ferrum-status-network-item-name {
+
+    flex-grow: 1;
+
+}
+
+
+
+.ferrum-status-network-list .ok {
+    background-color: #c5dfc5
+}
+
+.ferrum-status-network-list .failed {
+    background-color: #f9afaf;
+}
+
+.ferrum-status-network-list .skipped {
+    background-color: #f9f0af;
+}

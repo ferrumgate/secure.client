@@ -15,6 +15,7 @@ export class UnixTunnelService extends TunnelService {
 
     isRootShellWorking = false;
     sshCommand = '';
+    sshCommands: string[] = [];
     isInitted = false;
     sshPID = '';
     isTunnelCreated = false;
@@ -48,6 +49,13 @@ export class UnixTunnelService extends TunnelService {
         const parameters = ['-N', '-F', `"${sshConfigFile}"`, "-w", "any", "-o", '"StrictHostKeyChecking no"', "-o", '"UserKnownHostsFile /dev/null"']
 
         this.sshCommand = `"${sshFile}" ${parameters.join(' ')} ferrum@${this.host} -p${this.port}`;
+        this.sshCommands = [];
+        this.sshCommands.push(`${sshFile}`);
+        this.sshCommands.push(...['-N', '-F', `${sshConfigFile}`, "-w", "any", "-o", 'StrictHostKeyChecking no', "-o", 'UserKnownHostsFile /dev/null']);
+        this.sshCommands.push(`ferrum@${this.host}`);
+        this.sshCommands.push(`-p${this.port}`);
+
+
         if (this.isInitted) return;
         /////
 
@@ -83,7 +91,6 @@ export class UnixTunnelService extends TunnelService {
                             await this.api.createTunnel(this.accessToken, this.tunnelKey);
                         }
                     }
-
                 }
                 if (data.includes('ferrum_tunnel_opened:')) {
                     if (!this.sshPID)
@@ -93,6 +100,7 @@ export class UnixTunnelService extends TunnelService {
                         //create tun interface name
                         const tun = items[1].replace('\n', '');
                         // get assigned ip and service network
+                        this.logInfo(`getting tunnel ip list ${tun}`);
                         const iplist = await this.api.getTunnelAndServiceIpList(this.tunnelKey);
 
 
@@ -104,6 +112,7 @@ export class UnixTunnelService extends TunnelService {
 
 
                         //await this.executeOnRootShell(`wait ${this.sshPID} || echo "ferrum_exit:"`)
+                        this.logInfo(`confirming tunnel ${tun}`);
                         await this.api.confirmTunnel(this.tunnelKey);
                         ////
                         this.events.emit("tunnelOpened", this.net?.id);
@@ -111,7 +120,12 @@ export class UnixTunnelService extends TunnelService {
                         this.isTunnelCreated = true;
                         this.isWorking = true;
                         this.logInfo(`tunnel ${tun} created and configured successfully`);
+
+                        if (this.isSSHTunnelStarting)
+                            clearTimeout(this.isSSHTunnelStarting);
+                        this.isSSHTunnelStarting = null;
                         await this.startIAmAlive();
+
                     }
                 }
                 if (data.includes('ferrum_exit:') || data.includes('Terminated') || data.includes('No route to host') || data.includes('Connection refused')) {
@@ -123,11 +137,13 @@ export class UnixTunnelService extends TunnelService {
                     if (this.isSSHTunnelStarting)
                         clearTimeout(this.isSSHTunnelStarting);
                     this.isSSHTunnelStarting = null;
+                    this.lastError = data;
 
 
                 }
             } catch (err: any) {
                 this.logError(err.message || err.toString());
+                this.lastError = err.message;
                 this.events.emit(`tunnelFailed`, `Could not connect:${err.message}`);
                 await this.tryKillProcess();
             }
@@ -141,6 +157,7 @@ export class UnixTunnelService extends TunnelService {
         if (this.isSSHTunnelStarting) return;
         await this.init();
         await this.startSSHFerrum();
+
     }
     public async startIAmAlive() {
         if (this.iamAliveInterval)
@@ -210,8 +227,21 @@ export class UnixTunnelService extends TunnelService {
      */
     public async startProcess() {
 
-        const child = child_process.spawn(`bash -c '${this.sshCommand}'`, { shell: true });
-        child.stdout.on('data', (data: Buffer) => {
+        /* const child = child_process.exec(`${this.sshCommand}`, (err, stdout, stderr) => {
+            if (stdout)
+                this.onstdout(stdout.toString());
+            if (stderr) {
+                this.onstderr(stderr.toString());
+                this.onstdout(stderr.toString());
+            }
+
+        }); */
+        this.lastError = '';
+        this.logInfo("executing process command");
+        //const child = child_process.spawn(`${this.sshCommand}`)
+        const child = child_process.spawn(this.sshCommands[0], this.sshCommands.slice(1))
+        //const child = child_process.spawn(`sleep`, ['60'])
+        child.stdout?.on('data', (data: Buffer) => {
             this.onstdout(data.toString());
         });
         child.stderr?.on('data', (data: Buffer) => {
@@ -241,13 +271,16 @@ export class UnixTunnelService extends TunnelService {
                 clearTimeout(this.isSSHTunnelStarting);
             this.isSSHTunnelStarting = null;
             await this.stopIAmAlive();
-            this.logInfo(`killing process tunnel`)
+            if (this.childProcess)
+                this.logInfo(`killing process tunnel`)
 
             this.childProcess?.kill();
             if (this.sshPID) {
+                this.logInfo(`forcing to kill ${this.sshPID}`);
                 await this.execOnShell('kill -9 ' + this.sshPID);
                 this.sshPID = '';
             }
+            this.isWorking = false;
 
         } catch (err: any) {
             this.logError(err.message || err.toString());

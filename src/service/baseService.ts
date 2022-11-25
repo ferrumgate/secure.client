@@ -10,15 +10,15 @@ export class BaseService {
     }
 
     logInfo(msg: string) {
-        console.log(msg);
+
         this.events.emit('log', 'info', msg);
     }
     logError(msg: string) {
-        console.log(msg);
+
         this.events.emit('log', 'error', msg);
     }
     logWarn(msg: string) {
-        console.log(msg);
+
         this.events.emit('log', 'warn', msg);
     }
     notifyInfo(msg: string) {

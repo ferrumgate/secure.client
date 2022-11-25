@@ -15,7 +15,7 @@ import path from 'path';
 
 import net from 'net';
 import { Logger } from 'selenium-webdriver/lib/logging';
-import { Cmd } from './worker/models';
+import { Cmd, Network } from './worker/models';
 import { clearIntervalAsync, setIntervalAsync } from 'set-interval-async';
 import { app } from 'electron';
 
@@ -68,10 +68,12 @@ export class SessionService extends BaseHttpService {
 
         })
         this.events.on('workerConnected', async () => {
+            this.logInfo('worker connected');
             await this.continueToOpenSession();
         })
         this.events.on('workerDisconnected', async () => {
-            await this.closeSession();
+            this.logInfo('worker disconnected');
+            //await this.closeSession();
             this.ipcClient = null;
         })
 
@@ -160,12 +162,19 @@ export class SessionService extends BaseHttpService {
                     break;
                 case 'tokenRequest':
                     await this.executeTokenRequest();
+                    break;
                 case 'tunnelFailed':
                     await this.executeTunnelFailed(cmd.data);
+                    break;
                 case 'tunnelOpened':
                     await this.executeTunnelFailed(cmd.data);
+                    break;
                 case 'tunnelClosed':
                     await this.executeTunnelFailed(cmd.data);
+                    break;
+                case 'networkStatus':
+                    await this.executeNetworkStatus(cmd.data);
+                    break;
                 default:
                     break;
             }
@@ -176,7 +185,7 @@ export class SessionService extends BaseHttpService {
     }
     async executeLogRequest(data: { type: string, msg: string }) {
         if (!data || !data.type || !data.msg) return;
-        console.log(`tunnel log: ${data.msg}`);
+        //console.log(`tunnel log: ${data.msg}`);
         if (data.type == 'info')
             this.logInfo(data.msg);
         else
@@ -201,6 +210,10 @@ export class SessionService extends BaseHttpService {
     }
     async executeTunnelClosed(data: { msg: string }) {
         this.events.emit('tunnelClosed', data.msg);
+    }
+
+    async executeNetworkStatus(data: Network[]) {
+        this.events.emit('networkStatus', data);
     }
 
     async startSession() {

@@ -1,7 +1,7 @@
 
 import chai from 'chai';
 import { contextBridge } from 'electron';
-import * as preload from '../src/ui/configPreload';
+import * as preload from '../src/ui/windowPreload';
 const expect = chai.expect;
 
 

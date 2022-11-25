@@ -1,7 +1,7 @@
 import { TunnelService } from "./tunnelService";
 
 export interface Cmd {
-    type: 'logRequest' | 'tokenRequest' | 'tokenResponse' | 'tunnelFailed' | 'tunnelClosed' | 'tunnelOpened'
+    type: 'logRequest' | 'tokenRequest' | 'tokenResponse' | 'tunnelFailed' | 'tunnelClosed' | 'tunnelOpened' | 'networkStatus';
     data: any;
 }
 
@@ -16,5 +16,7 @@ export interface Network {
         lastTryTime: number;
         tryCount: number;
         process?: TunnelService;
+        lastError?: string;
+        isWorking: boolean;
     }
 }

@@ -23,7 +23,6 @@ export class LogService {
         }
     }
     write(type: string, msg: string) {
-        //console.log(`${type} ${msg}`);
         if (!msg) return;
         switch (type) {
             case 'info':

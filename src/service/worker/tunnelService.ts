@@ -16,6 +16,7 @@ export class TunnelService {
 
     // we are using for test 
     public processLastOutput = '';
+    public lastError = '';
     /**
      *
      */
@@ -25,15 +26,15 @@ export class TunnelService {
     }
 
     logInfo(msg: string) {
-        console.log(msg);
+
         this.events.emit('log', 'info', msg);
     }
     logError(msg: string) {
-        console.log(msg);
+
         this.events.emit('log', 'error', msg);
     }
     logWarn(msg: string) {
-        console.log(msg);
+
         this.events.emit('log', 'warn', msg);
     }
 

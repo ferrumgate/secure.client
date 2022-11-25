@@ -5,8 +5,10 @@ import { Cmd, Network } from "./models";
 import { setIntervalAsync, clearIntervalAsync } from 'set-interval-async';
 import { UnixTunnelService } from "../unix/unixTunnelService";
 import child_process from 'child_process';
+import { write } from "original-fs";
 
-export class BaseWorker {
+
+export class TunnelController {
 
 
     ipcClient: net.Socket | null = null;
@@ -17,6 +19,7 @@ export class BaseWorker {
     networks: Network[] = [];
     networksLastCheck = 0;
     lastErrorOccured = 0;
+    lastMessageToParent = 0;
     checkSystemIsWorking = false;
 
 
@@ -106,7 +109,6 @@ export class BaseWorker {
     async checkSystem() {
 
         try {
-
             if (this.lastErrorOccured && (new Date().getTime() - this.lastErrorOccured) < 15000)
                 return;
             if (!this.accessToken) {
@@ -127,7 +129,7 @@ export class BaseWorker {
             for (const network of this.networks) {
                 if (network.action == 'allow') {
                     if (!network.tunnel) {
-                        network.tunnel = { tryCount: 0, lastTryTime: 0 }
+                        network.tunnel = { tryCount: 0, lastTryTime: 0, isWorking: false }
                     }
                     if ((new Date().getTime() - network.tunnel.lastTryTime) < 15000) {
                         continue;
@@ -136,31 +138,59 @@ export class BaseWorker {
                 }
             }
             this.lastErrorOccured = 0;
+            if ((new Date().getTime() - this.networksLastCheck) > 30000) {
+                this.networksLastCheck = new Date().getTime();
+                await this.syncNetworkStatus();
+            }
 
 
         } catch (err: any) {
             this.lastErrorOccured = new Date().getTime();
             this.logError(err.message || err.toString())
         }
+
     }
     async checkTunnel(network: Network): Promise<{} | undefined> {
+
         try {
             network.tunnel.lastTryTime = new Date().getTime();
             if (!network.tunnel.process) {
                 network.tunnel.process = new UnixTunnelService(network, this.accessToken, this.event, this.api);
             }
             if (!network.tunnel.process.isWorking) {
+                this.logError(`no tunnel created for ${network.name}`);
                 await network.tunnel.process.openTunnel();
+                await this.syncNetworkStatus();
             }
-
-            this.logError(`no tunnel created for ${network.name}`);
+            network.tunnel.isWorking = network.tunnel.process.isWorking;
+            network.tunnel.lastError = network.tunnel.process.lastError;
             return undefined;
-        } catch (err) {
+        } catch (err: any) {
 
             network.tunnel.tryCount++;
+            network.tunnel.lastError = err.message || err.toString();
+            await this.syncNetworkStatus();
 
         } finally {
             network.tunnel.lastTryTime = new Date().getTime();
+
+        }
+    }
+
+    async syncNetworkStatus() {
+        try {
+            //if ((new Date().getTime() - this.lastMessageToParent) < 30000) return;
+            this.logInfo("sync network status " + new Date().toISOString());
+            this.lastMessageToParent = new Date().getTime();
+            function replacer(this: any, key: string, value: any) {
+                if (key == "process") return undefined;
+                else return value;
+            }
+            const cloned = JSON.parse(JSON.stringify(this.networks, replacer));
+            await this.writeToParent({ type: 'networkStatus', data: cloned })
+
+        } catch (err: any) {
+            this.logError(err.message || err.toString())
         }
     }
 
@@ -199,23 +229,25 @@ export class BaseWorker {
 
 
     async writeToParent(msg: Cmd) {
-        let data = Buffer.from(JSON.stringify(msg), 'utf-8');
-        let tmp = Buffer.from([0, 0, 0, 0]).slice(0, 4);
-        let buffers = [tmp, data];
-        let enhancedData = Buffer.concat(buffers)
-        let len = data.length;
-        enhancedData.writeInt32BE(len);//write how many bytes
-        this.ipcClient?.write(enhancedData);
+        if (this.ipcClient) {
+            let data = Buffer.from(JSON.stringify(msg), 'utf-8');
+            let tmp = Buffer.from([0, 0, 0, 0]).slice(0, 4);
+            let buffers = [tmp, data];
+            let enhancedData = Buffer.concat(buffers)
+            let len = data.length;
+            enhancedData.writeInt32BE(len);//write how many bytes
+            this.ipcClient.write(enhancedData);
+        }
     }
 
 
     async logError(msg: string) {
-        console.log(msg);
+        //console.log(msg);
         await this.writeToParent({ type: 'logRequest', data: { type: 'error', msg: msg } })
 
     }
     async logInfo(msg: string) {
-        console.log(msg);
+        //console.log(msg);
         await this.writeToParent({ type: 'logRequest', data: { type: 'info', msg: msg } })
     }
 
