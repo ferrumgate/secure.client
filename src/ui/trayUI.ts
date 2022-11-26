@@ -11,10 +11,9 @@ import { StatusUI } from './statusUI';
 export class TrayUI {
     public tray: Tray;
     private latestFoundedRelease = null;
-    configUI: ConfigUI | null = null;
-    statusUI: StatusUI | null = null;
     constructor(private events: EventService) {
         this.tray = this.createTray();
+
 
     }
 
@@ -22,7 +21,6 @@ export class TrayUI {
         const assetsDirectory = path.join(__dirname, '../', 'assets')
 
         const tray = new Tray(path.join(assetsDirectory, 'img', 'logo-red.png'))
-
 
         //some menu items
         const connect: MenuItem = {
@@ -57,7 +55,6 @@ export class TrayUI {
             id: 'status',
             label: 'Status', type: 'normal', icon: path.join(assetsDirectory, 'img', 'status.png'),
             click: () => {
-                this.statusUI = new StatusUI(this.events, this.tray);
                 this.events.emit("showStatusWindow");
             }
 
@@ -66,7 +63,6 @@ export class TrayUI {
         const options = {
             label: 'Options', type: 'normal',
             icon: path.join(assetsDirectory, 'img', 'settings-14.png'), click: () => {
-                this.configUI = new ConfigUI(this.events, this.tray);
                 this.events.emit("showOptionsWindow");
             }
         } as unknown as MenuItem;

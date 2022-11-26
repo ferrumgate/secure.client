@@ -20,7 +20,7 @@ export class WindowUI {
         this.window = this.createWindow(html);
         events.on("closeWindow", () => {
             this.closeWindow();
-        })
+        });
 
 
 
@@ -159,5 +159,6 @@ export class WindowUI {
 
     closeWindow() {
         this.window.close();
+        this.events.off('closeWindow', this.closeWindow);
     }
 }

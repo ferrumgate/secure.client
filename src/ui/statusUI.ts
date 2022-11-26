@@ -22,7 +22,8 @@ export class StatusUI extends WindowUI {
         })
         events.on("closeStatusWindow", () => {
             this.toggleWindow();
-        })
+        });
+
         events.on('networkStatus', (data: any) => {
             this.window.webContents.send('networkStatus', data);
         })
@@ -32,5 +33,6 @@ export class StatusUI extends WindowUI {
 
 
     }
+
 
 }

@@ -125,6 +125,7 @@ export class UnixTunnelService extends TunnelService {
                             clearTimeout(this.isSSHTunnelStarting);
                         this.isSSHTunnelStarting = null;
                         await this.startIAmAlive();
+                        this.lastError = '';
 
                     }
                 }
@@ -236,7 +237,7 @@ export class UnixTunnelService extends TunnelService {
             }
 
         }); */
-        this.lastError = '';
+        //this.lastError = '';
         this.logInfo("executing process command");
         //const child = child_process.spawn(`${this.sshCommand}`)
         const child = child_process.spawn(this.sshCommands[0], this.sshCommands.slice(1))

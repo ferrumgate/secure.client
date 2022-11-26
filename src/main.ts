@@ -30,6 +30,8 @@ let api: ApiService;
 let session: SessionService;
 let sudo: SudoService;
 let loadingUI: LoadingUI;
+let configUI: ConfigUI;
+let statusUI: StatusUI;
 
 const assetsDirectory = path.join(__dirname, 'assets')
 
@@ -80,6 +82,7 @@ export async function init() {
         events.emit("log", 'info', 'closing app');
         events.emit("closeSession");
         events.emit("closeWindow");
+        app.exit(0);
 
     });
 
@@ -123,7 +126,8 @@ export async function init() {
 
 
     tray = new TrayUI(events);
-
+    configUI = new ConfigUI(events, tray.tray);
+    statusUI = new StatusUI(events, tray.tray);
 
     loadingUI = new LoadingUI(events);
     loadingUI.showWindow();//show loading window for user interaction
@@ -132,7 +136,7 @@ export async function init() {
         try {
             const conf = await config.getConfig();
             if (!conf?.host) {
-                const ui = new ConfigUI(events, tray.tray);
+
                 events.emit('showOptionsWindow', 'centerScreen');
             }
         } catch (err: any) {

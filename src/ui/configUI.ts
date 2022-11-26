@@ -22,7 +22,7 @@ export class ConfigUI extends WindowUI {
         })
         events.on("closeOptionsWindow", () => {
             this.toggleWindow();
-        })
+        });
 
 
     }

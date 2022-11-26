@@ -76,6 +76,16 @@
         alert(msg);//or any message
         return false;
     }
+
+    document.addEventListener('visibilitychange', (ev: any) => {
+
+        if (document.visibilityState === 'visible') {
+            windowx.electronAPI.emit('config');
+        } else {
+
+        }
+
+    })
     // Update initial weather when loaded
     document.addEventListener('DOMContentLoaded', () => {
         configInit();

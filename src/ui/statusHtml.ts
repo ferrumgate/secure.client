@@ -95,8 +95,8 @@
                     } else {
                         css0 = 'failed';
                         css1 = 'ferrum-display-none';
-                        css2 = 'ferrum-display-none';
-                        css3 = '';
+                        css2 = '';
+                        css3 = 'ferrum-display-none';
                         why = network.tunnel.lastError || 'unknown error';
                     }
                 results += getRow(network.name, css0, css1, css2, css3, why);
@@ -117,9 +117,8 @@
         })
 
         windowx.electronAPI.emit('appVersion');
-        setInterval(() => {
-            windowx.electronAPI.emit('networkStatusRequest');
-        }, 5000)
+
+
 
     }
 
@@ -130,6 +129,24 @@
         alert(msg);//or any message
         return false;
     }
+
+    let interval: any = null;
+    document.addEventListener('visibilitychange', (ev: any) => {
+
+        if (document.visibilityState === 'visible') {
+            windowx.electronAPI.emit('networkStatusRequest');
+            interval = setInterval(() => {
+                windowx.electronAPI.emit('networkStatusRequest');
+
+            }, 5000)
+        } else {
+            if (interval)
+                clearInterval(interval);
+            interval = null;
+
+        }
+
+    })
     // Update initial weather when loaded
     document.addEventListener('DOMContentLoaded', () => {
 
