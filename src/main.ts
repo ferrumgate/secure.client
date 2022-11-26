@@ -77,6 +77,9 @@ export async function init() {
     events.on("log", (type: string, msg: string) => {
         log.write(type, msg);
     })
+    events.on("logFile", () => {
+
+    })
 
     events.on("appExit", () => {
         events.emit("log", 'info', 'closing app');
@@ -101,7 +104,10 @@ export async function init() {
     })
 
     ipcMain.on('config', async (event: Electron.IpcMainEvent, ...args: any[]) => {
-        event.reply('replyConfig', await config.getConfig() || {});
+        event.reply('configReply', await config.getConfig() || {});
+    })
+    ipcMain.on('logFile', async (event: Electron.IpcMainEvent, ...args: any[]) => {
+        event.reply('logFileReply', await log.logfile || '');
     })
     ipcMain.on('saveConfig', async (event: Electron.IpcMainEvent, ...args: any[]) => {
         events.emit('saveConfig', ...args);
@@ -129,23 +135,36 @@ export async function init() {
     configUI = new ConfigUI(events, tray.tray);
     statusUI = new StatusUI(events, tray.tray);
 
-    loadingUI = new LoadingUI(events);
-    loadingUI.showWindow();//show loading window for user interaction
-    //when loading window closed, open config window if app not configured
-    events.on('loadingWindowClosed', async () => {
-        try {
-            const conf = await config.getConfig();
-            if (!conf?.host) {
+    const testConfig = app.commandLine.hasSwitch("config");
+    const testStatus = app.commandLine.hasSwitch('status');
+    if (testConfig || testStatus) {
+        //test 
+        if (testConfig)
+            configUI.showWindow();
+        if (testStatus)
+            statusUI.showWindow();
+    } else {
+        //production
+        loadingUI = new LoadingUI(events);
+        loadingUI.showWindow();//show loading window for user interaction
+        //when loading window closed, open config window if app not configured
+        events.on('loadingWindowClosed', async () => {
+            try {
+                const conf = await config.getConfig();
+                if (!conf?.host) {
 
-                events.emit('showOptionsWindow', 'centerScreen');
+                    events.emit('showOptionsWindow', 'centerScreen');
+                }
+            } catch (err: any) {
+                events.emit("log", 'err', err.toString());
             }
-        } catch (err: any) {
-            events.emit("log", 'err', err.toString());
-        }
-    })
+        })
+    }
     return { log, events };
 
 }
+
+
 //when app ready, init
 app.on('ready', async () => {
     // const gotTheLock = app.requestSingleInstanceLock()

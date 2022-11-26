@@ -16,7 +16,7 @@ export class LoadingUI {
         this.window = this.createWindow();
         setTimeout(() => {
             this.closeWindow();
-        }, 1000);
+        }, 3000);
 
     }
 

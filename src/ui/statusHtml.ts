@@ -44,9 +44,6 @@
                     <span class="icon icon-help ${escapeHtml(css3)}"" style="color:red ;font-size: 14px;"></span>
 
                 </div>
-
-
-
             </div>
             </li>
                     `
@@ -115,8 +112,17 @@
             if (versionEl)
                 versionEl.textContent = data;
         })
+        windowx.electronAPI.on('logFileReply', (data: any) => {
+            console.log(data);
+            const logFile = document.querySelector('#el-logfile');
+            if (logFile) {
+                logFile.setAttribute('href', `file://${data}`);
+                logFile.textContent = `file://${data}`;
+            }
+        })
 
         windowx.electronAPI.emit('appVersion');
+        windowx.electronAPI.emit('logFile');
 
 
 

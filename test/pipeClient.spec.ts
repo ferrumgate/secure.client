@@ -12,7 +12,7 @@ const controller = new AbortController();
 const { signal } = controller;
 import path from 'path';
 
-describe('PipeClient ', async () => {
+describe.skip('pipeClient ', async () => {
 
 
     let cprocess: childprocess.ChildProcess | null;

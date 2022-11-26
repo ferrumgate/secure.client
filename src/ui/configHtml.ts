@@ -42,7 +42,7 @@
 
         windowx.electronAPI.emit('appVersion');
 
-        windowx.electronAPI.on('replyConfig', (data: { host: string }) => {
+        windowx.electronAPI.on('configReply', (data: { host: string }) => {
             console.log('reply config ' + new Date().toISOString());
             config = data;
             const inputServer = document.querySelector('#el-login') as HTMLInputElement;

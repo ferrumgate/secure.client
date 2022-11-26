@@ -74,6 +74,15 @@ export class ApiService extends BaseHttpService {
         return response.data as {};
 
     }
+    private urlPort(url: URL) {
+        if (url.port)
+            return Number(url.port);
+
+        if (url.protocol.startsWith('https')) return 443;
+        return 80;
+
+
+    }
 
     public async getExchangeToken() {
         console.log("/api/auth/exchangetoken")
@@ -84,7 +93,7 @@ export class ApiService extends BaseHttpService {
                 method: 'GET',
                 protocol: url.protocol,
                 hostname: url.hostname,
-                port: url.port == '4200' ? 8080 : Number(url.port),
+                port: this.urlPort(url),
                 path: '/api/auth/exchangetoken',
                 redirect: 'follow',
 
@@ -104,7 +113,7 @@ export class ApiService extends BaseHttpService {
                 method: 'POST',
                 protocol: url.protocol,
                 hostname: url.hostname,
-                port: url.port == '4200' ? 8080 : Number(url.port),
+                port: this.urlPort(url),
                 path: '/api/auth/exchangetoken',
                 redirect: 'follow',
 
@@ -127,7 +136,7 @@ export class ApiService extends BaseHttpService {
                 method: 'POST',
                 protocol: url.protocol,
                 hostname: url.hostname,
-                port: url.port == '4200' ? 8080 : Number(url.port),
+                port: this.urlPort(url),
                 path: '/api/auth/refreshtoken',
                 redirect: 'follow',
 
@@ -154,7 +163,7 @@ export class ApiService extends BaseHttpService {
 
         const response = await Axios.get(url.toString() + 'api/user/current/network', options)
 
-        return response.data as Network[];
+        return response.data as { items: Network[] };
 
 
     }

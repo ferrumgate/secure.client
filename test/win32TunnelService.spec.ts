@@ -12,7 +12,7 @@ import { until } from 'selenium-webdriver';
 import Axios from 'axios';
 import { ApiService } from '../src/service/apiService';
 
-describe('win32TunnelService ', async () => {
+describe.skip('win32TunnelService ', async () => {
 
 
     before(async () => {

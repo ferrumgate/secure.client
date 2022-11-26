@@ -21,7 +21,7 @@ export class ConfigService {
      *
      */
     constructor() {
-        this._baseDirectory = path.join(app.getPath('appData'), 'ferrumgate');
+        this._baseDirectory = path.join(app?.getPath('appData') || '/tmp/appData', 'ferrumgate');
         this._filename = 'ferrum.json';
     }
 

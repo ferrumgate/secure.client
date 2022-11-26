@@ -120,8 +120,8 @@ export class TunnelController {
             }
             if (!this.networksLastCheck) {
                 this.logInfo('getting networks');
-                const networks = await this.api.getNetworks(this.accessToken);
-                this.networks = networks;
+                const data = await this.api.getNetworks(this.accessToken);
+                this.networks = data.items;
                 this.networks.sort((a, b) => {
                     return a.name.localeCompare(b.name);
                 })

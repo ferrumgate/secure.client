@@ -81,6 +81,7 @@ export class SessionService extends BaseHttpService {
         })
 
 
+
     }
     createPipename() {
         //return `/tmp/ferrumgate.sock`;
