@@ -44,7 +44,7 @@ describe.skip('statusUI ', async () => {
 
     it.skip('networks', async () => {
 
-        ipcMain.emit('networkStatus', [
+        ipcMain.emit('networkStatusReply', [
             { id: '123', name: 'name', sshHost: 'sdf', isWorking: 1 },
             { id: '1234', name: 'name4', sshHost: 'sdf4', isWorking: 1 },
         ])

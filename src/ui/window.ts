@@ -119,7 +119,7 @@ export class WindowUI {
                 preload: path.join(__dirname, 'windowPreload.js'),
             }
         })
-        window.webContents.openDevTools();
+        //window.webContents.openDevTools();
 
         //const overlay = nativeImage.createFromPath(path.join(__dirname, '../assets/img/logo-transparent.png'));
         //window.setOverlayIcon(overlay, 'Description for overlay')
@@ -137,7 +137,7 @@ export class WindowUI {
         return window;
     }
 
-    toggleWindow() {
+    hideWindow() {
         if (this.window.isVisible()) {
             this.window.hide()
         } else {

@@ -64,7 +64,7 @@
         }
 
 
-        windowx.electronAPI.on('networkStatus', (data: Network[]) => {
+        windowx.electronAPI.on('networkStatusReply', (data: Network[]) => {
             if (!data) return;
             const tbody = document.querySelector('#el-ferrum-status-net-list') as HTMLInputElement;
             let results = '';
@@ -107,7 +107,7 @@
         })
 
 
-        windowx.electronAPI.on('replyAppVersion', (data: any) => {
+        windowx.electronAPI.on('appVersionReply', (data: any) => {
             const versionEl = document.querySelector('#el-version');
             if (versionEl)
                 versionEl.textContent = data;

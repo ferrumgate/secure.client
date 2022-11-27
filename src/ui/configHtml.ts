@@ -34,7 +34,7 @@
             windowx.electronAPI.emit('saveConfig', config);
         })
 
-        windowx.electronAPI.on('replyAppVersion', (data: any) => {
+        windowx.electronAPI.on('appVersionReply', (data: any) => {
             const versionEl = document.querySelector('#el-version');
             if (versionEl)
                 versionEl.textContent = data;
@@ -49,7 +49,7 @@
             if (inputServer && config.host)
                 inputServer.value = config.host;
         })
-        windowx.electronAPI.emit('config');
+
         //display none all test buttons 
 
         if (windowx.electronAPI.node_env() != 'development') {
@@ -78,15 +78,6 @@
     }
 
 
-    document.addEventListener('visibilitychange', (ev: any) => {
-
-        if (document.visibilityState === 'visible') {
-            windowx.electronAPI.emit('config');
-        } else {
-
-        }
-
-    })
     // Update initial weather when loaded
     document.addEventListener('DOMContentLoaded', () => {
         configInit();

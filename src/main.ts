@@ -74,12 +74,8 @@ export async function init() {
 
 
     //write all logs 
-    events.on("log", (type: string, msg: string) => {
-        log.write(type, msg);
-    })
-    events.on("logFile", () => {
 
-    })
+
 
     events.on("appExit", () => {
         events.emit("log", 'info', 'closing app');
@@ -94,13 +90,18 @@ export async function init() {
     })
     events.on("notify", (data: { type: string, msg: string }) => {
         new Notification({ title: 'FerrumGate', body: data.msg }).show();
+
     })
 
     ipcMain.on('appVersion', async (event: Electron.IpcMainEvent, ...args: any[]) => {
 
         const version = await Util.getAppVersion();
-        event.reply('replyAppVersion', version || 'unknown');
+        event.reply('appVersionReply', version || 'unknown');
 
+    })
+
+    events.on("log", (type: string, msg: string) => {
+        log.write(type, msg);
     })
 
 
@@ -127,13 +128,14 @@ export async function init() {
         throw new Error(msg);
     })
 
+
     app.setName('FerrumGate');
     events.emit("log", 'info', 'starting app');
 
 
 
     tray = new TrayUI(events);
-    configUI = new ConfigUI(events, tray.tray);
+    configUI = new ConfigUI(events, config, tray.tray);
     statusUI = new StatusUI(events, tray.tray);
 
     const testConfig = app.commandLine.hasSwitch("config");

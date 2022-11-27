@@ -177,8 +177,8 @@ export class SessionService extends BaseHttpService {
                 case 'tunnelClosed':
                     await this.executeTunnelFailed(cmd.data);
                     break;
-                case 'networkStatus':
-                    await this.executeNetworkStatus(cmd.data);
+                case 'networkStatusReply':
+                    await this.executeNetworkStatusReply(cmd.data);
                     break;
                 default:
                     break;
@@ -217,8 +217,8 @@ export class SessionService extends BaseHttpService {
         this.events.emit('tunnelClosed', data.msg);
     }
 
-    async executeNetworkStatus(data: Network[]) {
-        this.events.emit('networkStatus', data);
+    async executeNetworkStatusReply(data: Network[]) {
+        this.events.emit('networkStatusReply', data);
     }
 
     async startSession() {

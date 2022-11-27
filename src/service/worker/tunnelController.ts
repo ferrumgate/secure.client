@@ -189,7 +189,7 @@ export class TunnelController {
                 else return value;
             }
             const cloned = JSON.parse(JSON.stringify(this.networks, replacer));
-            await this.writeToParent({ type: 'networkStatus', data: cloned })
+            await this.writeToParent({ type: 'networkStatusReply', data: cloned })
 
         } catch (err: any) {
             this.logError(err.message || err.toString())

@@ -2,13 +2,14 @@ import { BrowserWindow, ipcMain, nativeImage, Rectangle, screen, Tray } from "el
 import { EventService } from "../service/eventsService";
 import path from 'path';
 import { WindowUI } from "./window";
+import { setIntervalAsync } from "set-interval-async";
 
 /**
  * @summary status ui for connected networks
 */
 
 export class StatusUI extends WindowUI {
-
+    interval: any;
     constructor(protected events: EventService, protected tray: Tray) {
 
         super(events, tray, 'status.html', 500);
@@ -21,11 +22,11 @@ export class StatusUI extends WindowUI {
 
         })
         events.on("closeStatusWindow", () => {
-            this.toggleWindow();
+            this.hideWindow();
         });
 
-        events.on('networkStatus', (data: any) => {
-            this.window.webContents.send('networkStatus', data);
+        events.on('networkStatusReply', (data: any) => {
+            this.window.webContents.send('networkStatusReply', data);
         })
         ipcMain.on('networkStatusRequest', () => {
             this.events.emit('networkStatusRequest');
@@ -37,10 +38,18 @@ export class StatusUI extends WindowUI {
 
     override showWindow(pos?: string | undefined): void {
         super.showWindow();
-        this.events.emit('networkStatusRequest');
+        if (this.interval)
+            clearInterval(this.interval)
+        this.interval = setInterval(() => {
+            this.events.emit('networkStatusRequest');
+        }, 3000);
+
     }
-    override toggleWindow(): void {
-        super.toggleWindow();
+    override hideWindow(): void {
+        super.hideWindow();
+        if (this.interval)
+            clearInterval(this.interval);
+        this.interval = null;
     }
 
 

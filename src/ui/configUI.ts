@@ -9,7 +9,7 @@ import { ConfigService } from "../service/configService";
  */
 export class ConfigUI extends WindowUI {
 
-    constructor(protected events: EventService, protected tray: Tray) {
+    constructor(protected events: EventService, protected config: ConfigService, protected tray: Tray) {
 
         super(events, tray, 'config.html');
         ipcMain.on('closeOptionsWindow', async (event: Electron.IpcMainEvent, ...args: any[]) => {
@@ -22,10 +22,19 @@ export class ConfigUI extends WindowUI {
 
         })
         events.on("closeOptionsWindow", () => {
-            this.toggleWindow();
+            this.hideWindow();
         });
 
 
+
     }
+
+    override showWindow(pos?: string | undefined): void {
+        super.showWindow(pos);
+        this.config.getConf().then(x => {
+            this.window.webContents.send('configReply', { host: x?.host || '' });
+        })
+    }
+
 
 }
