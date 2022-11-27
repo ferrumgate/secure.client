@@ -119,13 +119,14 @@ export class WindowUI {
                 preload: path.join(__dirname, 'windowPreload.js'),
             }
         })
-        //window.webContents.openDevTools();
+        window.webContents.openDevTools();
 
         //const overlay = nativeImage.createFromPath(path.join(__dirname, '../assets/img/logo-transparent.png'));
         //window.setOverlayIcon(overlay, 'Description for overlay')
         window.loadURL(`file://${path.join(__dirname, html)}`)
         if (process.env.NODE_ENV == 'development')
             window.webContents.openDevTools();
+
         // Hide the window when it loses focus
         /* window.on('blur', () => {
             if (!window.webContents.isDevToolsOpened()) {

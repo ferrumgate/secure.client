@@ -32,7 +32,17 @@ export class StatusUI extends WindowUI {
         })
 
 
+
     }
+
+    override showWindow(pos?: string | undefined): void {
+        super.showWindow();
+        this.events.emit('networkStatusRequest');
+    }
+    override toggleWindow(): void {
+        super.toggleWindow();
+    }
+
 
 
 }

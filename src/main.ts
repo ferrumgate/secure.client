@@ -103,6 +103,7 @@ export async function init() {
 
     })
 
+
     ipcMain.on('config', async (event: Electron.IpcMainEvent, ...args: any[]) => {
         event.reply('configReply', await config.getConfig() || {});
     })

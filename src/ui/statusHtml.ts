@@ -106,7 +106,7 @@
 
         })
 
-        windowx.electronAPI.emit('networkStatusRequest');
+
         windowx.electronAPI.on('replyAppVersion', (data: any) => {
             const versionEl = document.querySelector('#el-version');
             if (versionEl)
@@ -123,6 +123,7 @@
 
         windowx.electronAPI.emit('appVersion');
         windowx.electronAPI.emit('logFile');
+        windowx.electronAPI.emit('networkStatusRequest');
 
 
 
@@ -136,23 +137,6 @@
         return false;
     }
 
-    let interval: any = null;
-    document.addEventListener('visibilitychange', (ev: any) => {
-
-        if (document.visibilityState === 'visible') {
-            windowx.electronAPI.emit('networkStatusRequest');
-            interval = setInterval(() => {
-                windowx.electronAPI.emit('networkStatusRequest');
-
-            }, 5000)
-        } else {
-            if (interval)
-                clearInterval(interval);
-            interval = null;
-
-        }
-
-    })
     // Update initial weather when loaded
     document.addEventListener('DOMContentLoaded', () => {
 

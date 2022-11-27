@@ -77,6 +77,7 @@
         return false;
     }
 
+
     document.addEventListener('visibilitychange', (ev: any) => {
 
         if (document.visibilityState === 'visible') {

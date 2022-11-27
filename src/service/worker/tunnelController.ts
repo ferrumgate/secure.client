@@ -135,16 +135,15 @@ export class TunnelController {
                         network.tunnel = { tryCount: 0, lastTryTime: 0, isWorking: false }
                     }
                     if ((new Date().getTime() - network.tunnel.lastTryTime) < 15000) {
+                        network.tunnel.isWorking = network.tunnel.process?.isWorking || false;
+                        network.tunnel.lastError = network.tunnel.process?.lastError || '';
                         continue;
                     }
                     await this.checkTunnel(network);
                 }
             }
             this.lastErrorOccured = 0;
-            if ((new Date().getTime() - this.networksLastCheck) > 30000) {
-                this.networksLastCheck = new Date().getTime();
 
-            }
 
 
         } catch (err: any) {
@@ -156,12 +155,12 @@ export class TunnelController {
     async checkTunnel(network: Network): Promise<{} | undefined> {
 
         try {
-            network.tunnel.lastTryTime = new Date().getTime();
+
             if (!network.tunnel.process) {
                 network.tunnel.process = new UnixTunnelService(network, this.accessToken, this.event, this.api);
             }
             if (!network.tunnel.process.isWorking) {
-                this.logError(`no tunnel created for ${network.name}`);
+                this.logError(`no tunnel created for ${network.name} starting new one`);
                 await network.tunnel.process.openTunnel();
 
             }
