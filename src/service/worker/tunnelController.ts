@@ -1,11 +1,10 @@
-import { ApiService } from "../apiService";
 import { EventService } from "../eventsService";
 import net from 'net';
 import { Cmd, Network } from "./models";
 import { setIntervalAsync, clearIntervalAsync } from 'set-interval-async';
 import { UnixTunnelService } from "../unix/unixTunnelService";
 import child_process from 'child_process';
-import { write } from "original-fs";
+import { TunnelApiService } from "./tunnelApiService";
 
 
 export class TunnelController {
@@ -23,7 +22,7 @@ export class TunnelController {
     checkSystemIsWorking = false;
 
 
-    constructor(protected pipename: string, protected event: EventService, protected api: ApiService) {
+    constructor(protected pipename: string, protected event: EventService, protected api: TunnelApiService) {
         event.on('log', async (type: string, msg: string) => {
 
             try {

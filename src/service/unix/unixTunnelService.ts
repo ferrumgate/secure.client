@@ -7,6 +7,7 @@ import { Logger } from "selenium-webdriver/lib/logging";
 import { ApiService } from "../apiService";
 import { clearIntervalAsync, setIntervalAsync } from "set-interval-async";
 import { Network } from "../worker/models";
+import { TunnelApiService } from "../worker/tunnelApiService";
 
 /**
  * @summary unit tunnel controller
@@ -28,7 +29,7 @@ export class UnixTunnelService extends TunnelService {
     accessToken: string = '';
     onstderr = async (data: string) => { };
     onstdout = async (data: string) => { };
-    constructor(net: Network, accessToken: string, event: EventService, api: ApiService) {
+    constructor(net: Network, accessToken: string, event: EventService, api: TunnelApiService) {
         super(event, api);
         this.net = net;
         this.accessToken = accessToken;

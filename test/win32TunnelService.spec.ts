@@ -11,6 +11,7 @@ import child_process from 'child_process';
 import { until } from 'selenium-webdriver';
 import Axios from 'axios';
 import { ApiService } from '../src/service/apiService';
+import { TunnelApiService } from '../src/service/worker/tunnelApiService';
 
 describe.skip('win32TunnelService ', async () => {
 
@@ -33,7 +34,7 @@ describe.skip('win32TunnelService ', async () => {
         } as EventService;
 
 
-        class MockApiService extends ApiService {
+        class MockApiService extends TunnelApiService {
             public override async getTunnelAndServiceIpList(tunnelKey: string): Promise<{ assignedIp: string; serviceNetwork: string; }> {
                 let response = await Axios.get('http://192.168.88.10:8080/api/client/tunnel/ip', {
                     headers: {
@@ -76,7 +77,7 @@ describe.skip('win32TunnelService ', async () => {
 
         const apiService = {
 
-        } as unknown as ApiService;
+        } as unknown as TunnelApiService;
 
         // lets create
         const win32 = new Win32TunnelService({} as any, eventService, apiService);

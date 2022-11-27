@@ -6,6 +6,7 @@ import child_process from 'child_process';
 import { net } from "electron";
 import { TouchSequence } from 'selenium-webdriver';
 import { ApiService } from '../apiService';
+import { TunnelApiService } from './tunnelApiService';
 
 export class TunnelService {
 
@@ -21,7 +22,7 @@ export class TunnelService {
      *
      */
     constructor(protected events: EventService,
-        protected api: ApiService) {
+        protected api: TunnelApiService) {
 
     }
 

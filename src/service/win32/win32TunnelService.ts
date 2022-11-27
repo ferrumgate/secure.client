@@ -7,6 +7,7 @@ import { PipeClient } from "./pipeClient";
 import { ApiService } from "../apiService";
 import { Network } from "../worker/models";
 import { clearIntervalAsync, setIntervalAsync } from "set-interval-async";
+import { TunnelApiService } from "../worker/tunnelApiService";
 
 /**
  * @summary windows tunnel controller
@@ -31,7 +32,7 @@ export class Win32TunnelService extends TunnelService {
 
     onstderr = async (data: string) => { };
     onstdout = async (data: string) => { };
-    constructor(net: Network, event: EventService, api: ApiService) {
+    constructor(net: Network, event: EventService, api: TunnelApiService) {
         super(event, api);
         this.net = net;
         if (net.sshHost) {
