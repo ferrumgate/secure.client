@@ -230,7 +230,7 @@ app.on('ready', async () => {
         case 'linux':
         case 'netbsd':
         case 'freebsd':
-            await init();
+            await init(); break;
         case 'win32':
             app.setAppUserModelId("FerrumGate");
             const normalStart = app.commandLine.hasSwitch('win32');

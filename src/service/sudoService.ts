@@ -125,6 +125,7 @@ export class SudoService extends BaseService {
             case 'netbsd':
             case 'freebsd':
                 await this.startRootShell(true, '/bin/bash');
+                break;
             case 'win32':
                 await this.windowsStartShell();
                 break;
