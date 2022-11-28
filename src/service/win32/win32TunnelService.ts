@@ -3,240 +3,76 @@ import path from 'path';
 import child_process from 'child_process';
 import { EventService } from "../eventsService";
 import { Logger } from "selenium-webdriver/lib/logging"
-import { PipeClient } from "./pipeClient";
+import { PipeClient } from "../cross/pipeClient";
 import { ApiService } from "../apiService";
 import { Network } from "../worker/models";
 import { clearIntervalAsync, setIntervalAsync } from "set-interval-async";
 import { TunnelApiService } from "../worker/tunnelApiService";
+import { UnixTunnelService } from "../unix/unixTunnelService";
+import { EOL } from 'os';
 
 /**
  * @summary windows tunnel controller
  */
-export class Win32TunnelService extends TunnelService {
+export class Win32TunnelService extends UnixTunnelService {
+    tun: string
 
-    isServiceWorking = false;
-    sshCommand = '';
-    isInitted = false;
-    sshPID = '';
-    isTunnelCreated = false;
-    iamAliveInterval: any;
-    isSSHTunnelStarting: any;
-    isDisconnected = false;
+    constructor(net: Network, accessToken: string, event: EventService, api: TunnelApiService) {
+        super(net, accessToken, event, api);
+        this.tun = '';
+    }
+    public override prepareCommand() {
 
-    pipeMain: PipeClient | null = null;
-    pipeChild: PipeClient | null = null;
+        const sshFile = path.join(__dirname, 'ssh_ferrum.exe');
+        const sshConfigFile = path.join(__dirname, 'ssh_config');
 
-    port = '2223';
-    host = 'localhost';
-    net: Network | null = null;
+        const parameters = ['-N', '-F', `"${sshConfigFile}"`, "-w", "any", "-o", '"StrictHostKeyChecking no"', "-o", '"UserKnownHostsFile /dev/null"'];
 
-    onstderr = async (data: string) => { };
-    onstdout = async (data: string) => { };
-    constructor(net: Network, event: EventService, api: TunnelApiService) {
-        super(event, api);
-        this.net = net;
-        if (net.sshHost) {
-            let parts = net.sshHost.split(':');
-            if (parts.length)
-                this.host = parts[0];
+        this.sshCommand = `"${sshFile}" ${parameters.join(' ')} ferrum@${this.host} -p${this.port}`;
+        this.sshCommands = [];
+        this.sshCommands.push(`${sshFile}`);
+        this.sshCommands.push(...['-N', '-F', `${sshConfigFile}`, "-w", "any", "-o", 'StrictHostKeyChecking no', '-o', 'UserKnownHostsFile /dev/null']);
+        this.sshCommands.push(`ferrum@${this.host}`);
+        this.sshCommands.push(`-p${this.port}`);
+
+
+    }
+
+    public override async onStdOut(data: string) {
+        if (data.startsWith('interface_name:')) {
+            let parts = data.split(':');
             if (parts.length > 1)
-                this.port = parts[1];
-        }
-    }
-    /**
-     * @brief connects to named pipe server that allready opened by windows service
-     */
-    public async connectToService() {
-        if (!this.pipeMain)
-            this.pipeMain = new PipeClient();
-        this.isDisconnected = false;
-        await this.pipeMain?.connect('ferrumgate');
-
-    }
-
-
-
-    public async init() {
-
-
-        const sshConfigFile = 'ssh_config';
-        const parameters = ['-N', '-F', `${sshConfigFile}`, "-w", "any", "-o", '"StrictHostKeyChecking no"']
-
-        this.sshCommand = `${parameters.join(' ')} ferrum@${this.host} -p${this.port}`;
-        if (this.pipeMain)
-            await this.pipeMain.close();
-        this.pipeMain = null;
-        if (this.iamAliveInterval) {
-            clearIntervalAsync(this.iamAliveInterval);
-            this.iamAliveInterval = null;
-        }
-        /////
-        this.pipeMain = new PipeClient();
-
-        this.pipeMain.onStdout = async (data: string) => {
-            try {
-                this.processLastOutput = data;
-
-                this.logInfo(`${data}`);
-                if (data.startsWith("connected:")) {
-                    await this.pipeMain?.write(`connect ${this.sshCommand}`);
-                }
-                if (data.startsWith("connect to:")) {
-                    const childpipename = data.split(':')[1];
-                    if (this.pipeChild)
-                        await this.pipeChild.close();
-                    //connect to child process pipe and redirect all output 
-                    this.pipeChild = new PipeClient();
-                    this.pipeChild.onStdout = async (data: string) => {
-                        if (!data.startsWith('connected:') && !data.startsWith('disconnected'))
-                            await this.pipeMain?.onStdout(data);
-                        if (data.startsWith('disconnected:'))
-                            await this.pipeMain?.close();
-                    }
-
-                    await this.pipeChild?.connect(`ferrumgate_${childpipename}`);
-
-
-
-                }
-                if (data.includes('ferrum_pid:')) {
-                    const items = data.split('\n');
-                    const pidItem = items.find(x => x.startsWith('ferrum_pid:'))
-                    if (pidItem) {
-                        this.sshPID = pidItem.replace('ferrum_pid:', '').replace('\n', '');
-                    }
-                }
-                if (data.includes('ferrum_open:')) {
-                    const items = data.split('\n');
-                    const openItem = items.find(x => x.includes('ferrum_open:'))
-                    if (openItem) {
-
-                        const link = openItem.slice(openItem.indexOf('ferrum_open:') + 12).replace('\n', '').trim();
-                        this.logInfo(`open link ${link}`);
-                        this.events.emit('openLink', link);
-                        const parts = link.split('=');
-                        if (parts.length > 1) {
-                            this.tunnelKey = parts[1];
-                        }
-                        const url = new URL(link);
-                        /*  this.host = url.hostname;
-                         this.protocol = url.protocol;
-                         this.port = url.port; */
-                    }
-
-                }
-                if (data.includes('ferrum_tunnel_opened:')) {
-                    if (!this.sshPID)
-                        throw new Error('ssh pid is not valid');
-                    const items = data.split(':')
-                    if (items.length == 2) {
-                        //create tun interface name
-                        const tun = items[1].replace('\n', '');
-                        // get assigned ip and service network
-                        const iplist = await this.api.getTunnelAndServiceIpList(this.tunnelKey);
-
-
-                        this.logInfo(`configuring tunnel: ${tun} with ${JSON.stringify(iplist)}`)
-                        // prepare network for connection
-                        await this.pipeMain?.write(`network assignedIp:${iplist.assignedIp} serviceNetwork:${iplist.serviceNetwork}`)
-
-                    }
-                }
-                if (data.includes("network ok")) {
-                    await this.api.confirmTunnel(this.tunnelKey);
-                    ////
-                    this.events.emit("tunnelOpened", this.net?.id);
-                    this.isTunnelCreated = true;
-                    this.logInfo(`tunnel created and configured successfully`);
-                }
-                if (data.includes('ferrum_exit:') || data.includes('disconnected:') || data.includes("network failed") || data.includes('Terminated') || data.includes('No route to host') || data.includes('Connection refused')) {
-                    if (!this.isDisconnected) {
-                        this.sshPID = '';
-                        this.isTunnelCreated = false;
-                        this.events.emit('tunnelClosed', this.net?.id);
-                        this.logInfo(`tunnel closed`);
-                        await this.pipeMain?.close();
-                        await this.pipeChild?.close();
-                        this.isDisconnected = true;
-                        if (this.isSSHTunnelStarting)
-                            clearTimeout(this.isSSHTunnelStarting);
-                        this.isSSHTunnelStarting = null;
-                    }
-                }
-            } catch (err: any) {
-                this.logError(err.message || err.toString());
-                this.events.emit('tunnelFailed', `Could not connect:${err.message}`);
-                await this.tryKillSSHFerrumProcess();
-            }
+                this.tun = parts[1].replace(EOL, '');
         }
 
-        this.iamAliveInterval = setIntervalAsync(async () => {
-            await this.sendIAmAlive();
-        }, 30000)
-        this.isInitted = true;
-
     }
-    ////./ssh_ferrum -c none -N -F ../etc/ssh_config -w any  -o "StrictHostKeyChecking no"  ferrum@192.168.88.243 -p3333
-    public override async openTunnel(isRoot = true): Promise<void> {
-        await this.init();
-        await this.connectToService();
+    public override async configureNetwork(tun: string, conf: { assignedIp: string; serviceNetwork: string; }) {
+        this.logInfo(`configuring tunnel: ${tun} with ${JSON.stringify(conf)}`)
+        //ExecuteCmd("cmd.exe /c netsh interface ipv4 set address \"" + interfacename + "\" static " + ip + " 255.255.255.255");
+        //   ExecuteCmd("/c route ADD "+route+" "+ip+" IF "+index);
 
+        await this.execOnShell(`cmd.exe /c netsh interface ipv4 set address "${tun}" static  ${conf.assignedIp}  255.255.255.255`)
+
+        const outputBuf = await this.execOnShell("cmd.exe /c netsh int ipv4 show interfaces");
+        const output = (outputBuf as any).toString() as string;
+        const line = output.split(EOL).find(x => x.includes(tun));
+        let index = '';
+        if (line) {
+            index = line.split(' ').map(x => x.trim()).filter(y => y)[0];
+        }
+        if (index)
+            await this.execOnShell(`cmd.exe /c route ADD  ${conf.serviceNetwork}  ${conf.assignedIp} IF ${index}`);
+        else
+            await this.execOnShell(`cmd.exe /c route ADD  ${conf.serviceNetwork}  ${conf.assignedIp}`);
     }
-    public async sendIAmAlive() {
-        try {
-            if (this.isTunnelCreated) {
-                this.logInfo('sending I am alive');
-                await this.api.iAmAlive(this.tunnelKey);
-            }
-        } catch (err: any) {
-            this.logError(err.toString())
+
+    protected async forceKillPid() {
+        //taskkill /F /PID pid_number
+        if (this.sshPID) {
+            this.logInfo(`forcing to kill ${this.sshPID}`);
+            await this.execOnShell(`taskkill.exe /F /PID ${this.sshPID}`);
+            this.sshPID = '';
         }
     }
 
-    public async startNewSSHFerrum() {
-        this.logInfo(`starting new tunnel ${this.sshCommand}`);
-        await this.tryKillSSHFerrumProcess();
-
-
-        await this.pipeMain?.write(`connect ${this.sshCommand}`);
-        if (this.isSSHTunnelStarting)
-            clearTimeout(this.isSSHTunnelStarting);
-        this.isSSHTunnelStarting = setTimeout(async () => {
-            if (!this.isTunnelCreated) {
-                this.events.emit('tunnelFailed', this.net?.id);
-                await this.tryKillSSHFerrumProcess();
-            }
-        }, 45000);
-
-
-    }
-
-
-    public async tryKillSSHFerrumProcess(processname = 'ssh_ferrum') {
-        this.logInfo(`killing tunnel`)
-        await this.pipeMain?.write(`disconnect`);
-        this.events.emit('tunnelClosed');
-    }
-    public override async closeTunnel(): Promise<void> {
-        await this.tryKillSSHFerrumProcess();
-    }
-
-
-
-
-
-    /**
-     * @summary kill all created process list
-     */
-    public async tryKillAllProcess() {
-        try {
-            this.logInfo(`killing all related process list`)
-
-            await this.tryKillSSHFerrumProcess();
-
-
-        } catch (err: any) {
-            this.logError(err.message || err.toString());
-        }
-    }
 }

@@ -5,12 +5,18 @@ import { setIntervalAsync, clearIntervalAsync } from 'set-interval-async';
 import { UnixTunnelService } from "../unix/unixTunnelService";
 import child_process from 'child_process';
 import { TunnelApiService } from "./tunnelApiService";
+import { PipeClient } from "../cross/pipeClient";
+import os from 'os';
+import { Win32TunnelService } from "../win32/win32TunnelService";
 
-
+/**
+ * @summary tunnel controller, watch every tunnal
+ * @remark this is part of nodejs process, works on root worker process
+ */
 export class TunnelController {
 
 
-    ipcClient: net.Socket | null = null;
+    ipcClient: PipeClient | null = null;
     private socketReadBuffer: Buffer = Buffer.from([]);
     accessToken: string = '';
     refreshToken: string = '';
@@ -48,40 +54,30 @@ export class TunnelController {
     }
     async start() {
         if (!this.ipcClient) {
-            this.ipcClient = net.connect(this.pipename);
-            this.ipcClient.on('connect', async () => {
+            this.ipcClient = new PipeClient(this.pipename);
+            this.ipcClient.onConnect = async () => {
                 await this.closeAllTunnels();
                 setIntervalAsync(async () => {
                     await this.checkSystem();
                 }, 2000);
-            })
-            this.ipcClient.on('close', async () => {
+            };
+            this.ipcClient.onClose = async () => {
                 this.logInfo("ipc client closed");
                 this.ipcClient = null;
                 await this.stop();
 
-            })
-            this.ipcClient.on('error', async (err: any) => {
+            }
+            this.ipcClient.onError = async (err: any) => {
                 this.logError("ipc server error " + err?.message || err?.toString())
                 await this.stop();
-            })
-            this.ipcClient.on('data', async (data: Buffer) => {
+            }
+            this.ipcClient.onData = async (data: Buffer) => {
 
-                let bufs = [this.socketReadBuffer, data];
-                this.socketReadBuffer = Buffer.concat(bufs);
-                while (true) {
-                    if (this.socketReadBuffer.length <= 4)
-                        return;
-                    let len = this.socketReadBuffer.readInt32BE(0);
-                    if (this.socketReadBuffer.length < (len + 4))// not enough body
-                        return;
-                    const msg = this.socketReadBuffer.slice(4, 4 + len).toString('utf-8');
-                    this.socketReadBuffer = this.socketReadBuffer.slice(4 + len);
-                    //this.logInfo(`data received on worker`);
-                    await this.executeCommand(msg);
-                }
+                await this.executeCommand(data.toString('utf-8'));
 
-            })
+
+            }
+            this.ipcClient.connect();
         }
     }
     async execOnShell(cmd: string, isStdErr = true) {
@@ -103,7 +99,17 @@ export class TunnelController {
     }
     async closeAllTunnels() {
         try {
-            await this.execOnShell('pkill ssh_ferrum');
+            const platform = os.platform();
+            switch (platform) {
+                case 'linux':
+                case 'freebsd':
+                case 'netbsd':
+                    await this.execOnShell('pkill ssh_ferrum'); break;
+                case 'win32':
+                    await this.execOnShell('taskkill.exe /IM "ssh_ferrum.exe" /F'); break;
+                default:
+                    throw new Error('not implemented for os:' + platform);
+            }
         } catch (err: any) {
             this.logError(err.message || err.toString())
         }
@@ -156,7 +162,18 @@ export class TunnelController {
         try {
 
             if (!network.tunnel.process) {
-                network.tunnel.process = new UnixTunnelService(network, this.accessToken, this.event, this.api);
+                const platform = os.platform();
+                switch (platform) {
+                    case 'linux':
+                    case 'freebsd':
+                    case 'netbsd':
+                        network.tunnel.process = new UnixTunnelService(network, this.accessToken, this.event, this.api); break;
+                    case 'win32':
+                        network.tunnel.process = new Win32TunnelService(network, this.accessToken, this.event, this.api); break;
+                    default:
+                        throw new Error('not implemented for os:' + platform);
+                }
+
             }
             if (!network.tunnel.process.isWorking) {
                 this.logError(`no tunnel created for ${network.name} starting new one`);
@@ -198,7 +215,7 @@ export class TunnelController {
     async stop() {
         try {
             if (this.ipcClient)
-                this.ipcClient.destroy();
+                this.ipcClient.close();
             this.ipcClient = null;
             process.exit(0);
         } catch (err: any) {
@@ -240,13 +257,7 @@ export class TunnelController {
 
     async writeToParent(msg: Cmd) {
 
-        let data = Buffer.from(JSON.stringify(msg), 'utf-8');
-        let tmp = Buffer.from([0, 0, 0, 0]).slice(0, 4);
-        let buffers = [tmp, data];
-        let enhancedData = Buffer.concat(buffers)
-        let len = data.length;
-        enhancedData.writeInt32BE(len);//write how many bytes
-        this.ipcClient?.write(enhancedData);
+        this.ipcClient?.write(Buffer.from(JSON.stringify(msg), 'utf-8'));
 
 
     }

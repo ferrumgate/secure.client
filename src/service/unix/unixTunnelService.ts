@@ -3,14 +3,12 @@ import path from 'path';
 const sudo = require('../../lib/sudoprompt')
 import child_process from 'child_process';
 import { EventService } from "../eventsService";
-import { Logger } from "selenium-webdriver/lib/logging";
-import { ApiService } from "../apiService";
 import { clearIntervalAsync, setIntervalAsync } from "set-interval-async";
 import { Network } from "../worker/models";
 import { TunnelApiService } from "../worker/tunnelApiService";
-
+const { EOL } = require('os');
 /**
- * @summary unit tunnel controller
+ * @summary unix tunnel controller, this service works on root worker process
  */
 export class UnixTunnelService extends TunnelService {
 
@@ -29,6 +27,8 @@ export class UnixTunnelService extends TunnelService {
     accessToken: string = '';
     onstderr = async (data: string) => { };
     onstdout = async (data: string) => { };
+    newLineBufferStderr = '';
+    newLineBufferStdout = '';
     constructor(net: Network, accessToken: string, event: EventService, api: TunnelApiService) {
         super(event, api);
         this.net = net;
@@ -41,12 +41,11 @@ export class UnixTunnelService extends TunnelService {
                 this.port = parts[1];
         }
     }
-
-
-    public async init() {
+    public prepareCommand() {
 
         const sshFile = path.join(__dirname, 'ssh_ferrum');
         const sshConfigFile = path.join(__dirname, 'ssh_config');
+
         const parameters = ['-N', '-F', `"${sshConfigFile}"`, "-w", "any", "-o", '"StrictHostKeyChecking no"', "-o", '"UserKnownHostsFile /dev/null"']
 
         this.sshCommand = `"${sshFile}" ${parameters.join(' ')} ferrum@${this.host} -p${this.port}`;
@@ -56,7 +55,14 @@ export class UnixTunnelService extends TunnelService {
         this.sshCommands.push(`ferrum@${this.host}`);
         this.sshCommands.push(`-p${this.port}`);
 
+    }
 
+
+    public async init() {
+
+        this.prepareCommand();
+
+        console.log(this.sshCommand);
         if (this.isInitted) return;
         /////
 
@@ -68,27 +74,28 @@ export class UnixTunnelService extends TunnelService {
 
         this.onstdout = async (data: string) => {
             try {
+                await this.onStdOut(data);
                 this.processLastOutput = data;
                 //console.log(data);
                 this.logInfo(`${data}`);
                 if (data.includes('ferrum_pid:')) {
-                    const items = data.split('\n');
+                    const items = data.split(EOL);
                     const pidItem = items.find(x => x.startsWith('ferrum_pid:'))
                     if (pidItem) {
-                        this.sshPID = pidItem.replace('ferrum_pid:', '').replace('\n', '');
+                        this.sshPID = pidItem.replace('ferrum_pid:', '').replace(EOL, '');
                     }
                 }
                 if (data.includes('ferrum_open:')) {
-                    const items = data.split('\n');
-                    const openItem = items.find(x => x.startsWith('ferrum_open:'))
+                    const items = data.split(EOL);
+                    const openItem = items.find(x => x.includes('ferrum_open:'))
+
                     if (openItem) {
-                        const link = openItem.replace('ferrum_open:', '').replace('\n', '');
+                        const link = openItem.slice(openItem.indexOf('ferrum_open:') + 12).replace(EOL, '').trim();
                         const parts = link.split('=');
                         if (parts.length > 1) {
                             this.tunnelKey = parts[1];
                         }
                         if (this.tunnelKey) {
-                            //todo create tunnel with access token
                             await this.api.createTunnel(this.accessToken, this.tunnelKey);
                         }
                     }
@@ -99,17 +106,13 @@ export class UnixTunnelService extends TunnelService {
                     const items = data.split(':')
                     if (items.length == 2) {
                         //create tun interface name
-                        const tun = items[1].replace('\n', '');
+                        const tun = items[1].replace(EOL, '');
                         // get assigned ip and service network
                         this.logInfo(`getting tunnel ip list ${tun}`);
                         const iplist = await this.api.getTunnelAndServiceIpList(this.tunnelKey);
 
 
-                        this.logInfo(`configuring tunnel: ${tun} with ${JSON.stringify(iplist)}`)
-                        // prepare network for connection
-                        await this.execOnShell(`ip addr add ${iplist.assignedIp}/32 dev ${tun}`)
-                        await this.execOnShell(`ip link set ${tun} up`);
-                        await this.execOnShell(`ip route add ${iplist.serviceNetwork} dev ${tun}`)
+                        await this.configureNetwork(tun, iplist);
 
 
                         //await this.executeOnRootShell(`wait ${this.sshPID} || echo "ferrum_exit:"`)
@@ -153,6 +156,16 @@ export class UnixTunnelService extends TunnelService {
         this.isInitted = true;
 
 
+    }
+    public async onStdOut(data: string) {
+
+    }
+    public async configureNetwork(tun: string, conf: { assignedIp: string, serviceNetwork: string }) {
+        this.logInfo(`configuring tunnel: ${tun} with ${JSON.stringify(conf)}`)
+        // prepare network for connection
+        await this.execOnShell(`ip addr add ${conf.assignedIp}/32 dev ${tun}`)
+        await this.execOnShell(`ip link set ${tun} up`);
+        await this.execOnShell(`ip route add ${conf.serviceNetwork} dev ${tun}`)
     }
     ////./ssh_ferrum -c none -N -F ../etc/ssh_config -w any  -o "StrictHostKeyChecking no"  ferrum@192.168.88.243 -p3333
     public override async openTunnel(isRoot = true): Promise<void> {
@@ -244,11 +257,27 @@ export class UnixTunnelService extends TunnelService {
         const child = child_process.spawn(this.sshCommands[0], this.sshCommands.slice(1))
         //const child = child_process.spawn(`sleep`, ['60'])
         child.stdout?.on('data', (data: Buffer) => {
-            this.onstdout(data.toString());
+            this.newLineBufferStdout += data.toString();
+            while (true) {
+                let index = this.newLineBufferStdout.indexOf('\n');
+                if (index < 0)
+                    break;
+
+                this.onstdout(this.newLineBufferStdout.substring(0, index + 1));
+                this.newLineBufferStdout = this.newLineBufferStdout.substring(index + 1);
+            }
         });
         child.stderr?.on('data', (data: Buffer) => {
-            this.onstderr(data.toString());
-            this.onstdout(data.toString());
+
+            this.newLineBufferStderr += data.toString();
+            while (true) {
+                let index = this.newLineBufferStderr.indexOf('\n');
+                if (index < 0)
+                    break;
+
+                this.onstdout(this.newLineBufferStderr.substring(0, index + 1));
+                this.newLineBufferStderr = this.newLineBufferStderr.substring(index + 1);
+            }
         });
         child.on('exit', async () => {
             this.childProcess = null;
@@ -277,15 +306,18 @@ export class UnixTunnelService extends TunnelService {
                 this.logInfo(`killing process tunnel`)
 
             this.childProcess?.kill();
-            if (this.sshPID) {
-                this.logInfo(`forcing to kill ${this.sshPID}`);
-                await this.execOnShell('kill -9 ' + this.sshPID);
-                this.sshPID = '';
-            }
+            await this.forceKillPid();
             this.isWorking = false;
 
         } catch (err: any) {
             this.logError(err.message || err.toString());
+        }
+    }
+    protected async forceKillPid() {
+        if (this.sshPID) {
+            this.logInfo(`forcing to kill ${this.sshPID}`);
+            await this.execOnShell('kill -9 ' + this.sshPID);
+            this.sshPID = '';
         }
     }
 }

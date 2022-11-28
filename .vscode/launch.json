@@ -18,10 +18,14 @@
                 "NODE_ENV": "development2"
             },
             "windows": {
-                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
+                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd",
+                "args": [
+                    "${workspaceFolder}/build/src",
+                    "--win32"
+                ]
             },
             "args": [
-                "${workspaceFolder}/build/src"
+                "${workspaceFolder}/build/src",
             ],
             "outputCapture": "std",
         },
@@ -44,7 +48,12 @@
                 "NODE_ENV": "development2"
             },
             "windows": {
-                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
+                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd",
+                "runtimeArgs": [
+                    "worker.js",
+                    "--url=http://192.168.88.51",
+                    "--socket=\\\\?\\pipe\\ferrumgate.sock"
+                ],
             },
             "args": [
                 "${workspaceFolder}/build/src"

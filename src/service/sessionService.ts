@@ -85,7 +85,20 @@ export class SessionService extends BaseHttpService {
     }
     createPipename() {
         //return `/tmp/ferrumgate.sock`;
-        return `/tmp/ferrumgate.${Math.floor(Math.random() * 100000)}.sock`;
+        //return '\\\\?\\pipe\\ferrumgate.sock';
+        const platform = Util.getPlatform()
+        switch (platform) {
+            case 'linux':
+            case 'netbsd':
+            case 'freebsd':
+                return `/tmp/ferrumgate.${Math.floor(Math.random() * 100000)}.sock`;
+            case 'win32':
+                return path.join('\\\\?\\pipe', `ferrumgate.${Math.floor(Math.random() * 100000)}.sock`);
+
+            default:
+                throw new Error("not implemented for os:" + platform);
+        }
+
     }
     async createIPCServer() {
         return new Promise((resolve, reject) => {

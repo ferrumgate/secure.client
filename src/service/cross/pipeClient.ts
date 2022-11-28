@@ -1,7 +1,5 @@
-
-import * as fspromise from 'fs/promises'
-import * as fs from 'fs';
-import net from 'node:net';
+import net from 'net';
+import { Util } from '../util';
 import path from 'path';
 
 export class PipeClient {
@@ -12,42 +10,47 @@ export class PipeClient {
     /**
      *
      */
-    constructor() {
-
-
+    constructor(name: string) {
+        this.name = name;
     }
 
-    async connect(name: string) {
-        this.name = name;
+    async connect() {
+        const platform = Util.getPlatform();
+        let filepath = '';
+        switch (platform) {
+            case 'linux':
+            case 'netbsd':
+            case 'freebsd':
+                filepath = this.name.startsWith('/') ? this.name : '/tmp/' + this.name; break;
+            case 'win32':
+                filepath = this.name.startsWith("\\") ? this.name : path.join('\\\\?\\pipe', this.name); break;
+            default:
+                throw new Error('not implemented');
+                break;
+
+        }
         this.isDisconnected = false;
         this.socket = net.connect({
-            path: path.join('\\\\?\\pipe', name),
+            path: filepath,
             writable: true, readable: true,
         })
-
-
         this.socket.on('close', () => {
             if (!this.isDisconnected) {
                 this.isDisconnected = true;
-                this.onStdout(`disconnected:${this.name}`);
+                this.onClose();
             }
 
         })
-        this.socket.on('end', () => {
+
+        this.socket.on('error', (err: Error) => {
             if (!this.isDisconnected) {
                 this.isDisconnected = true;
-                this.onStdout(`disconnected:${this.name}`);
-            }
-        })
-        this.socket.on('error', () => {
-            if (!this.isDisconnected) {
-                this.isDisconnected = true;
-                this.onStdout(`disconnected:${this.name}`);
+                this.onError(err);
             }
         })
         this.socket.on('connect', () => {
             this.isDisconnected = false;
-            this.onStdout(`connected:${this.name}`);
+            this.onConnect();
         })
 
         this.socket.on('data', (data: Buffer) => {
@@ -59,20 +62,23 @@ export class PipeClient {
                 let len = this.buffer.readInt32BE(0);
                 if (this.buffer.length < len + 4)// not enough body
                     return;
-                const msglist = this.buffer.slice(4, 4 + len).toString('utf-8');
+                const msglist = this.buffer.slice(4, 4 + len);
                 this.buffer = this.buffer.slice(4 + len);
 
-                this.onStdout(msglist);
+                this.onData(msglist);
             }
 
         });
 
-
     }
 
     onStdout = async (data: string) => { }
-    async write(msg: string) {
-        let data = Buffer.from(msg, 'utf-8');
+    onData = async (data: Buffer) => { }
+    onConnect = async () => { };
+    onError = async (error: Error) => { };
+    onClose = async () => { };
+    async write(msg: Buffer) {
+        let data = msg;
         let tmp = Buffer.from([0, 0, 0, 0]).slice(0, 4);
         let buffers = [tmp, data];
         let enhancedData = Buffer.concat(buffers)

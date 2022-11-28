@@ -35,11 +35,11 @@ async function executeBuilder() {
     // Step 1: Instantiate the MSICreator
 
     const msiCreator = new MSICreator({
-        appDirectory: 'C:\\Users\\test\\Desktop\\ferrum\\secure.client\\pack\\FerrumGateUI-win32-x64',
+        appDirectory: 'C:\\Users\\test\\Desktop\\ferrum\\secure.client\\pack\\FerrumGate-win32-x64',
         outputDirectory: 'C:\\Users\\test\\Desktop\\ferrum\\secure.client\\dist\\win32',
         appIconPath: './src/assets/img/icon.ico',
-        description: 'Zero Trust Application Access',
-        exe: 'FerrumGateUI.exe',
+        description: 'Zero Trust Network Access',
+        exe: 'FerrumGate.exe',
         name: 'FerrumGate',
         shortName: 'FerrumGate',
         upgradeCode: '54a32f9e-7103-49f4-bf2f-29de5fca5bcd',
