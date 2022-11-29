@@ -1,7 +1,7 @@
 
 import chai from 'chai';
 import { shell } from 'electron';
-import { ConfigService } from '../src/service/configService';
+import { ConfigService } from '../src/service/cross/configService';
 import { EventService } from '../src/service/eventsService';
 import { UnixTunnelService } from '../src/service/unix/unixTunnelService';
 const expect = chai.expect;

@@ -1,8 +1,8 @@
-import { MenuItem, safeStorage, app } from "electron";
+
 import fspromise from 'fs/promises'
 import fs from 'fs';
 import path from 'path';
-
+import getAppDataPath from 'appdata-path';
 /**
  * @summary system wide config interface
  */
@@ -21,7 +21,7 @@ export class ConfigService {
      *
      */
     constructor() {
-        this._baseDirectory = path.join(app?.getPath('appData') || '/tmp/appData', 'ferrumgate');
+        this._baseDirectory = path.join(getAppDataPath('ferrumgate'));
         this._filename = 'ferrum.json';
     }
 

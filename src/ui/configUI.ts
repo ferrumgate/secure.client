@@ -2,7 +2,7 @@ import { BrowserWindow, ipcMain, nativeImage, Rectangle, screen, Tray } from "el
 import { EventService } from "../service/eventsService";
 import path from 'path';
 import { WindowUI } from "./window";
-import { ConfigService } from "../service/configService";
+import { ConfigService } from "../service/cross/configService";
 
 /**
  * @summary configuration ui for settings some options like host

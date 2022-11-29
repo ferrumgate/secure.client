@@ -44,14 +44,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="FerrumGateService.exe" size="32256">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="FerrumGateService.exe" size="26112">
       <assemblyIdentity name="FerrumGateService" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>Xm2Mf6BIsOl3iNUCCKi3Mq5UxndGs1zQKKSi1Kr3n1Y=</dsig:DigestValue>
+        <dsig:DigestValue>Fzj8aB37oYEDxVZbA+iAszwN770Ch7cMHJ65MKBwzOQ=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -82,13 +82,13 @@
       <dsig:DigestValue>5dqER9wsMg7cD8UvoBiFwQPejBGEgfaDZDyswyINr84=</dsig:DigestValue>
     </hash>
   </file>
-  <file name="FerrumGateService.exe.config" size="1098">
+  <file name="FerrumGateService.exe.config" size="1057">
     <hash>
       <dsig:Transforms>
         <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
       </dsig:Transforms>
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-      <dsig:DigestValue>2IGySDwuEiyTquuU3nwgtHYcI6YIl0zJ6NX3KxQtkQQ=</dsig:DigestValue>
+      <dsig:DigestValue>HuENU6J5AlbuTE5cCCA+jTxE/KB65h00y1rXseXpgJU=</dsig:DigestValue>
     </hash>
   </file>
 </asmv1:assembly>

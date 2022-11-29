@@ -6,7 +6,7 @@ import { TrayUI } from './ui/trayUI';
 import { ConfigUI } from './ui/configUI';
 import fs from 'fs';
 import fspromise from 'fs/promises';
-import { Config, ConfigService } from './service/configService';
+import { Config, ConfigService } from './service/cross/configService';
 import * as unhandled from 'electron-unhandled';
 import { LogService } from './service/logService';
 import { Util } from './service/util';

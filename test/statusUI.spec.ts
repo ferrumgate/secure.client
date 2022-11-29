@@ -3,7 +3,7 @@ import chai from 'chai';
 const expect = chai.expect;
 import webdriver from 'selenium-webdriver';
 import fs from 'fs';
-import { ConfigService } from '../src/service/configService';
+import { ConfigService } from '../src/service/cross/configService';
 import { ipcMain } from 'electron';
 import { DriverService } from 'selenium-webdriver/remote';
 

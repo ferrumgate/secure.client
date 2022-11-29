@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { BaseHttpService, BaseService } from './baseService';
-import { ConfigService } from './configService';
+import { ConfigService } from './cross/configService';
 import { EventService } from './eventsService';
 import child_process from 'child_process';
 
