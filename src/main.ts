@@ -155,63 +155,6 @@ export async function init() {
 }
 
 
-/**
- * when windows user click open, connect to win32 svc and start ui
- */
-async function init_win32_trigger() {
-    events = new EventService();
-    try {
-
-        log = new LogService();
-        // catch all unhandled exceptions
-        unhandled.default({
-            logger: (error) => {
-                console.log(`unhandled error: ${error}`);
-                log.write('error', error.stack || error.message || 'unknown');
-
-            },
-            showDialog: true
-        });
-
-        events.on("notify", (data: { type: string, msg: string }) => {
-            new Notification({ title: 'Ferrum', body: data.msg }).show();
-
-        })
-        const pipe = new PipeClient('ferrumgate');
-        pipe.onConnect = async () => {
-            new Notification({ title: 'Ferrum', body: 'Trying to start' }).show();
-            await pipe.write(Buffer.from("connect"));
-        }
-        pipe.onError = async (err: Error) => {
-            new Notification({ title: 'FerrumGate', body: err.message }).show();
-            setTimeout(() => {
-                app.exit(1);
-            }, 3000);
-        };
-
-        pipe.onData = async (data) => {
-            const msg = data.toString('utf-8');
-            if (msg.startsWith("ok"))
-                app.exit(0);
-            else {
-                new Notification({ title: 'FerrumGate', body: msg }).show();
-                setTimeout(() => {
-                    app.exit(1);
-                }, 3000);
-            }
-        }
-        await pipe.connect();
-
-
-
-
-    } catch (err: any) {
-        new Notification({ title: 'FerrumGate', body: err.message || err.toString() }).show();
-        throw err;
-    }
-
-
-}
 
 
 //when app ready, init
@@ -233,11 +176,9 @@ app.on('ready', async () => {
             await init(); break;
         case 'win32':
             app.setAppUserModelId("FerrumGate");
-            const normalStart = app.commandLine.hasSwitch('win32');
-            if (normalStart)
-                await init();
-            else
-                await init_win32_trigger();
+
+            await init();
+
             break;
         default:
             throw new Error('not implemented');
