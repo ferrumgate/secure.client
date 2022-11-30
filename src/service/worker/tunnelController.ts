@@ -8,6 +8,7 @@ import { TunnelApiService } from "./tunnelApiService";
 import { PipeClient } from "../cross/pipeClient";
 import os from 'os';
 import { Win32TunnelService } from "../win32/win32TunnelService";
+import fs from 'fs';
 
 /**
  * @summary tunnel controller, watch every tunnal
@@ -57,6 +58,7 @@ export class TunnelController {
             this.ipcClient = new PipeClient(this.pipename);
             this.ipcClient.onConnect = async () => {
                 await this.closeAllTunnels();
+
                 setIntervalAsync(async () => {
                     await this.checkSystem();
                 }, 2000);
@@ -117,6 +119,7 @@ export class TunnelController {
     async checkSystem() {
 
         try {
+
             if (this.lastErrorOccured && (new Date().getTime() - this.lastErrorOccured) < 15000)
                 return;
             if (!this.accessToken) {
@@ -217,9 +220,14 @@ export class TunnelController {
             if (this.ipcClient)
                 this.ipcClient.close();
             this.ipcClient = null;
-            process.exit(0);
+
         } catch (err: any) {
             this.logError(err.message || err.toString());
+        }
+        try {
+            process.exit(0);
+        } catch (ignore) {
+
         }
     }
 
@@ -232,6 +240,7 @@ export class TunnelController {
                 case 'tokenResponse':
                     await this.executeTokenResponse(cmd.data);
                     break;
+
                 case 'networkStatusRequest':
                     await this.executeNetworkInfo(cmd.data);
                     break;
@@ -255,6 +264,7 @@ export class TunnelController {
     }
 
 
+
     async writeToParent(msg: Cmd) {
 
         this.ipcClient?.write(Buffer.from(JSON.stringify(msg), 'utf-8'));
@@ -265,11 +275,13 @@ export class TunnelController {
 
     async logError(msg: string) {
         //console.log(msg);
+
         await this.writeToParent({ type: 'logRequest', data: { type: 'error', msg: msg } })
 
     }
     async logInfo(msg: string) {
         //console.log(msg);
+
         await this.writeToParent({ type: 'logRequest', data: { type: 'info', msg: msg } })
     }
 

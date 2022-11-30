@@ -178,7 +178,9 @@ app.on('ready', async () => {
             await init(''); break;
         case 'win32':
             app.setAppUserModelId("FerrumGate");
-            const token = app.commandLine.getSwitchValue("token");
+            await init('');
+            await trigger_win32_svc_config();
+            /*const token = app.commandLine.getSwitchValue("token");
             if (token) {
 
                 await init(token);
@@ -186,7 +188,7 @@ app.on('ready', async () => {
             } else {
 
                 await trigger_win32_svc();
-            }
+            }*/
 
 
             break;
@@ -199,6 +201,45 @@ app.on('ready', async () => {
 
 
 })
+
+//get config from windows service
+async function trigger_win32_svc_config() {
+
+
+    const pipe = new PipeClient('ferrumgate');
+    pipe.onConnect = async () => {
+
+        await pipe.write(Buffer.from(`config`));
+    }
+    pipe.onError = async (err: Error) => {
+
+        pipe.close();
+
+    };
+
+    pipe.onData = async (data) => {
+        const msg = data.toString('utf-8');
+
+        if (msg.startsWith("config:")) {
+            try {
+                log.write('info', `config received`);
+                const substr = msg.substring("config:".length);
+                if (substr) {
+                    config.saveConfig(JSON.parse(substr));
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+        else {
+
+        }
+        pipe.close();
+
+    }
+    await pipe.connect();
+
+}
 
 
 

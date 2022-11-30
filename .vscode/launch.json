@@ -8,7 +8,7 @@
             "name": "Debug Main Process",
             "type": "node",
             "request": "launch",
-            "preLaunchTask": "build",
+            //"preLaunchTask": "build",
             "cwd": "${workspaceFolder}/build/src",
             "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
             "env": {
@@ -20,8 +20,7 @@
             "windows": {
                 "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd",
                 "args": [
-                    "${workspaceFolder}/build/src",
-                    "--token=abd"
+                    "${workspaceFolder}/build/src"
                 ]
             },
             "args": [

@@ -51,7 +51,8 @@ export class SudoService extends BaseService {
         const pipe = new PipeClient('ferrumgate');
         pipe.onConnect = async () => {
             this.logInfo(`connected to ferrumgate svc pipe`);
-            await pipe.write(Buffer.from(`connect ${this.windowsToken} ${url} ${socket}`));
+            // await pipe.write(Buffer.from(`connectWith ${this.windowsToken} ${url} ${socket}`));
+            await pipe.write(Buffer.from(`connect ${url} ${socket}`));
         }
         pipe.onError = async (err: Error) => {
 

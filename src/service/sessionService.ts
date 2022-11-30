@@ -73,8 +73,8 @@ export class SessionService extends BaseHttpService {
         })
         this.events.on('workerDisconnected', async () => {
             this.logInfo('worker disconnected');
-            //await this.closeSession();
             this.ipcClient = null;
+            await this.closeSession();
         })
         this.events.on('networkStatusRequest', async () => {
             await this.writeToWorker({ type: 'networkStatusRequest', data: {} })
@@ -106,6 +106,7 @@ export class SessionService extends BaseHttpService {
                 resolve('');
             }
             else {
+                this.pipeName = this.createPipename();
                 this.ipcServer = net.createServer();
                 this.ipcServer.on('listening', () => {
                     this.ipcServerCreated = true;
@@ -220,6 +221,7 @@ export class SessionService extends BaseHttpService {
 
 
     }
+
     async executeTunnelFailed(data: { msg: string }) {
         this.events.emit('tunnelFailed', data.msg);
     }
@@ -356,10 +358,16 @@ export class SessionService extends BaseHttpService {
             clearIntervalAsync(this.tokenCheckInterval);
         this.tokenCheckInterval = null;
 
-        if (this.ipcServer)
-            this.ipcServer.close();
-        this.ipcServer = null
+        if (this.ipcClient) {
+            this.ipcClient.destroy();
 
+        }
+        if (this.ipcServer) {
+            this.ipcServer.close();
+        }
+        this.ipcClient = null;
+        this.ipcServer = null
+        this.ipcServerCreated = false;
         this.accessToken = '';
         this.refreshToken = '';
         this.exchangeToken = '';
