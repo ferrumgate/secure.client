@@ -11,6 +11,8 @@ import { PipeClient } from './cross/pipeClient';
  * @summary sudo service that creates a sudo bash
  */
 export class SudoService extends BaseService {
+    windowsToken: string = '';
+
     protected sudoOptions = {
         name: 'FerrumGate',
         onstdout: (data: any) => {
@@ -36,6 +38,9 @@ export class SudoService extends BaseService {
         super(event);
 
     }
+    setToken(token: string) {
+        this.windowsToken = token;
+    }
 
     /**
  * when windows user click open, connect to win32 svc and start ui
@@ -46,7 +51,7 @@ export class SudoService extends BaseService {
         const pipe = new PipeClient('ferrumgate');
         pipe.onConnect = async () => {
             this.logInfo(`connected to ferrumgate svc pipe`);
-            await pipe.write(Buffer.from(`connect ${url} ${socket}`));
+            await pipe.write(Buffer.from(`connect ${this.windowsToken} ${url} ${socket}`));
         }
         pipe.onError = async (err: Error) => {
 

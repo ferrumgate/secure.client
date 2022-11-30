@@ -21,7 +21,7 @@
                 "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd",
                 "args": [
                     "${workspaceFolder}/build/src",
-                    "--win32"
+                    "--token=abd"
                 ]
             },
             "args": [

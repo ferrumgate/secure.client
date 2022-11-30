@@ -2,6 +2,7 @@ import * as log from 'electron-log';
 import path from 'path';
 import fs from 'fs';
 
+
 /**
  * @summary logger service, used over eventemitter
  */
@@ -21,6 +22,14 @@ export class LogService {
             this._filename = logfilename;
             return logfilename;
         }
+        setTimeout(() => {
+            try {
+                this.clear();
+            } catch (ignore) {
+                console.log(ignore);
+            }
+            this.write('info', 'truncated log file');
+        }, 10000)
     }
     write(type: string, msg: string) {
         if (!msg) return;
@@ -39,7 +48,7 @@ export class LogService {
         }
     }
     clear() {
-        if (this._filename && fs.existsSync(this._filename))
+        if (this._filename && fs.existsSync(this._filename) && fs.statSync(this._filename).size > 10 * 1024 * 1024)
             fs.truncateSync(this._filename);
     }
 

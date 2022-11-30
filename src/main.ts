@@ -38,7 +38,7 @@ const assetsDirectory = path.join(__dirname, 'assets')
 // Don't show the app in the doc
 app.dock?.hide()
 
-export async function init() {
+export async function init(token: string) {
     events = new EventService();
     config = new ConfigService();
     log = new LogService();
@@ -46,6 +46,7 @@ export async function init() {
     const conf = await config.getConf();
     api = new ApiService(conf?.host || 'http://localhost', events);
     sudo = new SudoService(events);
+    sudo.setToken(token || '');
 
     session = new SessionService(events, config, api, sudo);
 
@@ -117,7 +118,7 @@ export async function init() {
 
 
     app.setName('FerrumGate');
-    events.emit("log", 'info', 'starting app');
+    events.emit("log", 'info', 'starting app with token:' + token);
 
 
 
@@ -168,16 +169,25 @@ app.on('ready', async () => {
 
     }
 
+
     const platform = Util.getPlatform()
     switch (platform) {
         case 'linux':
         case 'netbsd':
         case 'freebsd':
-            await init(); break;
+            await init(''); break;
         case 'win32':
             app.setAppUserModelId("FerrumGate");
+            const token = app.commandLine.getSwitchValue("token");
+            if (token) {
 
-            await init();
+                await init(token);
+
+            } else {
+
+                await trigger_win32_svc();
+            }
+
 
             break;
         default:
@@ -189,6 +199,42 @@ app.on('ready', async () => {
 
 
 })
+
+
+
+async function trigger_win32_svc() {
+
+
+
+    log = new LogService();
+
+    const pipe = new PipeClient('ferrumgate');
+    pipe.onConnect = async () => {
+        log.write('info', "starting application")
+        await pipe.write(Buffer.from(`hello`));
+    }
+    pipe.onError = async (err: Error) => {
+
+
+        pipe.close();
+
+    };
+
+    pipe.onData = async (data) => {
+        const msg = data.toString('utf-8');
+
+        if (msg.startsWith("ok")) {
+            log.write('info', "started application with msg:" + msg)
+        }
+        else {
+            log.write('info', "failed starting application with msg:" + msg)
+        }
+        pipe.close();
+        app.exit();
+    }
+    await pipe.connect();
+
+}
 
 // Quit the app when the window is closed
 app.on('window-all-closed', () => {
