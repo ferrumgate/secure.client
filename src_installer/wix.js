@@ -35,13 +35,13 @@ async function executeBuilder() {
     // Step 1: Instantiate the MSICreator
 
     const msiCreator = new MSICreator({
-        appDirectory: 'C:\\Users\\test\\Desktop\\ferrum\\secure.client\\pack\\FerrumGateUI-win32-x64',
+        appDirectory: 'C:\\Users\\test\\Desktop\\ferrum\\secure.client\\pack\\FerrumGate-win32-x64',
         outputDirectory: 'C:\\Users\\test\\Desktop\\ferrum\\secure.client\\dist\\win32',
         appIconPath: './src/assets/img/icon.ico',
-        description: 'Zero Trust Application Access',
-        exe: 'FerrumGateUI.exe',
-        name: 'Ferrum Gate',
-        shortName: 'Ferrum Gate',
+        description: 'Zero Trust Network Access',
+        exe: 'FerrumGate.exe',
+        name: 'FerrumGate',
+        shortName: 'FerrumGate',
         upgradeCode: '54a32f9e-7103-49f4-bf2f-29de5fca5bcd',
         manufacturer: 'FerrumGate',
         bundled: false,
@@ -101,7 +101,7 @@ async function executeBuilder() {
         throw new Error('productname not found');
     productname['@_Value'] = msiCreator.name;
     //install services
-    //<ServiceInstall Id="ServiceInstaller" Name="FerrumGateService" DisplayName="Ferrum Gate"
+    //<ServiceInstall Id="ServiceInstaller" Name="FerrumGateService" DisplayName="FerrumGate"
     // Description="Zero Trust Application Access" Vital="yes" Account="LocalSystem" 
     // Start="auto" Type="ownProcess" ErrorControl="normal"  />
     //<ServiceControl Id="StartService" Start="install" Stop="both" Remove="uninstall" 
@@ -114,7 +114,7 @@ async function executeBuilder() {
     service.push({
         ServiceInstall: [],
         ':@': {
-            '@_Id': "ServiceInstaller", '@_Name': "FerrumGateService", '@_DisplayName': "Ferrum Gate",
+            '@_Id': "ServiceInstaller", '@_Name': "FerrumGateService", '@_DisplayName': "FerrumGate",
             '@_Description': "Zero Trust Application Access", '@_Vital': "yes", '@_Account': "LocalSystem",
             '@_Start': "auto", '@_Type': "ownProcess", '@_ErrorControl': "normal"
         }

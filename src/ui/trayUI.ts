@@ -1,6 +1,8 @@
 import { app, BrowserWindow, ipcMain, Tray, screen, Menu, MenuItem } from 'electron';
 import path from 'path';
 import { EventService } from '../service/eventsService';
+import { ConfigUI } from './configUI';
+import { StatusUI } from './statusUI';
 
 
 /**
@@ -12,19 +14,19 @@ export class TrayUI {
     constructor(private events: EventService) {
         this.tray = this.createTray();
 
+
     }
 
     private createTray() {
         const assetsDirectory = path.join(__dirname, '../', 'assets')
 
-        const tray = new Tray(path.join(assetsDirectory, 'img', 'logo-red-16.png'))
-
+        const tray = new Tray(path.join(assetsDirectory, 'img', 'logo-red.png'))
 
         //some menu items
         const connect: MenuItem = {
             id: 'connect',
             label: 'Connect', type: 'normal', icon: path.join(assetsDirectory, 'img', 'connect.png'),
-            click: () => { this.events.emit('openTunnel') }
+            click: () => { this.events.emit('openSession') }
 
         } as unknown as MenuItem;
         const connecting: MenuItem = {
@@ -33,11 +35,13 @@ export class TrayUI {
             click: () => { }
 
         } as unknown as MenuItem;
+
+
         const disconnect: MenuItem = {
             id: 'disconnect',
             label: 'Disconnect', type: 'normal', visible: false,
             icon: path.join(assetsDirectory, 'img', 'disconnect.png'),
-            click: () => { this.events.emit('closeTunnel') }
+            click: () => { this.events.emit('closeSession') }
         } as unknown as MenuItem;
         const update: MenuItem = {
             id: 'update',
@@ -45,6 +49,15 @@ export class TrayUI {
             icon: path.join(assetsDirectory, 'img', 'update.png'), click: () => {
                 this.events.emit("openLink", `https://github.com/ferrumgate/secure.client/releases/tag/${this.latestFoundedRelease}`);
             }
+        } as unknown as MenuItem;
+
+        const status: MenuItem = {
+            id: 'status',
+            label: 'Status', type: 'normal', icon: path.join(assetsDirectory, 'img', 'status.png'),
+            click: () => {
+                this.events.emit("showStatusWindow");
+            }
+
         } as unknown as MenuItem;
 
         const options = {
@@ -72,45 +85,48 @@ export class TrayUI {
         ]);
 
 
-        this.events.on('tunnelOpening', () => {
+        this.events.on('sessionOpening', () => {
 
             connect.visible = false;
             connecting.visible = true;
             disconnect.visible = false;
+            status.visible = false;
             const contextMenu = Menu.buildFromTemplate([
-                connect, connecting, disconnect, options, quit, seperator, update
+                connect, connecting, disconnect, status, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
-            tray.setImage(path.join(assetsDirectory, 'img', 'logo-yellow-16.png'));
+            tray.setImage(path.join(assetsDirectory, 'img', 'logo-yellow.png'));
 
         })
 
-        this.events.on('tunnelOpened', () => {
+        this.events.on('sessionOpened', () => {
             connect.visible = false;
             connecting.visible = false;
             disconnect.visible = true;
+            status.visible = true;
             const contextMenu = Menu.buildFromTemplate([
-                connect, connecting, disconnect, options, quit, seperator, update
+                connect, connecting, disconnect, status, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
-            tray.setImage(path.join(assetsDirectory, 'img', 'logo-green-16.png'));
+            tray.setImage(path.join(assetsDirectory, 'img', 'logo-green.png'));
         })
-        this.events.on('tunnelClosed', () => {
+        this.events.on('sessionClosed', () => {
             connect.visible = true;
             connecting.visible = false;
             disconnect.visible = false;
+            status.visible = false;
             const contextMenu = Menu.buildFromTemplate([
-                connect, connecting, disconnect, options, quit, seperator, update
+                connect, connecting, disconnect, status, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
-            tray.setImage(path.join(assetsDirectory, 'img', 'logo-red-16.png'));
+            tray.setImage(path.join(assetsDirectory, 'img', 'logo-red.png'));
         })
 
 
         this.events.on('release', (release) => {
             update.visible = true;
             const contextMenu = Menu.buildFromTemplate([
-                connect, connecting, disconnect, options, quit, seperator, update
+                connect, connecting, disconnect, status, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
             if (this.latestFoundedRelease != release) {
@@ -120,7 +136,7 @@ export class TrayUI {
         })
 
         tray.setToolTip('Zero trust access')
-        tray.setTitle('Ferrum Gate')
+        tray.setTitle('FerrumGate')
         tray.setContextMenu(contextMenu);
         tray.setIgnoreDoubleClickEvents(true);
 

@@ -1,5 +1,10 @@
 import { EventEmitter } from 'events';
 import { ipcMain, ipcRenderer } from 'electron';
+
+
+
+
+
 /**
  * @summary inherits @EventEmitter nodejs class for supporting determined event names,
  * also emits events that comes from ipcrenderer
@@ -10,22 +15,23 @@ export class EventService extends EventEmitter {
      * @example ['tunnelOpened', 'tunnelClosed']
      */
 
-    protected knownEvents = ['tunnelOpening', 'tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow',
-        'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow',
-        "openLink", "notify", "appVersion", "config", "saveConfig", "log", "throwError", 'release',
-        'loadingWindowClosed', 'openTunnel', 'closeTunnel'];
+    protected knownEvents = ['openSession', 'closeSession', 'sessionOpening', 'sessionOpened', 'sessionClosed', 'tunnelFailed', 'tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow',
+        'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow', 'showStatusWindow', 'closeStatusWindow',
+        "openLink", "notify", "appVersion", "config", "configChanged", "saveConfig", "log", "throwError", 'release',
+        'loadingWindowClosed', 'openTunnel', 'closeTunnel', 'sudoIsReady', 'sudoFailed', 'workerConnected', 'workerDisconnected', 'networkStatusReply', 'networkStatusRequest', 'logFile'];
     /**
      *
      */
-    constructor() {
+    constructor(headless = false) {
         super();
         // resend all render events to listeners, they willnot reply
-        this.knownEvents.forEach(x => {
-            ipcMain.on(x, (event: any, ...args: any[]) => {
-                super.emit(x, ...args);
-            })
-
-        })
+        /*  if (!headless)
+             this.knownEvents.forEach(x => {
+                 ipcMain.on(x, (event: any, ...args: any[]) => {
+                     super.emit(x, ...args);
+                 })
+ 
+             }) */
     }
     /**
      * 
@@ -35,7 +41,7 @@ export class EventService extends EventEmitter {
      */
     override on(eventName: string, listener: (...args: any[]) => void): this {
         if (!this.knownEvents.includes(eventName))
-            throw new Error('not known event');
+            throw new Error(`not known event: ${eventName}`);
         return super.on(eventName, listener);
     }
 
@@ -47,7 +53,7 @@ export class EventService extends EventEmitter {
      */
     override emit(eventName: string, ...args: any[]): boolean {
         if (!this.knownEvents.includes(eventName))
-            throw new Error('not known event');
+            throw new Error(`not known event: ${eventName}`);
         return super.emit(eventName, ...args);
     }
 

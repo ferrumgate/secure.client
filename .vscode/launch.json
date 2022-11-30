@@ -8,9 +8,38 @@
             "name": "Debug Main Process",
             "type": "node",
             "request": "launch",
+            //"preLaunchTask": "build",
+            "cwd": "${workspaceFolder}/build/src",
+            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+            "env": {
+                "ELECTRON_ENABLE_LOGGING": "true",
+                "ELECTRON_ENABLE_STACK_DUMPING": "true",
+                "ELECTRON_RUN_AS_NODE": "false",
+                "NODE_ENV": "development2"
+            },
+            "windows": {
+                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd",
+                "args": [
+                    "${workspaceFolder}/build/src"
+                ]
+            },
+            "args": [
+                "${workspaceFolder}/build/src",
+            ],
+            "outputCapture": "std",
+        },
+        {
+            "name": "Debug Worker Process",
+            "type": "node",
+            "request": "launch",
             "preLaunchTask": "build",
             "cwd": "${workspaceFolder}/build/src",
             "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+            "runtimeArgs": [
+                "worker.js",
+                "--url=http://192.168.88.51",
+                "--socket=/tmp/ferrumgate.30670.sock"
+            ],
             "env": {
                 "ELECTRON_ENABLE_LOGGING": "true",
                 "ELECTRON_ENABLE_STACK_DUMPING": "true",
@@ -18,12 +47,18 @@
                 "NODE_ENV": "development2"
             },
             "windows": {
-                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
+                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd",
+                "runtimeArgs": [
+                    "worker.js",
+                    "--url=http://192.168.88.51",
+                    "--socket=\\\\?\\pipe\\ferrumgate.sock"
+                ],
             },
             "args": [
                 "${workspaceFolder}/build/src"
             ],
             "outputCapture": "std",
-        }
+            "autoAttachChildProcesses": true,
+        },
     ]
 }

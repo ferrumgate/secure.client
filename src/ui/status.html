@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>FerrumGate</title>
+    <link rel="stylesheet" href="../assets/css/photon.css" media="screen" charset="utf-8">
+    <link rel="stylesheet" href="./all.css" media="screen" charset="utf-8">
+    <script charset="utf-8" src="./statusHtml.js"></script>
+
+</head>
+
+<body>
+    <!-- <div class="header-arrow"></div> -->
+    <div class="window">
+        <header class="toolbar toolbar-header">
+            <h1 class="title" id="ferrumgate_status">FerrumGate<span class="js-update-time"></span></h1>
+            <div class="toolbar-actions pull-right">
+                <div class="btn-group">
+                    <button class="btn btn-default js-quit-action" id="el-close-window">
+                        <span class="icon icon-cancel js-quit-action" title="Quit"></span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="window-content content">
+            <div class="tab-group">
+                <div class="tab-item active">
+                    <div class="tab-content">
+                        Network
+                    </div>
+                </div>
+
+            </div>
+            <div id="tab-content-general" class="tab-content">
+                <div class="tab-content">
+
+                    <div class="form-group ferrum-status">
+                        <ul class="list-group ferrum-status-network-list" id="el-ferrum-status-net-list">
+
+                            <li class="list-group-item">
+
+                                <div class="ferrum-status-network-item ok">
+
+                                    <img class="img-circle media-object pull-left" src="../assets/img/logo.png"
+                                        width="24" height="24">
+                                    <div class="ferrum-status-network-item-name">wait for auto refresh</div>
+                                    <div class="ferrum-status-network-item-status">
+                                        <span style="padding-left: 10px;">why</span>
+                                        <span class="icon icon-check" style="color:green ;font-size: 18px;"></span>
+                                        <span class="icon icon-cancel" style="color:red ;font-size: 18px;"></span>
+                                        <span class="icon icon-help" style="color:red ;font-size: 14px;"></span>
+
+                                    </div>
+
+
+
+                                </div>
+                            </li>
+
+
+                        </ul>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <footer class="toolbar toolbar-footer">
+
+            <div class="footer-link">
+                <div id="el-link-ferrumgate">
+                    Powered by <a target="_blank">FerrumGate</a>
+                </div>
+                <span id="el-version">
+                </span>
+                <div>
+                    log:
+                    <a href="" target="_blank" id="el-logfile"></a>
+                </div>
+            </div>
+
+        </footer>
+    </div>
+</body>
+
+</html>

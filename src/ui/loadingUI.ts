@@ -16,7 +16,7 @@ export class LoadingUI {
         this.window = this.createWindow();
         setTimeout(() => {
             this.closeWindow();
-        }, 6000);
+        }, 3000);
 
     }
 
@@ -37,7 +37,7 @@ export class LoadingUI {
     height = 460 * (process.env.NODE_ENV == 'development' ? 2 : 1);
     createWindow() {
         const window = new BrowserWindow({
-            title: 'Ferrum Gate',
+            title: 'FerrumGate',
             width: this.width,
             height: this.height,
             icon: path.join(__dirname, '../assets/img/logo-transparent2.png'),
@@ -81,7 +81,7 @@ export class LoadingUI {
 
     closeWindow() {
         if (this.window && !this.window.isDestroyed()) {
-            this.window.close();
+            this.window.hide();
             this.events.emit('loadingWindowClosed');
         }
     }

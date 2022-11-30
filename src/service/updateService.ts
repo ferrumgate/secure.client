@@ -1,4 +1,5 @@
 import { net } from "electron";
+import { setIntervalAsync } from "set-interval-async";
 import { BaseService } from "./baseService";
 import { EventService } from "./eventsService";
 import { Util } from "./util";
@@ -82,7 +83,7 @@ export class UpdateService extends BaseService {
     }
 
     private startChecking() {
-        setInterval(async () => {
+        setIntervalAsync(async () => {
             this.logInfo('checking update');
             try {
 

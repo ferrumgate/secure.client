@@ -555,6 +555,7 @@ function WindowsElevate(instance, end) {
     command.push('-WindowStyle hidden');
     command.push('-Verb runAs');
     command = command.join(' ');
+    console.log(command);
     var child = Node.child.exec(command, { encoding: 'utf-8' },
         function (error, stdout, stderr) {
             // We used to return PERMISSION_DENIED only for error messages containing

@@ -1,7 +1,7 @@
 
 import chai, { config } from 'chai';
 import fs from 'fs';
-import { ConfigService } from '../src/service/configService';
+import { ConfigService } from '../src/service/cross/configService';
 const expect = chai.expect;
 
 
