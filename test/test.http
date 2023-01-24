@@ -1,0 +1,11 @@
+
+
+@Bearer = eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmVzIjoxNjc0NDI0MzIwMTY4LCJ1c2VyIjp7ImlkIjoiMGhzbWFpSVlId1h5U2tnayIsInNpZCI6ImVVazVrM2FQTmR3dHdhSHMza2lTRk5XTGZsaG5wVkRoUjc2VFd3cjRFN2tpS0tRY203TkxaeHE4MUxoYXNZbnYifSwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTY3NDQyMzc1N30.ITlFoX5cyquwEZfdtlJ0EZzW4QsN1MQN2ZxpnfJOboruHiP9dAuzS-97w4wwaFs3nYgjIw92ikyCmW-jJD5htu6GYy5jdSzGDV0c5Fnt3Gatt9J-pHbedt-UMWm8B0AScDUq4NzB-1Vttq78W5h6UA3W8T7liuMHkwKMZ34cE6440TM9haKoE_DbZC-LcVbA6XwnuAZb4J_peiu7kgtzMywOXy3wh51TbNT8XIooqZ33NuBbRxOSdHjHJe4OmXiU6DF3anHpf9Ks1yS-buraFtWX13pV9hpKdxirsZdaI4hBAuowDO6xwVh0zOflzoKKViDsJjPYqkHrxgKDr1rYJQ
+@TunnelKey = VZGroyIr6pArRoP0iNRKmGWvw6vs8fGhzlD3pkiudnSpPxcnRPBjysqtk5ILVccB
+POST http://192.168.43.51/api/client/tunnel
+Content-Type: application/json
+Authorization: Bearer {{Bearer}}
+
+{
+    "tunnelKey":"{{TunnelKey}}"
+}

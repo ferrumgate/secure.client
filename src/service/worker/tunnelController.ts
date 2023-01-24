@@ -9,6 +9,7 @@ import { PipeClient } from "../cross/pipeClient";
 import os from 'os';
 import { Win32TunnelService } from "../win32/win32TunnelService";
 import fs from 'fs';
+import { DarwinTunnelService } from "../darwin/darwinTunnelService";
 
 /**
  * @summary tunnel controller, watch every tunnal
@@ -106,6 +107,7 @@ export class TunnelController {
                 case 'linux':
                 case 'freebsd':
                 case 'netbsd':
+                case 'darwin':
                     await this.execOnShell('pkill ssh_ferrum'); break;
                 case 'win32':
                     await this.execOnShell('taskkill.exe /IM "ssh_ferrum.exe" /F'); break;
@@ -173,6 +175,8 @@ export class TunnelController {
                         network.tunnel.process = new UnixTunnelService(network, this.accessToken, this.event, this.api); break;
                     case 'win32':
                         network.tunnel.process = new Win32TunnelService(network, this.accessToken, this.event, this.api); break;
+                    case 'darwin':
+                        network.tunnel.process = new DarwinTunnelService(network, this.accessToken, this.event, this.api); break;
                     default:
                         throw new Error('not implemented for os:' + platform);
                 }

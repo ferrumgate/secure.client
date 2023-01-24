@@ -91,6 +91,7 @@ export class SessionService extends BaseHttpService {
             case 'linux':
             case 'netbsd':
             case 'freebsd':
+            case 'darwin':
                 return `/tmp/ferrumgate.${Math.floor(Math.random() * 100000)}.sock`;
             case 'win32':
                 return path.join('\\\\?\\pipe', `ferrumgate.${Math.floor(Math.random() * 100000)}.sock`);

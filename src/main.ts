@@ -175,6 +175,7 @@ app.on('ready', async () => {
         case 'linux':
         case 'netbsd':
         case 'freebsd':
+        case 'darwin':
             await init(''); break;
         case 'win32':
             app.setAppUserModelId("FerrumGate");

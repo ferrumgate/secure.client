@@ -21,6 +21,7 @@ export class PipeClient {
             case 'linux':
             case 'netbsd':
             case 'freebsd':
+            case 'darwin':
                 filepath = this.name.startsWith('/') ? this.name : '/tmp/' + this.name; break;
             case 'win32':
                 filepath = this.name.startsWith("\\") ? this.name : path.join('\\\\?\\pipe', this.name); break;

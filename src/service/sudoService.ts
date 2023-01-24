@@ -87,12 +87,14 @@ export class SudoService extends BaseService {
             case 'linux':
             case 'netbsd':
             case 'freebsd':
+            case 'darwin':
                 {
                     const start = `ELECTRON_RUN_AS_NODE=true ${process.execPath} ${workerJS} --url=${url} --socket=${pipename} \n`
                     this.logInfo(`starting worker : ${start}`)
                     root.stdin?.write(start);
                 }
                 break;
+
 
             case 'win32':
                 {
@@ -134,7 +136,7 @@ export class SudoService extends BaseService {
                         this.logError(stderr.toString());
                     else
                         if (stdout) {
-                            this.logInfo("root shell exited");
+                            this.logInfo(`root shell exited ${stdout}`);
                         }
 
             })
@@ -167,6 +169,9 @@ export class SudoService extends BaseService {
             case 'netbsd':
             case 'freebsd':
                 await this.startRootShell(true, '/bin/bash');
+                break;
+            case 'darwin':
+                await this.startRootShell(true, '/bin/bash -c "echo SUDOPROMPT;/bin/bash"');
                 break;
             case 'win32':
                 await this.windowsStartShell();
