@@ -15,7 +15,9 @@
     "packwin32": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src FerrumGate --platform=win32 --arch=x64 --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
     "distwin32": "node ./src_installer/wix.js",
     "packdarwin": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src --platform=darwin --arch=x64  --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
-    "distdarwin": "npx electron-builder build --mac --x64 ",
+    "distdarwin": "npx electron-builder build --mac --x64",
+    "packdarwin-arm": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src --platform=darwin --arch=arm64  --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
+    "distdarwin-arm": "npx electron-builder build --mac --arm64",
     "showasar": "npx asar l dist/linux-unpacked/resources/app.asar"
   },
   "build": {
