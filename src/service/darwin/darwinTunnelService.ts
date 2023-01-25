@@ -20,8 +20,9 @@ export class DarwinTunnelService extends UnixTunnelService {
     public async configureNetwork(tun: string, conf: { assignedIp: string, serviceNetwork: string }) {
         this.logInfo(`configuring tunnel: ${tun} with ${JSON.stringify(conf)}`)
         // prepare network for connection
-        await this.execOnShell(`ipconfig ${tun} ${conf.assignedIp} ${conf.assignedIp} 255.255.255.255 up`)
-        //await this.execOnShell(`ipconfig ${tun} up`);
+
+        await this.execOnShell(`ifconfig ${tun} ${conf.assignedIp} ${conf.assignedIp} netmask 255.255.255.255 up`)
+
         await this.execOnShell(`route add -net ${conf.serviceNetwork} -interface ${tun}`)
     }
 
