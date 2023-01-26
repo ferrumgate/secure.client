@@ -13,6 +13,10 @@ export class DarwinTunnelService extends UnixTunnelService {
                 const sshFile = path.join(__dirname, 'x86_64', 'ssh_ferrum');
                 const sshConfigFile = path.join(__dirname, 'x86_64', 'ssh_config');
                 return { sshFile, sshConfigFile };
+            case 'arm64':
+                const sshFile2 = path.join(__dirname, 'arm64', 'ssh_ferrum');
+                const sshConfigFile2 = path.join(__dirname, 'arm64', 'ssh_config');
+                return { sshFile: sshFile2, sshConfigFile: sshConfigFile2 };
             default:
                 throw new Error(`no ssh program found for arch: ${arch}`);
         }
