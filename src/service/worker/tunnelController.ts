@@ -69,10 +69,13 @@ export class TunnelController {
                 this.ipcClient = null;
                 await this.stop();
 
+
+
             }
             this.ipcClient.onError = async (err: any) => {
                 this.logError("ipc server error " + err?.message || err?.toString())
                 await this.stop();
+
             }
             this.ipcClient.onData = async (data: Buffer) => {
 
@@ -234,11 +237,13 @@ export class TunnelController {
         } catch (err: any) {
             this.logError(err.message || err.toString());
         }
+        await this.closeAllTunnels();
         try {
             process.exit(0);
         } catch (ignore) {
 
         }
+
     }
 
 

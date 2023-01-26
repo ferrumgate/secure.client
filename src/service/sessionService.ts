@@ -115,7 +115,7 @@ export class SessionService extends BaseHttpService {
                 })
                 this.ipcServer.on('close', async () => {
                     this.logInfo("ipc server closed");
-                    this.notifyError("Could not connect socket");
+                    //this.notifyError("Could not connect socket");
                     await this.closeSession();
 
                 })

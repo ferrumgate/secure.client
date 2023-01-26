@@ -42,6 +42,22 @@ export async function init(pipename: string) {
 
 
     }
+
+    process.on('SIGABRT', () => {
+        if (prc)
+            prc.kill();
+        prc = null;
+    })
+    process.on('SIGTERM', () => {
+        if (prc)
+            prc.kill();
+        prc = null;
+    })
+    process.on('SIGINT', () => {
+        if (prc)
+            prc.kill();
+        prc = null;
+    })
     await pipe.connect();
 }
 
