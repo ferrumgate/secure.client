@@ -1,18 +1,23 @@
 {
   "name": "secure.client",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "cross platform client for ferrumgate servers",
   "main": "main.js",
   "scripts": {
     "preparefortest": "./node_modules/.bin/chromedriver",
     "test": "npm run build && NODE_ENV=development node ./node_modules/electron-mocha/bin/electron-mocha --exit --timeout 30000 --require ts-node/register test/**/statusUI.spec.ts",
-    "build": "tsc && cp package.json ./build/src/ && cp ./src/ui/*.html ./build/src/ui/ && cp ./src/ui/*.css ./build/src/ui/ && cp -R ./src/assets ./build/src/ && cp ./src/service/unix/ssh* build/src/service/unix/ && cp ./src/service/win32/ssh* build/src/service/win32/ &&cp ./src/service/win32/wintun* build/src/service/win32/ && cp -R ./src/service/win32/svc build/src/service/win32/",
+    "build": "tsc && cp package.json ./build/src/ && cp ./src/ui/*.html ./build/src/ui/ && cp ./src/ui/*.css ./build/src/ui/ && cp -R ./src/assets ./build/src/ && cp ./src/service/unix/ssh* build/src/service/unix/ && cp ./src/service/win32/ssh* build/src/service/win32/ &&cp ./src/service/win32/wintun* build/src/service/win32/ && cp -R ./src/service/win32/svc build/src/service/win32/ && cp -R ./src/service/darwin/x86_64 build/src/service/darwin/",
     "clean": "rm -rf ./build ./dist ./pack",
     "start": "npm run build && NODE_ENV=development ./node_modules/electron/dist/electron ./build/src/main.js",
+    "startdarwin": "NODE_ENV=development2 ./node_modules/electron/dist/Electron.app/Contents/MacOS/Electron ./build/src/main.js",
     "packlinux": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src --platform=linux --arch=x64 --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
     "distlinux": "npx electron-builder build --linux --x64",
     "packwin32": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src FerrumGate --platform=win32 --arch=x64 --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
     "distwin32": "node ./src_installer/wix.js",
+    "packdarwin": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src --platform=darwin --arch=x64  --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
+    "distdarwin": "npx electron-builder build --mac --x64",
+    "packdarwin-arm": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src --platform=darwin --arch=arm64  --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
+    "distdarwin-arm": "npx electron-builder build --mac --arm64",
     "showasar": "npx asar l dist/linux-unpacked/resources/app.asar"
   },
   "build": {
@@ -86,7 +91,7 @@
     "access"
   ],
   "author": {
-    "name": "devferrum",
+    "name": "development",
     "email": "dev@ferrumgate.com"
   },
   "license": "Apache-2.0",

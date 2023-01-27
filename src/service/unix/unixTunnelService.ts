@@ -41,10 +41,15 @@ export class UnixTunnelService extends TunnelService {
                 this.port = parts[1];
         }
     }
-    public prepareCommand() {
-
+    public getSSHPath() {
         const sshFile = path.join(__dirname, 'ssh_ferrum');
         const sshConfigFile = path.join(__dirname, 'ssh_config');
+        return { sshFile, sshConfigFile };
+    }
+    public prepareCommand() {
+
+        const { sshFile, sshConfigFile } = this.getSSHPath();
+
 
         const parameters = ['-N', '-F', `"${sshConfigFile}"`, "-w", "any", "-o", '"StrictHostKeyChecking no"', "-o", '"UserKnownHostsFile /dev/null"']
 

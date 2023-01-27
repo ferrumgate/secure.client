@@ -200,7 +200,6 @@ function Linux(instance, end) {
             );
             //ferrum added
             instance.options.child = child;
-            instance.options.child = child;
             child.stdout.on('data', (data) => {
                 instance.options.onstdout(data);
             })

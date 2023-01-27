@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, Tray, screen, Menu, MenuItem } from 'electron';
 import path from 'path';
+import { Util } from '../service/util';
 import { EventService } from '../service/eventsService';
 import { ConfigUI } from './configUI';
 import { StatusUI } from './statusUI';
@@ -18,9 +19,22 @@ export class TrayUI {
     }
 
     private createTray() {
+
+        let logored = 'logo-red.png';
+        let logogreen = 'logo-green.png';
+        let logoyellow = 'logo-yellow.png';
+        const platform = Util.getPlatform()
+        switch (platform) {
+            case 'darwin':
+                logored = 'logo-red-16.png';
+                logogreen = 'logo-green-16.png';
+                logoyellow = 'logo-yellow-16.png'; break;
+            default:
+                break;
+        }
         const assetsDirectory = path.join(__dirname, '../', 'assets')
 
-        const tray = new Tray(path.join(assetsDirectory, 'img', 'logo-red.png'))
+        const tray = new Tray(path.join(assetsDirectory, 'img', logored))
 
         //some menu items
         const connect: MenuItem = {
@@ -95,7 +109,7 @@ export class TrayUI {
                 connect, connecting, disconnect, status, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
-            tray.setImage(path.join(assetsDirectory, 'img', 'logo-yellow.png'));
+            tray.setImage(path.join(assetsDirectory, 'img', logoyellow));
 
         })
 
@@ -108,7 +122,7 @@ export class TrayUI {
                 connect, connecting, disconnect, status, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
-            tray.setImage(path.join(assetsDirectory, 'img', 'logo-green.png'));
+            tray.setImage(path.join(assetsDirectory, 'img', logogreen));
         })
         this.events.on('sessionClosed', () => {
             connect.visible = true;
@@ -119,7 +133,7 @@ export class TrayUI {
                 connect, connecting, disconnect, status, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
-            tray.setImage(path.join(assetsDirectory, 'img', 'logo-red.png'));
+            tray.setImage(path.join(assetsDirectory, 'img', logored));
         })
 
 

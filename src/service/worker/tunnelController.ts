@@ -9,6 +9,7 @@ import { PipeClient } from "../cross/pipeClient";
 import os from 'os';
 import { Win32TunnelService } from "../win32/win32TunnelService";
 import fs from 'fs';
+import { DarwinTunnelService } from "../darwin/darwinTunnelService";
 
 /**
  * @summary tunnel controller, watch every tunnal
@@ -18,7 +19,7 @@ export class TunnelController {
 
 
     ipcClient: PipeClient | null = null;
-    private socketReadBuffer: Buffer = Buffer.from([]);
+    //private socketReadBuffer: Buffer = Buffer.from([]);
     accessToken: string = '';
     refreshToken: string = '';
 
@@ -68,10 +69,13 @@ export class TunnelController {
                 this.ipcClient = null;
                 await this.stop();
 
+
+
             }
             this.ipcClient.onError = async (err: any) => {
                 this.logError("ipc server error " + err?.message || err?.toString())
                 await this.stop();
+
             }
             this.ipcClient.onData = async (data: Buffer) => {
 
@@ -106,7 +110,9 @@ export class TunnelController {
                 case 'linux':
                 case 'freebsd':
                 case 'netbsd':
+                case 'darwin':
                     await this.execOnShell('pkill ssh_ferrum'); break;
+
                 case 'win32':
                     await this.execOnShell('taskkill.exe /IM "ssh_ferrum.exe" /F'); break;
                 default:
@@ -129,11 +135,13 @@ export class TunnelController {
             if (!this.networksLastCheck) {
                 this.logInfo('getting networks');
                 const data = await this.api.getNetworks(this.accessToken);
+                this.logInfo(`network: ${JSON.stringify(data)}`);
                 this.networks = data.items;
                 this.networks.sort((a, b) => {
                     return a.name.localeCompare(b.name);
                 })
                 this.networksLastCheck = new Date().getTime();
+                this.logInfo(`getting networks result: ${JSON.stringify(data)}`);
 
             }
             //check networks
@@ -155,6 +163,7 @@ export class TunnelController {
 
 
         } catch (err: any) {
+            console.log(err);
             this.lastErrorOccured = new Date().getTime();
             this.logError(err.message || err.toString())
         }
@@ -173,6 +182,9 @@ export class TunnelController {
                         network.tunnel.process = new UnixTunnelService(network, this.accessToken, this.event, this.api); break;
                     case 'win32':
                         network.tunnel.process = new Win32TunnelService(network, this.accessToken, this.event, this.api); break;
+                    case 'darwin':
+                        this.logError('darwin tunnel service');
+                        network.tunnel.process = new DarwinTunnelService(network, this.accessToken, this.event, this.api); break;
                     default:
                         throw new Error('not implemented for os:' + platform);
                 }
@@ -217,6 +229,7 @@ export class TunnelController {
 
     async stop() {
         try {
+            this.logInfo("stopping tunnel controller");
             if (this.ipcClient)
                 this.ipcClient.close();
             this.ipcClient = null;
@@ -224,11 +237,13 @@ export class TunnelController {
         } catch (err: any) {
             this.logError(err.message || err.toString());
         }
+        await this.closeAllTunnels();
         try {
             process.exit(0);
         } catch (ignore) {
 
         }
+
     }
 
 
@@ -263,13 +278,13 @@ export class TunnelController {
         await this.syncNetworkStatus()
     }
 
-
+    async debug(msg: any) {
+        fs.appendFileSync('/tmp/test.log', JSON.stringify(msg) + '\n');
+    }
 
     async writeToParent(msg: Cmd) {
 
         this.ipcClient?.write(Buffer.from(JSON.stringify(msg), 'utf-8'));
-
-
     }
 
 

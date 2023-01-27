@@ -18,6 +18,15 @@ export async function init(url: string, pipename: string) {
 
     controller = new TunnelController(pipename, events, api);
     controller.logInfo('starting worker');
+    process.on('SIGTERM', async () => {
+        await controller.stop();
+    })
+    process.on('SIGINT', async () => {
+        await controller.stop();
+    })
+    process.on('SIGABRT', async () => {
+        await controller.stop();
+    })
     await controller.start();
 
 }

@@ -106,3 +106,4 @@ build/
 dist/
 pack/
 src_installer/wix311-binaries
+.DS_Store
