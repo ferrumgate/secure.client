@@ -189,7 +189,7 @@ export class TunnelController {
                     if (network.tunnel.resolvErrorCount > 3) {//dns could not resolved 3 times
                         await network.tunnel.process?.closeTunnel();
                         network.tunnel.isWorking = false;
-                        network.tunnel.lastError = network.tunnel.process?.lastError || '';
+                        network.tunnel.lastError = 'Cannot reach';
                         this.event.emit('tunnelClosed', network);
                     }
                 }
