@@ -21,7 +21,7 @@ export class DarwinTunnelService extends UnixTunnelService {
                 throw new Error(`no ssh program found for arch: ${arch}`);
         }
     }
-    public async configureNetwork(tun: string, conf: { assignedIp: string, serviceNetwork: string }) {
+    public async configureNetwork(tun: string, conf: { assignedIp: string, serviceNetwork: string, resolvIp?: string, resolvSearch: string }) {
         this.logInfo(`configuring tunnel: ${tun} with ${JSON.stringify(conf)}`)
         // prepare network for connection
 

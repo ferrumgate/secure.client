@@ -1,6 +1,6 @@
 import { EventService } from "../eventsService";
 import net from 'net';
-import { Cmd, Network } from "./models";
+import { Cmd, NetworkEx } from "./models";
 import { setIntervalAsync, clearIntervalAsync } from 'set-interval-async';
 import { UnixTunnelService } from "../unix/unixTunnelService";
 import child_process from 'child_process';
@@ -23,7 +23,7 @@ export class TunnelController {
     accessToken: string = '';
     refreshToken: string = '';
 
-    networks: Network[] = [];
+    networks: NetworkEx[] = [];
     networksLastCheck = 0;
     lastErrorOccured = 0;
     lastMessageToParent = 0;
@@ -31,26 +31,36 @@ export class TunnelController {
 
 
     constructor(protected pipename: string, protected event: EventService, protected api: TunnelApiService) {
+        function replacer(this: any, key: string, value: any) {
+            if (key == "process") return undefined;
+            else return value;
+        }
         event.on('log', async (type: string, msg: string) => {
 
             try {
                 await this.writeToParent({ type: 'logRequest', data: { type: type, msg: msg } })
             } catch (ignore) { }
         })
-        event.on('tunnelFailed', async (data: string) => {
+        event.on('tunnelFailed', async (data: NetworkEx) => {
             try {
-                await this.writeToParent({ type: 'tunnelFailed', data: { msg: data } })
+
+                const cloned = JSON.parse(JSON.stringify(data, replacer));
+                await this.writeToParent({ type: 'tunnelFailed', data: { msg: cloned } })
             } catch (ignore) { }
         })
 
-        event.on('tunnelOpened', async (data: string) => {
+        event.on('tunnelOpened', async (data: NetworkEx) => {
             try {
-                await this.writeToParent({ type: 'tunnelOpened', data: { msg: data } })
-            } catch (ignore) { }
+                const cloned = JSON.parse(JSON.stringify(data, replacer));
+                await this.writeToParent({ type: 'tunnelOpened', data: { msg: cloned } })
+            } catch (ignore: any) {
+                await this.writeToParent({ type: 'logRequest', data: { type: 'info', msg: ignore.stack } })
+            }
         })
-        event.on('tunnelClosed', async (data: string) => {
+        event.on('tunnelClosed', async (data: NetworkEx) => {
             try {
-                await this.writeToParent({ type: 'tunnelClosed', data: { msg: data } })
+                const cloned = JSON.parse(JSON.stringify(data, replacer));
+                await this.writeToParent({ type: 'tunnelClosed', data: { msg: cloned } })
             } catch (ignore) { }
         })
     }
@@ -148,7 +158,7 @@ export class TunnelController {
             for (const network of this.networks) {
                 if (network.action == 'allow') {
                     if (!network.tunnel) {
-                        network.tunnel = { tryCount: 0, lastTryTime: 0, isWorking: false }
+                        network.tunnel = { tryCount: 0, lastTryTime: 0, isWorking: false, resolvErrorCount: 0, resolvTimes: [] }
                     }
                     if ((new Date().getTime() - network.tunnel.lastTryTime) < 15000) {
                         network.tunnel.isWorking = network.tunnel.process?.isWorking || false;
@@ -158,6 +168,8 @@ export class TunnelController {
                     await this.checkTunnel(network);
                 }
             }
+            // check healthy and dns routing
+            await this.checkHealthyDns();
             this.lastErrorOccured = 0;
 
 
@@ -169,7 +181,73 @@ export class TunnelController {
         }
 
     }
-    async checkTunnel(network: Network): Promise<{} | undefined> {
+    async checkHealthyDns() {
+        try {
+
+            for (const network of this.networks) {
+                if (network.tunnel.isWorking) {
+                    if (network.tunnel.resolvErrorCount > 3) {//dns could not resolved 3 times
+                        await network.tunnel.process?.closeTunnel();
+                        network.tunnel.isWorking = false;
+                        network.tunnel.lastError = network.tunnel.process?.lastError || '';
+                        this.event.emit('tunnelClosed', network);
+                    }
+                }
+            }
+            const workingTunnels = this.networks.filter(x => x.tunnel.isWorking);
+            if (workingTunnels.length) {
+                const items = workingTunnels.map(x => {
+                    let median = 0;
+                    if (x.tunnel.resolvTimes.length > 5) {
+                        median = x.tunnel.resolvTimes.reduce((a, b) => a + b) / x.tunnel.resolvTimes.length;
+                    }
+                    //this.logInfo(`${x.name} resolution median is ${median}`);
+                    return {
+                        net: x, median: median
+                    }
+                })
+                const sortedList = items.sort((a, b) => a.median - b.median);
+                let isMadedPrimaryDns = false;
+                let isChangedSomething = false;
+                for (const item of sortedList) {
+                    if (!item.median || isMadedPrimaryDns) {
+                        if (item.net.tunnel.isMasterResolv) {
+                            this.logInfo(`making ${item.net.name} for ${item.net.tunnel.tun} secondary dns`);
+                            isChangedSomething = true;
+                        }
+                        await item.net.tunnel.process?.makeDns(false);
+                    } else {
+                        if (!item.net.tunnel.isMasterResolv) {
+                            this.logInfo(`making ${item.net.name} for ${item.net.tunnel.tun} primary dns ${item.median}`);
+                            isChangedSomething = true;
+                        }
+                        await item.net.tunnel.process?.makeDns(true);
+                        isMadedPrimaryDns = true;
+                    }
+
+                }
+
+                //we need to write more log, for debug
+                if (isChangedSomething) {
+                    workingTunnels.forEach(y => {
+                        this.logInfo(`network ${y.name} resolution times ${y.tunnel.resolvTimes.join(', ')}`);
+                    })
+                    sortedList.forEach(x => {
+                        this.logInfo(`network ${x.net.name} resolution median is ${x.median}`);
+                    })
+                }
+            }
+
+
+
+
+        } catch (err: any) {
+            console.log(err);
+            this.lastErrorOccured = new Date().getTime();
+            this.logError(err.message || err.toString())
+        }
+    }
+    async checkTunnel(network: NetworkEx): Promise<{} | undefined> {
 
         try {
 

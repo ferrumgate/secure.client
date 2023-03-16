@@ -15,7 +15,7 @@ import path from 'path';
 
 import net from 'net';
 import { Logger } from 'selenium-webdriver/lib/logging';
-import { Cmd, Network } from './worker/models';
+import { Cmd, NetworkEx } from './worker/models';
 import { clearIntervalAsync, setIntervalAsync } from 'set-interval-async';
 import { app } from 'electron';
 
@@ -126,7 +126,7 @@ export class SessionService extends BaseHttpService {
                         this.ipcServer = null;
                         reject(err);
                     }
-                    this.notifyError("Could not connect socket");
+                    this.notifyError("Could not connect");
                     await this.closeSession();
 
                 })
@@ -187,10 +187,10 @@ export class SessionService extends BaseHttpService {
                     await this.executeTunnelFailed(cmd.data);
                     break;
                 case 'tunnelOpened':
-                    await this.executeTunnelFailed(cmd.data);
+                    await this.executeTunnelOpened(cmd.data);
                     break;
                 case 'tunnelClosed':
-                    await this.executeTunnelFailed(cmd.data);
+                    await this.executeTunnelClosed(cmd.data);
                     break;
                 case 'networkStatusReply':
                     await this.executeNetworkStatusReply(cmd.data);
@@ -223,17 +223,25 @@ export class SessionService extends BaseHttpService {
 
     }
 
-    async executeTunnelFailed(data: { msg: string }) {
-        this.events.emit('tunnelFailed', data.msg);
+    async executeTunnelFailed(data: { msg: NetworkEx | string }) {
+        if (typeof (data.msg) == 'string') {
+            this.notifyError(data.msg)
+            this.events.emit('tunnelFailed', data.msg);
+        } else {
+            this.notifyError(`Connecting to network ${data.msg.name} failed: ${data.msg.tunnel.lastError || ''}`)
+            this.events.emit('tunnelFailed', data.msg);
+        }
     }
-    async executeTunnelOpened(data: { msg: string }) {
+    async executeTunnelOpened(data: { msg: NetworkEx }) {
+        this.notifyInfo(`Connected to network ${data.msg.name}`);
         this.events.emit('tunnelOpened', data.msg);
     }
-    async executeTunnelClosed(data: { msg: string }) {
+    async executeTunnelClosed(data: { msg: NetworkEx }) {
+        this.notifyInfo(`Disconnected from network ${data.msg.name}`);
         this.events.emit('tunnelClosed', data.msg);
     }
 
-    async executeNetworkStatusReply(data: Network[]) {
+    async executeNetworkStatusReply(data: NetworkEx[]) {
         this.events.emit('networkStatusReply', data);
     }
 
@@ -346,12 +354,12 @@ export class SessionService extends BaseHttpService {
             this.accessToken = result.accessToken;
             //await this.writeToWorker({ type: 'tokenResponse', data: { accessToken: this.accessToken, refreshToken: this.refreshToken } })
             this.sessionLastCheck = new Date().getTime();
-            this.logInfo("Refresh token");
         } catch (err: any) {
             this.logError(err.message || err.toString());
         }
     }
     async closeSession() {
+        //TODO hamza delete session
         if (this.sessionInterval)
             clearIntervalAsync(this.sessionInterval);
         this.sessionInterval = null;
@@ -375,12 +383,6 @@ export class SessionService extends BaseHttpService {
         this.events.emit("sessionClosed");
 
     }
-
-
-
-
-
-
 
 
 }

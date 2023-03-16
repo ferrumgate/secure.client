@@ -1,7 +1,7 @@
 
 import Axios, { AxiosRequestConfig } from "axios";
 import { EventService } from "../eventsService";
-import { Network } from "./models";
+import { NetworkEx } from "./models";
 
 /**
  * @summary http requests
@@ -34,7 +34,7 @@ export class TunnelApiService {
             }
         };
         const response = await Axios.get(url.toString() + 'api/client/tunnel/ip', options)
-        return response.data as { assignedIp: string, serviceNetwork: string };
+        return response.data as { assignedIp: string, serviceNetwork: string, resolvIp?: string, resolvSearch: string };
 
 
     }
@@ -91,7 +91,7 @@ export class TunnelApiService {
 
         const response = await Axios.get(url.toString() + 'api/user/current/network', options)
 
-        return response.data as { items: Network[] };
+        return response.data as { items: NetworkEx[] };
 
 
     }

@@ -5,7 +5,7 @@ import { EventService } from "../eventsService";
 import { Logger } from "selenium-webdriver/lib/logging"
 import { PipeClient } from "../cross/pipeClient";
 import { ApiService } from "../apiService";
-import { Network } from "../worker/models";
+import { NetworkEx } from "../worker/models";
 import { clearIntervalAsync, setIntervalAsync } from "set-interval-async";
 import { TunnelApiService } from "../worker/tunnelApiService";
 import { UnixTunnelService } from "../unix/unixTunnelService";
@@ -17,7 +17,7 @@ import { EOL } from 'os';
 export class Win32TunnelService extends UnixTunnelService {
     tun: string
 
-    constructor(net: Network, accessToken: string, event: EventService, api: TunnelApiService) {
+    constructor(net: NetworkEx, accessToken: string, event: EventService, api: TunnelApiService) {
         super(net, accessToken, event, api);
         this.tun = '';
     }
@@ -46,7 +46,7 @@ export class Win32TunnelService extends UnixTunnelService {
         }
 
     }
-    public override async configureNetwork(tun: string, conf: { assignedIp: string; serviceNetwork: string; }) {
+    public override async configureNetwork(tun: string, conf: { assignedIp: string; serviceNetwork: string; resolvIp?: string, resolvSearch: string }) {
         this.logInfo(`configuring tunnel: ${tun} with ${JSON.stringify(conf)}`)
         //ExecuteCmd("cmd.exe /c netsh interface ipv4 set address \"" + interfacename + "\" static " + ip + " 255.255.255.255");
         //   ExecuteCmd("/c route ADD "+route+" "+ip+" IF "+index);

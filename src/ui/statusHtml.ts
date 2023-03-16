@@ -1,5 +1,4 @@
 
-
 (() => {
     const windowx = window as any;
 
@@ -48,13 +47,21 @@
             </li>
                     `
         }
+        // this class comes from model.ts file
+        // dont import file just copy, 
         interface Network {
             id: string;
             name: string;
-            action: 'allow' | 'deny'
-            needs2FA: boolean,
-            needsIp: boolean,
-            sshHost?: string
+            action: 'allow' | 'deny';
+            needs2FA: boolean;
+            needsIp: boolean;
+            needsTime: boolean;
+            sshHost?: string;
+
+        }
+
+
+        interface NetworkEx extends Network {
             tunnel: {
                 lastTryTime: number;
                 tryCount: number;
@@ -64,7 +71,7 @@
         }
 
 
-        windowx.electronAPI.on('networkStatusReply', (data: Network[]) => {
+        windowx.electronAPI.on('networkStatusReply', (data: NetworkEx[]) => {
             if (!data) return;
             const tbody = document.querySelector('#el-ferrum-status-net-list') as HTMLInputElement;
             let results = '';
@@ -74,7 +81,7 @@
                 let css2 = '';
                 let css3 = '';
                 let why = '';
-                if ((network.needs2FA || network.needsIp || !network.sshHost)) {
+                if ((network.needs2FA || network.needsIp || !network.sshHost || !network.needsTime)) {
                     css0 = 'skipped';
                     css1 = 'ferrum-display-none';
                     css2 = 'ferrum-display-none';
@@ -82,6 +89,7 @@
                     why = network.needs2FA ? 'needs 2FA' : '';
                     why += network.needsIp ? "location does not match" : '';
                     why += (!network.sshHost) ? 'network host invalid' : '';
+                    why += (network.needsTime) ? 'time is invalid' : '';
                 } else
                     if (network.tunnel.isWorking) {
                         css0 = 'ok';

@@ -50,6 +50,9 @@ export class TunnelService {
     public async closeTunnel() {
 
     }
+    public async makeDns(primary = true) {
+
+    }
 
 
 

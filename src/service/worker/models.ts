@@ -1,22 +1,31 @@
+import { Network } from "../cross/model";
 import { TunnelService } from "./tunnelService";
 
 export interface Cmd {
     type: 'logRequest' | 'tokenRequest' | 'tokenResponse' | 'tunnelFailed' | 'tunnelClosed' | 'tunnelOpened' | 'networkStatusReply' | 'networkStatusRequest';
     data: any;
 }
+/**
+ * @summary
+ * @remark there is an other implementation on statusHtml
+ */
+export interface NetworkEx extends Network {
 
-export interface Network {
-    id: string;
-    name: string;
-    action: 'allow' | 'deny'
-    needs2FA: boolean,
-    needsIp: boolean,
-    sshHost?: string
     tunnel: {
         lastTryTime: number;
         tryCount: number;
         process?: TunnelService;
         lastError?: string;
         isWorking: boolean;
+        assignedIp?: string,
+        serviceNetwork?: string,
+        resolvIp?: string,
+        resolvSearch?: string,
+        resolvTimes: number[],
+        resolvErrorCount: number,
+        tun?: string;
+        isMasterResolv?: boolean;
+        resolvTunDomains?: { tun: string, domains: string[] }[]
+
     }
 }
