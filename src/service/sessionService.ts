@@ -50,13 +50,20 @@ export class SessionService extends BaseHttpService {
                 this.logError(err.toString());
             }
         });
-        this.events.on('closeSession', async () => {
+        this.events.on('closeSession', async (exit: boolean) => {
             try {
                 await this.closeSession();
+
+
             } catch (err: any) {
 
                 this.logError(err.toString());
             }
+            //close app if clikcked to quit
+            if (exit)
+                setTimeout(() => {
+                    app.exit(0);
+                }, 1000);
         })
         this.events.on('sudoIsReady', async () => {
             if (!this.ipcClient) {
@@ -360,6 +367,7 @@ export class SessionService extends BaseHttpService {
     }
     async closeSession() {
         //TODO hamza delete session
+        const wasThereASession = this.sessionInterval ? true : false;
         if (this.sessionInterval)
             clearIntervalAsync(this.sessionInterval);
         this.sessionInterval = null;
@@ -381,6 +389,8 @@ export class SessionService extends BaseHttpService {
         this.refreshToken = '';
         this.exchangeToken = '';
         this.events.emit("sessionClosed");
+        if (wasThereASession)
+            this.notifyInfo("Session closed");
 
     }
 

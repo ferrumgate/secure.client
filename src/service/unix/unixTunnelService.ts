@@ -35,6 +35,7 @@ export class UnixTunnelService extends TunnelService {
     constructor(net: NetworkEx, accessToken: string, event: EventService, api: TunnelApiService) {
         super(event, api);
         this.net = net;
+        this.networkId = net.id;
         this.accessToken = accessToken;
         if (net.sshHost) {
             let parts = net.sshHost?.split(':');
@@ -300,7 +301,7 @@ export class UnixTunnelService extends TunnelService {
     }
     public async healthCheck() {
         try {
-            this.logInfo(`heathcCheck ${this.isTunnelCreated} && ${this.net.tunnel.resolvIp}`)
+
             if (this.isTunnelCreated && this.net.tunnel.resolvIp) {
                 this.resolver.setServers([this.net.tunnel.resolvIp]);
 
@@ -435,6 +436,7 @@ export class UnixTunnelService extends TunnelService {
             this.childProcess?.kill();
             await this.forceKillPid();
             this.isWorking = false;
+            this.isTunnelCreated = false;
 
         } catch (err: any) {
             this.logError(err.message || err.toString());

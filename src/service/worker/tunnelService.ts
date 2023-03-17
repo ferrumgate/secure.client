@@ -14,7 +14,7 @@ export class TunnelService {
     // tunnel key for api call
     protected tunnelKey = '';
 
-
+    public networkId: string = '';
     // we are using for test 
     public processLastOutput = '';
     public lastError = '';

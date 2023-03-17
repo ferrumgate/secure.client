@@ -4,7 +4,7 @@ import { Util } from '../service/util';
 import { EventService } from '../service/eventsService';
 import { ConfigUI } from './configUI';
 import { StatusUI } from './statusUI';
-
+import os from 'os';
 
 /**
  * @summary Traybar functionality 
@@ -97,6 +97,12 @@ export class TrayUI {
         const contextMenu = Menu.buildFromTemplate([
             connect, options, quit, seperator, update
         ]);
+        tray.on('click', () => {
+            const platform = os.platform();
+            if (platform == 'win32')
+                tray.popUpContextMenu();
+        })
+
 
 
         this.events.on('sessionOpening', () => {
@@ -143,6 +149,7 @@ export class TrayUI {
                 connect, connecting, disconnect, status, options, quit, seperator, update
             ]);
             tray.setContextMenu(contextMenu);
+
             if (this.latestFoundedRelease != release) {
                 this.events.emit("notify", { type: 'info', msg: "New version is ready" })
             }

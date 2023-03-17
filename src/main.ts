@@ -67,9 +67,10 @@ export async function init(token: string) {
 
     events.on("appExit", () => {
         events.emit("log", 'info', 'closing app');
-        events.emit("closeSession");
+        events.emit("closeSession", true);
         events.emit("closeWindow");
-        app.exit(0);
+
+
 
     });
 

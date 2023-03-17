@@ -81,7 +81,7 @@
                 let css2 = '';
                 let css3 = '';
                 let why = '';
-                if ((network.needs2FA || network.needsIp || !network.sshHost || !network.needsTime)) {
+                if ((network.needs2FA || network.needsIp || !network.sshHost || network.needsTime)) {
                     css0 = 'skipped';
                     css1 = 'ferrum-display-none';
                     css2 = 'ferrum-display-none';
