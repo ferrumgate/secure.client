@@ -125,7 +125,7 @@ export class UnixTunnelService extends TunnelService {
 
 
                         //await this.executeOnRootShell(`wait ${this.sshPID} || echo "ferrum_exit:"`)
-                        this.logInfo(`conforming tunnel ${tun}`);
+                        this.logInfo(`confirming tunnel ${tun}`);
                         await this.api.confirmTunnel(this.tunnelKey);
                         ////
                         this.events.emit("tunnelOpened", this.net);
@@ -300,7 +300,7 @@ export class UnixTunnelService extends TunnelService {
     }
     public async healthCheck() {
         try {
-
+            this.logInfo(`heathcCheck ${this.isTunnelCreated} && ${this.net.tunnel.resolvIp}`)
             if (this.isTunnelCreated && this.net.tunnel.resolvIp) {
                 this.resolver.setServers([this.net.tunnel.resolvIp]);
 

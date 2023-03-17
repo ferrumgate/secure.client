@@ -46,6 +46,71 @@ export class Win32TunnelService extends UnixTunnelService {
         }
 
     }
+    public async getRegistry() {
+        const result = (await this.execOnShell(`reg query HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters /v SearchList`) as string);
+        const item = result.split('\r\n').map(x => x.trim()).find(x => x.startsWith('SearchList'));
+        if (!item) return [];
+        const values = item.replace('SearchList', '').replace('REG_SZ', '').split(' ').map(x => x.trim()).filter(y => y).find(x => x);
+        return values?.split(',') || [];
+    }
+
+    public async saveRegistry(fqdns: string[]) {
+        const result = (await this.execOnShell(`reg add HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters /v SearchList /t REG_SZ /d "${fqdns.join(',')}" /f`) as string);
+
+    }
+    public override async closeTunnel(): Promise<void> {
+        try {//remove resovlSearch
+            if (this.net.tunnel.resolvSearch) {
+                const items = await this.getRegistry();
+                if (items.includes(this.net.tunnel.resolvSearch))
+                    await this.saveRegistry(items.filter(x => x != this.net.tunnel.resolvSearch));
+            }
+
+        } catch (ignore) {
+
+        }
+        super.closeTunnel();
+
+    }
+
+    public override async configureDns(tun: string, conf: { assignedIp: string, serviceNetwork: string, resolvIp?: string, resolvSearch: string }) {
+        if (this.net) {
+            this.net.tunnel.assignedIp = conf.assignedIp;
+            this.net.tunnel.serviceNetwork = conf.serviceNetwork;
+            this.net.tunnel.resolvIp = conf.resolvIp;
+            this.net.tunnel.resolvSearch = conf.resolvSearch;
+            this.net.tunnel.tun = tun;
+            this.net.tunnel.isMasterResolv = false;
+            this.net.tunnel.resolvTunDomains = await this.getInterfaceResolvDomains()
+        }
+        let items = await this.getRegistry();
+        if (!items.includes(conf.resolvSearch)) {
+            items.push(conf.resolvSearch);
+            await this.saveRegistry(items);
+        }
+
+
+    }
+
+    public async getInterfaceResolvDomains() {
+        //on win no need
+        return [];
+    }
+    public override async makeDns(primary = true) {
+
+        if (primary) {
+            if (!this.net.tunnel.isMasterResolv) {
+                await this.execOnShell(`netsh interface ip set dns ${this.net.tunnel.tun} static ${this.net.tunnel.resolvIp}`)
+            }
+            this.net.tunnel.isMasterResolv = true;
+        } else {
+            if (this.net.tunnel.isMasterResolv) {
+                await this.execOnShell(`netsh interface ip delete dns ${this.net.tunnel.tun} all`)
+            }
+            this.net.tunnel.isMasterResolv = false;
+        }
+    }
+
     public override async configureNetwork(tun: string, conf: { assignedIp: string; serviceNetwork: string; resolvIp?: string, resolvSearch: string }) {
         this.logInfo(`configuring tunnel: ${tun} with ${JSON.stringify(conf)}`)
         //ExecuteCmd("cmd.exe /c netsh interface ipv4 set address \"" + interfacename + "\" static " + ip + " 255.255.255.255");
@@ -64,6 +129,7 @@ export class Win32TunnelService extends UnixTunnelService {
             await this.execOnShell(`cmd.exe /c route ADD  ${conf.serviceNetwork}  ${conf.assignedIp} IF ${index}`);
         else
             await this.execOnShell(`cmd.exe /c route ADD  ${conf.serviceNetwork}  ${conf.assignedIp}`);
+        await this.configureDns(tun, conf);
     }
 
     protected async forceKillPid() {

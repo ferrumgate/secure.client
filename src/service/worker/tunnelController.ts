@@ -115,6 +115,7 @@ export class TunnelController {
     }
     async closeAllTunnels() {
         try {
+
             const platform = os.platform();
             switch (platform) {
                 case 'linux':
@@ -151,7 +152,7 @@ export class TunnelController {
                     return a.name.localeCompare(b.name);
                 })
                 this.networksLastCheck = new Date().getTime();
-                this.logInfo(`getting networks result: ${JSON.stringify(data)}`);
+
 
             }
             //check networks
@@ -197,7 +198,7 @@ export class TunnelController {
             const workingTunnels = this.networks.filter(x => x.tunnel.isWorking);
             if (workingTunnels.length) {
                 const items = workingTunnels.map(x => {
-                    let median = 0;
+                    let median = workingTunnels.length > 1 ? 0 : 1;//dont wait on first tunnel
                     if (x.tunnel.resolvTimes.length > 5) {
                         median = x.tunnel.resolvTimes.reduce((a, b) => a + b) / x.tunnel.resolvTimes.length;
                     }
@@ -273,6 +274,7 @@ export class TunnelController {
                 await network.tunnel.process.openTunnel();
 
             }
+
             network.tunnel.isWorking = network.tunnel.process.isWorking;
             network.tunnel.lastError = network.tunnel.process.lastError;
             return undefined;
