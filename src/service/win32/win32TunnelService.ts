@@ -46,7 +46,7 @@ export class Win32TunnelService extends UnixTunnelService {
         }
 
     }
-    public async getRegistry() {
+    public async getResolvSearchList() {
         const result = (await this.execOnShell(`reg query HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters /v SearchList`) as string);
         const item = result.split('\r\n').map(x => x.trim()).find(x => x.startsWith('SearchList'));
         if (!item) return [];
@@ -54,16 +54,16 @@ export class Win32TunnelService extends UnixTunnelService {
         return values?.split(',') || [];
     }
 
-    public async saveRegistry(fqdns: string[]) {
+    public async saveResolvSearchList(fqdns: string[]) {
         const result = (await this.execOnShell(`reg add HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters /v SearchList /t REG_SZ /d "${fqdns.join(',')}" /f`) as string);
 
     }
     public override async closeTunnel(): Promise<void> {
         try {//remove resovlSearch
             if (this.net.tunnel.resolvSearch) {
-                const items = await this.getRegistry();
+                const items = await this.getResolvSearchList();
                 if (items.includes(this.net.tunnel.resolvSearch))
-                    await this.saveRegistry(items.filter(x => x != this.net.tunnel.resolvSearch));
+                    await this.saveResolvSearchList(items.filter(x => x != this.net.tunnel.resolvSearch));
             }
 
         } catch (ignore) {
@@ -83,13 +83,20 @@ export class Win32TunnelService extends UnixTunnelService {
             this.net.tunnel.isMasterResolv = false;
             this.net.tunnel.resolvTunDomains = await this.getInterfaceResolvDomains()
         }
-        let items = await this.getRegistry();
+        let items = await this.getResolvSearchList();
         if (!items.includes(conf.resolvSearch)) {
-            items.push(conf.resolvSearch);
-            await this.saveRegistry(items);
+            items.splice(0, 0, conf.resolvSearch);
+            await this.saveResolvSearchList(items);
         }
 
 
+    }
+    public override async flushDnsCache(): Promise<void> {
+        try {
+            await this.execOnShell(`ipconfig /flushdns`);
+        } catch (err: any) {
+            this.logError(err.message || err.toString());
+        }
     }
 
     public async getInterfaceResolvDomains() {
@@ -101,6 +108,7 @@ export class Win32TunnelService extends UnixTunnelService {
         if (primary) {
             if (!this.net.tunnel.isMasterResolv) {
                 await this.execOnShell(`netsh interface ip set dns ${this.net.tunnel.tun} static ${this.net.tunnel.resolvIp}`)
+                await this.flushDnsCache();
             }
             this.net.tunnel.isMasterResolv = true;
         } else {

@@ -28,3 +28,39 @@ if you want to revert script-shell
 > npm config delete script-shell
 ### dist
 > npm run build && npm run distwin32
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+macos
+ 
+list all services
+> networksetup -listallnetworkservices
+
+get dns
+
+> networksetup -getdnsservers $tun
+
+set dns
+
+>

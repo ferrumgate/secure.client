@@ -28,6 +28,145 @@ export class DarwinTunnelService extends UnixTunnelService {
         await this.execOnShell(`ifconfig ${tun} ${conf.assignedIp} ${conf.assignedIp} netmask 255.255.255.255 up`)
 
         await this.execOnShell(`route add -net ${conf.serviceNetwork} -interface ${tun}`)
+        await this.configureDns(tun, conf);
     }
+
+    public async getMacNetworkList() {
+        const result = (await this.execOnShell(`networksetup -listallnetworkservices |grep -v denotes|grep -v '*'||true`)) as string;
+        const nets = result.split('\n').map(x => x.trim()).filter(x => x);
+        return nets;
+    }
+
+    public async getResolvSearchList(net?: string) {
+
+        let items = [];
+        const nets = net ? [net] : await this.getMacNetworkList();
+        for (const net of nets) {
+            const searchlist = (await this.execOnShell(`networksetup -getsearchdomains "${net}"|grep -v "aren't"||true`)) as string;
+            const domains = searchlist.split('\n').map(x => x).filter(y => y);
+            items.push({
+                svc: net, domains: domains
+            })
+        }
+        return items;
+    }
+
+    public async saveResolvSearchList(svc: string, fqdns: string[]) {
+
+        await this.execOnShell(`networksetup -setsearchdomains "${svc}" ${fqdns.length ? fqdns.join(' ') : 'empty'}`)
+    }
+
+
+    public async getResolvIpList(net?: string) {
+
+        let items = [];
+        const nets = net ? [net] : await this.getMacNetworkList();
+        for (const net of nets) {
+            const searchlist = (await this.execOnShell(`networksetup -getdnsservers "${net}"|grep -v "aren't"||true`)) as string;
+            const ips = searchlist.split('\n').map(x => x).filter(y => y);
+            items.push({
+                svc: net, ips: ips
+            })
+        }
+        return items;
+    }
+
+    public async saveResolvIpList(svc: string, fqdns: string[]) {
+
+        await this.execOnShell(`networksetup -setdnsservers "${svc}" ${fqdns.length ? fqdns.join(' ') : 'empty'}`)
+    }
+
+    public override async closeTunnel(): Promise<void> {
+        try {//remove resovlSearch
+            if (this.net.tunnel.resolvSearch) {
+                const items = await this.getResolvSearchList();
+                for (const item of items) {
+                    if (item.domains.includes(this.net.tunnel.resolvSearch)) {
+                        await this.saveResolvSearchList(item.svc, item.domains.filter(x => x != this.net.tunnel.resolvSearch));
+                    }
+                }
+            }
+
+        } catch (ignore) {
+
+        }
+        try {//remove ip
+            if (this.net.tunnel.resolvIp) {
+                const nets = await this.getResolvIpList();
+                for (const net of nets) {
+                    if (this.net.tunnel.resolvIp && net.ips.includes(this.net.tunnel.resolvIp)) {
+                        await this.saveResolvIpList(net.svc, net.ips.filter(x => x != this.net.tunnel.resolvIp));
+                    }
+                }
+            }
+
+        } catch (ignore) {
+
+        }
+        super.closeTunnel();
+
+    }
+    public override async flushDnsCache() {
+        try {
+            await this.execOnShell(`dscacheutil -flushcache||true`)
+            await this.execOnShell(`killall -HUP mDNSResponder||true`);
+        } catch (err: any) {
+            console.log(err);
+            this.logError(err.message || err.toString());
+        }
+    }
+
+    public override async configureDns(tun: string, conf: { assignedIp: string, serviceNetwork: string, resolvIp?: string, resolvSearch: string }) {
+        if (this.net) {
+            this.net.tunnel.assignedIp = conf.assignedIp;
+            this.net.tunnel.serviceNetwork = conf.serviceNetwork;
+            this.net.tunnel.resolvIp = conf.resolvIp;
+            this.net.tunnel.resolvSearch = conf.resolvSearch;
+            this.net.tunnel.tun = tun;
+            this.net.tunnel.isMasterResolv = false;
+            this.net.tunnel.resolvTunDomains = await this.getInterfaceResolvDomains()
+        }
+
+        let items = await this.getResolvSearchList();
+        for (const item of items) {
+            if (!item.domains.includes(conf.resolvSearch)) {
+                item.domains.splice(0, 0, conf.resolvSearch);
+                await this.saveResolvSearchList(item.svc, item.domains);
+            }
+        }
+
+    }
+
+    public async getInterfaceResolvDomains() {
+        //on mac no need
+        return [];
+    }
+    public override async makeDns(primary = true) {
+
+        if (primary) {
+            if (!this.net.tunnel.isMasterResolv) {
+                const nets = await this.getResolvIpList();
+                for (const net of nets) {
+                    if (this.net.tunnel.resolvIp && !net.ips.includes(this.net.tunnel.resolvIp)) {
+                        net.ips.splice(0, 0, this.net.tunnel.resolvIp);
+                        await this.saveResolvIpList(net.svc, net.ips);
+                    }
+                }
+                await this.flushDnsCache();
+            }
+            this.net.tunnel.isMasterResolv = true;
+        } else {
+            if (this.net.tunnel.isMasterResolv) {
+                const nets = await this.getResolvIpList();
+                for (const net of nets) {
+                    if (this.net.tunnel.resolvIp && net.ips.includes(this.net.tunnel.resolvIp)) {
+                        await this.saveResolvIpList(net.svc, net.ips.filter(x => x != this.net.tunnel.resolvIp));
+                    }
+                }
+            }
+            this.net.tunnel.isMasterResolv = false;
+        }
+    }
+
 
 }

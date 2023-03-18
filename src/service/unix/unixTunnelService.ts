@@ -340,6 +340,14 @@ export class UnixTunnelService extends TunnelService {
 
     public override async closeTunnel(): Promise<void> {
         await this.tryKillProcess();
+        await this.flushDnsCache();
+    }
+    public async flushDnsCache() {
+        try {
+            await this.execOnShell(`resolvectl flush-caches`);
+        } catch (err: any) {
+            this.logError(err.message || err.toString());
+        }
     }
 
     async execOnShell(cmd: string, isStdErr = true) {
