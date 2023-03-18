@@ -78,6 +78,7 @@ export class DarwinTunnelService extends UnixTunnelService {
 
     public override async closeTunnel(): Promise<void> {
         try {//remove resovlSearch
+            this.logInfo(`removing resolve search ${this.net.tunnel.resolvSearch}`)
             if (this.net.tunnel.resolvSearch) {
                 const items = await this.getResolvSearchList();
                 for (const item of items) {
@@ -87,10 +88,11 @@ export class DarwinTunnelService extends UnixTunnelService {
                 }
             }
 
-        } catch (ignore) {
-
+        } catch (err: any) {
+            this.logError(err.message || err.toString());
         }
         try {//remove ip
+            this.logInfo(`removing resolve ip ${this.net.tunnel.resolvIp}`)
             if (this.net.tunnel.resolvIp) {
                 const nets = await this.getResolvIpList();
                 for (const net of nets) {
@@ -100,8 +102,8 @@ export class DarwinTunnelService extends UnixTunnelService {
                 }
             }
 
-        } catch (ignore) {
-
+        } catch (err: any) {
+            this.logError(err.message || err.toString());
         }
         super.closeTunnel();
 
@@ -145,6 +147,7 @@ export class DarwinTunnelService extends UnixTunnelService {
 
         if (primary) {
             if (!this.net.tunnel.isMasterResolv) {
+                this.logInfo(`make default dns router ${this.net.tunnel.tun}`);
                 const nets = await this.getResolvIpList();
                 for (const net of nets) {
                     if (this.net.tunnel.resolvIp && !net.ips.includes(this.net.tunnel.resolvIp)) {
@@ -157,6 +160,7 @@ export class DarwinTunnelService extends UnixTunnelService {
             this.net.tunnel.isMasterResolv = true;
         } else {
             if (this.net.tunnel.isMasterResolv) {
+                this.logInfo(`remove default dns router ${this.net.tunnel.tun}`);
                 const nets = await this.getResolvIpList();
                 for (const net of nets) {
                     if (this.net.tunnel.resolvIp && net.ips.includes(this.net.tunnel.resolvIp)) {

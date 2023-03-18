@@ -220,6 +220,7 @@ export class UnixTunnelService extends TunnelService {
         const allRoute = `~.`;
         if (primary) {
             if (!this.net.tunnel.isMasterResolv) {
+                this.logInfo(`make default dns router ${this.net.tunnel.tun}`);
                 await this.execOnShell(`resolvectl domain ${this.net.tunnel.tun} '${this.net.tunnel.resolvSearch}' '~.'`);
                 await this.execOnShell(`resolvectl default-route ${this.net.tunnel.tun} true`);
                 const domains = await this.getInterfaceResolvDomains();
@@ -235,6 +236,7 @@ export class UnixTunnelService extends TunnelService {
             this.net.tunnel.isMasterResolv = true;
         } else {
             if (this.net.tunnel.isMasterResolv) {
+                this.logInfo(`remove default dns router ${this.net.tunnel.tun}`);
                 await this.execOnShell(`resolvectl default-route ${this.net.tunnel.tun} false`);
                 await this.execOnShell(`resolvectl domain ${this.net.tunnel.tun} '${this.net.tunnel.resolvSearch}'`);
             }

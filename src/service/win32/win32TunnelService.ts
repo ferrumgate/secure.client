@@ -107,12 +107,14 @@ export class Win32TunnelService extends UnixTunnelService {
 
         if (primary) {
             if (!this.net.tunnel.isMasterResolv) {
+                this.logInfo(`make default dns router ${this.net.tunnel.tun}`);
                 await this.execOnShell(`netsh interface ip set dns ${this.net.tunnel.tun} static ${this.net.tunnel.resolvIp}`)
                 await this.flushDnsCache();
             }
             this.net.tunnel.isMasterResolv = true;
         } else {
             if (this.net.tunnel.isMasterResolv) {
+                this.logInfo(`remove default dns router ${this.net.tunnel.tun}`);
                 await this.execOnShell(`netsh interface ip delete dns ${this.net.tunnel.tun} all`)
             }
             this.net.tunnel.isMasterResolv = false;
