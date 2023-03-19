@@ -5,7 +5,7 @@ import { EventEmitter } from 'events';
 import { BaseService } from './baseService';
 import child_process from 'child_process';
 import { net } from "electron";
-import { Network } from "./worker/models";
+import { NetworkEx } from "./worker/models";
 import Axios, { AxiosRequestConfig } from "axios";
 
 /**

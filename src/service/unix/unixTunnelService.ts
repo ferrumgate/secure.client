@@ -4,9 +4,10 @@ const sudo = require('../../lib/sudoprompt')
 import child_process from 'child_process';
 import { EventService } from "../eventsService";
 import { clearIntervalAsync, setIntervalAsync } from "set-interval-async";
-import { Network } from "../worker/models";
+import { NetworkEx } from "../worker/models";
 import { TunnelApiService } from "../worker/tunnelApiService";
 const { EOL } = require('os');
+import { Resolver } from 'dns/promises';
 /**
  * @summary unix tunnel controller, this service works on root worker process
  */
@@ -19,19 +20,22 @@ export class UnixTunnelService extends TunnelService {
     sshPID = '';
     isTunnelCreated = false;
     iamAliveInterval: any;
+    healthCheckInterval: any;
     isSSHTunnelStarting: any;
     port = '2223';
     host = 'localhost';
-    net: Network | null = null;
+    net: NetworkEx;
     childProcess: child_process.ChildProcess | null = null;
     accessToken: string = '';
     onstderr = async (data: string) => { };
     onstdout = async (data: string) => { };
     newLineBufferStderr = '';
     newLineBufferStdout = '';
-    constructor(net: Network, accessToken: string, event: EventService, api: TunnelApiService) {
+    resolver: Resolver;
+    constructor(net: NetworkEx, accessToken: string, event: EventService, api: TunnelApiService) {
         super(event, api);
         this.net = net;
+        this.networkId = net.id;
         this.accessToken = accessToken;
         if (net.sshHost) {
             let parts = net.sshHost?.split(':');
@@ -40,6 +44,7 @@ export class UnixTunnelService extends TunnelService {
             if (parts.length > 1)
                 this.port = parts[1];
         }
+        this.resolver = new Resolver({ tries: 1, timeout: 2000 })
     }
     public getSSHPath() {
         const sshFile = path.join(__dirname, 'ssh_ferrum');
@@ -124,7 +129,7 @@ export class UnixTunnelService extends TunnelService {
                         this.logInfo(`confirming tunnel ${tun}`);
                         await this.api.confirmTunnel(this.tunnelKey);
                         ////
-                        this.events.emit("tunnelOpened", this.net?.id);
+                        this.events.emit("tunnelOpened", this.net);
 
                         this.isTunnelCreated = true;
                         this.isWorking = true;
@@ -134,27 +139,31 @@ export class UnixTunnelService extends TunnelService {
                             clearTimeout(this.isSSHTunnelStarting);
                         this.isSSHTunnelStarting = null;
                         await this.startIAmAlive();
+                        await this.startHealthCheck();
                         this.lastError = '';
 
                     }
                 }
                 if (data.includes('ferrum_exit:') || data.includes('Terminated') || data.includes('No route to host') || data.includes('Connection refused')) {
+                    const wasWorking = this.isWorking;
                     this.sshPID = '';
                     this.isTunnelCreated = false;
                     this.isWorking = false;
-                    this.events.emit('tunnelClosed', this.net?.id);
                     this.logInfo(`tunnel closed`);
                     if (this.isSSHTunnelStarting)
                         clearTimeout(this.isSSHTunnelStarting);
                     this.isSSHTunnelStarting = null;
                     this.lastError = data;
-
+                    if (wasWorking)
+                        this.events.emit('tunnelClosed', this.net);
 
                 }
             } catch (err: any) {
                 this.logError(err.message || err.toString());
                 this.lastError = err.message;
-                this.events.emit(`tunnelFailed`, `Could not connect:${err.message}`);
+                if (this.net)
+                    this.net.tunnel.lastError = err.message;
+                this.events.emit(`tunnelFailed`, this.net || `Could not connect:${err.message}`);
                 await this.tryKillProcess();
             }
         }
@@ -165,10 +174,80 @@ export class UnixTunnelService extends TunnelService {
     public async onStdOut(data: string) {
 
     }
-    public async configureNetwork(tun: string, conf: { assignedIp: string, serviceNetwork: string }) {
+    public async configureDns(tun: string, conf: { assignedIp: string, serviceNetwork: string, resolvIp?: string, resolvSearch: string }) {
+        if (this.net) {
+            this.net.tunnel.assignedIp = conf.assignedIp;
+            this.net.tunnel.serviceNetwork = conf.serviceNetwork;
+            this.net.tunnel.resolvIp = conf.resolvIp;
+            this.net.tunnel.resolvSearch = conf.resolvSearch;
+            this.net.tunnel.tun = tun;
+            this.net.tunnel.isMasterResolv = false;
+            this.net.tunnel.resolvTunDomains = await this.getInterfaceResolvDomains()
+        }
+
+        if (conf.resolvIp) {
+            this.logInfo(`configuring dns for tunnel:${tun} resolvIp:${conf.resolvIp} resolvSearch:${conf.resolvSearch}`);
+            await this.execOnShell(`resolvectl domain ${tun} '${conf.resolvSearch}'`);
+            await this.execOnShell(`resolvectl llmnr ${tun} false`);
+            await this.execOnShell(`resolvectl default-route ${tun} false`);
+            await this.execOnShell(`resolvectl dns ${tun} ${conf.resolvIp}`);
+        }
+    }
+    public async getInterfaceResolvDomains() {
+        const result: string = (await this.execOnShell(`resolvectl domain`)) as string;
+        const allDomainLines = result.split('\n');
+        let items: { tun: string, domains: string[] }[] = [];
+        for (const line of allDomainLines) {
+
+            const parts = line.split(':');
+            const part1 = parts[0];
+            const part2 = parts[1];
+            if (part2) {
+                let tmp1 = part1.split('(')[1];
+                let tun = tmp1.replace(')', '').trim();
+                let domains = part2.split(' ').map(x => x.trim()).filter(y => y);
+                items.push({
+                    tun: tun,
+                    domains: domains
+                })
+            }
+
+        }
+
+        return items;
+    }
+    public override async makeDns(primary = true) {
+        const allRoute = `~.`;
+        if (primary) {
+            if (!this.net.tunnel.isMasterResolv) {
+                this.logInfo(`make default dns router ${this.net.tunnel.tun}`);
+                await this.execOnShell(`resolvectl domain ${this.net.tunnel.tun} '${this.net.tunnel.resolvSearch}' '~.'`);
+                await this.execOnShell(`resolvectl default-route ${this.net.tunnel.tun} true`);
+                const domains = await this.getInterfaceResolvDomains();
+                for (const dom of domains) {
+                    if (dom.tun != this.net.tunnel.tun && dom.domains.includes(allRoute)) {
+                        const rlist = dom.domains.filter(x => x != '~.').join(' ');
+                        await this.execOnShell(`resolvectl domain ${dom.tun} "${rlist}"`)
+                    }
+                }
+
+                await this.execOnShell(`resolvectl flush-caches`);
+            }
+            this.net.tunnel.isMasterResolv = true;
+        } else {
+            if (this.net.tunnel.isMasterResolv) {
+                this.logInfo(`remove default dns router ${this.net.tunnel.tun}`);
+                await this.execOnShell(`resolvectl default-route ${this.net.tunnel.tun} false`);
+                await this.execOnShell(`resolvectl domain ${this.net.tunnel.tun} '${this.net.tunnel.resolvSearch}'`);
+            }
+            this.net.tunnel.isMasterResolv = false;
+        }
+    }
+    public async configureNetwork(tun: string, conf: { assignedIp: string, serviceNetwork: string, resolvIp?: string, resolvSearch: string }) {
         this.logInfo(`configuring tunnel: ${tun} with ${JSON.stringify(conf)}`)
         // prepare network for connection
         await this.execOnShell(`ip addr add ${conf.assignedIp}/32 dev ${tun}`)
+        await this.configureDns(tun, conf);
         await this.execOnShell(`ip link set ${tun} up`);
         await this.execOnShell(`ip route add ${conf.serviceNetwork} dev ${tun}`)
     }
@@ -177,14 +256,13 @@ export class UnixTunnelService extends TunnelService {
         if (this.isSSHTunnelStarting) return;
         await this.init();
         await this.startSSHFerrum();
-
     }
     public async startIAmAlive() {
         if (this.iamAliveInterval)
             clearIntervalAsync(this.iamAliveInterval);
         this.iamAliveInterval = null;
         this.iamAliveInterval = setIntervalAsync(async () => {
-            this.sendIAmAlive();
+            await this.sendIAmAlive();
         }, 3 * 60 * 1000)
 
     }
@@ -205,6 +283,51 @@ export class UnixTunnelService extends TunnelService {
         }
     }
 
+
+    public async startHealthCheck() {
+        if (this.healthCheckInterval)
+            clearIntervalAsync(this.healthCheckInterval);
+        this.healthCheckInterval = null;
+        this.healthCheckInterval = setIntervalAsync(async () => {
+            await this.healthCheck();
+        }, 3 * 1000)
+
+    }
+    public async stopHealthCheck() {
+        this.net.tunnel.resolvErrorCount = 0;
+        this.net.tunnel.resolvTimes = [];
+        if (this.iamAliveInterval)
+            clearIntervalAsync(this.iamAliveInterval);
+        this.iamAliveInterval = null;
+
+    }
+    public async healthCheck() {
+        try {
+
+            if (this.isTunnelCreated && this.net.tunnel.resolvIp) {
+                this.resolver.setServers([this.net.tunnel.resolvIp]);
+
+                const ping = process.hrtime();
+                const dnsResult = await this.resolver.resolve4(`dns.${this.net.tunnel.resolvSearch}`);
+                const pong = process.hrtime(ping);
+                const latency = (pong[0] * 1000000000 + pong[1]) / 1000000;
+                //this.logInfo(`dns resolution ${dnsResult} milisecond:${latency}`);
+                this.net.tunnel.resolvErrorCount = 0;
+                this.net.tunnel.resolvTimes.splice(0, 0, latency);
+
+            }
+        } catch (err: any) {
+            this.logError(err.toString());
+            this.net.tunnel.resolvTimes.push(3000);
+            this.net.tunnel.resolvErrorCount++;
+        } finally {
+            // only 1.5 minutes data
+            if (this.net.tunnel.resolvTimes.length > 30)
+                this.net.tunnel.resolvTimes.splice(29);// slice it
+        }
+    }
+
+
     public async startSSHFerrum() {
         this.logInfo(`starting new tunnel ${this.sshCommand}`);
         await this.tryKillProcess();
@@ -219,6 +342,14 @@ export class UnixTunnelService extends TunnelService {
 
     public override async closeTunnel(): Promise<void> {
         await this.tryKillProcess();
+        await this.flushDnsCache();
+    }
+    public async flushDnsCache() {
+        try {
+            await this.execOnShell(`resolvectl flush-caches`);
+        } catch (err: any) {
+            this.logError(err.message || err.toString());
+        }
     }
 
     async execOnShell(cmd: string, isStdErr = true) {
@@ -292,6 +423,7 @@ export class UnixTunnelService extends TunnelService {
                 clearTimeout(this.isSSHTunnelStarting);
             this.isSSHTunnelStarting = null;
             await this.stopIAmAlive();
+            await this.stopHealthCheck();
         })
         this.childProcess = child;
 
@@ -307,12 +439,14 @@ export class UnixTunnelService extends TunnelService {
                 clearTimeout(this.isSSHTunnelStarting);
             this.isSSHTunnelStarting = null;
             await this.stopIAmAlive();
+            await this.stopHealthCheck();
             if (this.childProcess)
                 this.logInfo(`killing process tunnel`)
 
             this.childProcess?.kill();
             await this.forceKillPid();
             this.isWorking = false;
+            this.isTunnelCreated = false;
 
         } catch (err: any) {
             this.logError(err.message || err.toString());

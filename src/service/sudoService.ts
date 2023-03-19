@@ -117,10 +117,13 @@ export class SudoService extends BaseService {
 
             case 'win32':
                 {
+                    // for testing open this section, build and run as administroator, npm run startwin32
                     //root.stdin?.write(`set  ELECTRON_RUN_AS_NODE = true \r\n`);
-                    //const start = `${ process.execPath } ${ workerJS } --url=${ url } --socket=${ pipename } \r\n`
-                    //this.logInfo(`starting worker: ${ start } `)
+                    //const start = `${process.execPath} ${workerJS} --url=${url} --socket=${pipename} \r\n`
+                    //this.logInfo(`starting worker: ${start} `)
                     //root.stdin?.write(start);
+
+                    // this section is for production
                     this.logInfo(`starting worker on service`);
                     await this.trigger_win32_svc(url, pipename);
                 }
@@ -182,6 +185,7 @@ export class SudoService extends BaseService {
         })
         this.events.emit('sudoIsReady');
     }
+
     async darwinStartShell() {
         console.log('starting darwing root shell');
         if (this.isRootShellWorking) {

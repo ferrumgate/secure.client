@@ -102,7 +102,7 @@ async function executeBuilder() {
     productname['@_Value'] = msiCreator.name;
     //install services
     //<ServiceInstall Id="ServiceInstaller" Name="FerrumGateService" DisplayName="FerrumGate"
-    // Description="Zero Trust Application Access" Vital="yes" Account="LocalSystem" 
+    // Description="Zero Trust Access" Vital="yes" Account="LocalSystem" 
     // Start="auto" Type="ownProcess" ErrorControl="normal"  />
     //<ServiceControl Id="StartService" Start="install" Stop="both" Remove="uninstall" 
     //Name="FerrumGateService" Wait="yes"   />  
@@ -115,7 +115,7 @@ async function executeBuilder() {
         ServiceInstall: [],
         ':@': {
             '@_Id': "ServiceInstaller", '@_Name': "FerrumGateService", '@_DisplayName': "FerrumGate",
-            '@_Description': "Zero Trust Application Access", '@_Vital': "yes", '@_Account': "LocalSystem",
+            '@_Description': "Zero Trust Access", '@_Vital': "yes", '@_Account': "LocalSystem",
             '@_Start': "auto", '@_Type': "ownProcess", '@_ErrorControl': "normal"
         }
     }),

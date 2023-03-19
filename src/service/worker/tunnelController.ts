@@ -1,6 +1,6 @@
 import { EventService } from "../eventsService";
 import net from 'net';
-import { Cmd, Network } from "./models";
+import { Cmd, NetworkEx } from "./models";
 import { setIntervalAsync, clearIntervalAsync } from 'set-interval-async';
 import { UnixTunnelService } from "../unix/unixTunnelService";
 import child_process from 'child_process';
@@ -10,6 +10,7 @@ import os from 'os';
 import { Win32TunnelService } from "../win32/win32TunnelService";
 import fs from 'fs';
 import { DarwinTunnelService } from "../darwin/darwinTunnelService";
+import { TunnelService } from "./tunnelService";
 
 /**
  * @summary tunnel controller, watch every tunnal
@@ -23,7 +24,8 @@ export class TunnelController {
     accessToken: string = '';
     refreshToken: string = '';
 
-    networks: Network[] = [];
+    networks: NetworkEx[] = [];
+    processList: TunnelService[] = [];
     networksLastCheck = 0;
     lastErrorOccured = 0;
     lastMessageToParent = 0;
@@ -31,25 +33,35 @@ export class TunnelController {
 
 
     constructor(protected pipename: string, protected event: EventService, protected api: TunnelApiService) {
+        function replacer(this: any, key: string, value: any) {
+            if (key == "process") return undefined;
+            else return value;
+        }
         event.on('log', async (type: string, msg: string) => {
 
             try {
                 await this.writeToParent({ type: 'logRequest', data: { type: type, msg: msg } })
             } catch (ignore) { }
         })
-        event.on('tunnelFailed', async (data: string) => {
+        event.on('tunnelFailed', async (data: NetworkEx) => {
             try {
+
+
                 await this.writeToParent({ type: 'tunnelFailed', data: { msg: data } })
             } catch (ignore) { }
         })
 
-        event.on('tunnelOpened', async (data: string) => {
+        event.on('tunnelOpened', async (data: NetworkEx) => {
             try {
+
                 await this.writeToParent({ type: 'tunnelOpened', data: { msg: data } })
-            } catch (ignore) { }
+            } catch (ignore: any) {
+                await this.writeToParent({ type: 'logRequest', data: { type: 'info', msg: ignore.stack } })
+            }
         })
-        event.on('tunnelClosed', async (data: string) => {
+        event.on('tunnelClosed', async (data: NetworkEx) => {
             try {
+                //                const cloned = JSON.parse(JSON.stringify(data, replacer));
                 await this.writeToParent({ type: 'tunnelClosed', data: { msg: data } })
             } catch (ignore) { }
         })
@@ -105,6 +117,9 @@ export class TunnelController {
     }
     async closeAllTunnels() {
         try {
+            for (const prc of this.processList) {
+                await prc.closeTunnel();
+            }
             const platform = os.platform();
             switch (platform) {
                 case 'linux':
@@ -118,9 +133,13 @@ export class TunnelController {
                 default:
                     throw new Error('not implemented for os:' + platform);
             }
+
         } catch (err: any) {
             this.logError(err.message || err.toString())
         }
+    }
+    getNetworkProcess(net: NetworkEx) {
+        return this.processList.find(x => x.networkId == net.id);
     }
     async checkSystem() {
 
@@ -141,23 +160,26 @@ export class TunnelController {
                     return a.name.localeCompare(b.name);
                 })
                 this.networksLastCheck = new Date().getTime();
-                this.logInfo(`getting networks result: ${JSON.stringify(data)}`);
+
 
             }
             //check networks
             for (const network of this.networks) {
+                const process = this.getNetworkProcess(network);
                 if (network.action == 'allow') {
                     if (!network.tunnel) {
-                        network.tunnel = { tryCount: 0, lastTryTime: 0, isWorking: false }
+                        network.tunnel = { tryCount: 0, lastTryTime: 0, isWorking: false, resolvErrorCount: 0, resolvTimes: [] }
                     }
                     if ((new Date().getTime() - network.tunnel.lastTryTime) < 15000) {
-                        network.tunnel.isWorking = network.tunnel.process?.isWorking || false;
-                        network.tunnel.lastError = network.tunnel.process?.lastError || '';
+                        network.tunnel.isWorking = process?.isWorking || false;
+                        network.tunnel.lastError = process?.lastError || '';
                         continue;
                     }
                     await this.checkTunnel(network);
                 }
             }
+            // check healthy and dns routing
+            await this.checkHealthyDns();
             this.lastErrorOccured = 0;
 
 
@@ -169,34 +191,109 @@ export class TunnelController {
         }
 
     }
-    async checkTunnel(network: Network): Promise<{} | undefined> {
-
+    async checkHealthyDns() {
         try {
 
-            if (!network.tunnel.process) {
+            for (const network of this.networks) {
+                const process = this.getNetworkProcess(network);
+                if (network.tunnel.isWorking) {
+                    if (network.tunnel.resolvErrorCount > 3) {//dns could not resolved 3 times
+                        this.logError(`network cannot reach ${network.name}`);
+                        await process?.closeTunnel();
+                        network.tunnel.isWorking = false;
+                        network.tunnel.lastError = 'Cannot reach';
+                        this.event.emit('tunnelClosed', network);
+                    }
+                }
+            }
+            const workingTunnels = this.networks.filter(x => x.tunnel.isWorking);
+            if (workingTunnels.length) {
+                const items = workingTunnels.map(x => {
+                    let median = workingTunnels.length > 1 ? 0 : 1;//dont wait on first tunnel
+                    if (x.tunnel.resolvTimes.length > 5) {
+                        median = x.tunnel.resolvTimes.reduce((a, b) => a + b) / x.tunnel.resolvTimes.length;
+                    }
+                    //this.logInfo(`${x.name} resolution median is ${median}`);
+                    return {
+                        net: x, median: median
+                    }
+                })
+                const sortedList = items.sort((a, b) => a.median - b.median);
+                let isMadedPrimaryDns = false;
+                let isChangedSomething = false;
+                for (const item of sortedList) {
+                    const process = this.getNetworkProcess(item.net);
+                    if (!item.median || isMadedPrimaryDns) {
+                        if (item.net.tunnel.isMasterResolv) {
+                            this.logInfo(`making ${item.net.name} for ${item.net.tunnel.tun} secondary dns`);
+                            isChangedSomething = true;
+                        }
+                        await process?.makeDns(false);
+                    } else {
+                        if (!item.net.tunnel.isMasterResolv) {
+                            this.logInfo(`making ${item.net.name} for ${item.net.tunnel.tun} primary dns ${item.median}`);
+                            isChangedSomething = true;
+                        }
+                        await process?.makeDns(true);
+                        isMadedPrimaryDns = true;
+                    }
+
+                }
+
+                //we need to write more log, for debug
+                if (isChangedSomething) {
+                    workingTunnels.forEach(y => {
+                        this.logInfo(`network ${y.name} resolution times ${y.tunnel.resolvTimes.join(', ')}`);
+                    })
+                    sortedList.forEach(x => {
+                        this.logInfo(`network ${x.net.name} resolution median is ${x.median}`);
+                    })
+                }
+            }
+
+
+
+
+        } catch (err: any) {
+            console.log(err);
+            this.lastErrorOccured = new Date().getTime();
+            this.logError(err.message || err.toString())
+        }
+    }
+    async checkTunnel(network: NetworkEx): Promise<{} | undefined> {
+
+        try {
+            let process = this.getNetworkProcess(network);
+            if (!process) {
                 const platform = os.platform();
                 switch (platform) {
                     case 'linux':
                     case 'freebsd':
                     case 'netbsd':
-                        network.tunnel.process = new UnixTunnelService(network, this.accessToken, this.event, this.api); break;
+                        process = new UnixTunnelService(network, this.accessToken, this.event, this.api);
+                        this.processList.push(process);
+                        break;
                     case 'win32':
-                        network.tunnel.process = new Win32TunnelService(network, this.accessToken, this.event, this.api); break;
+                        process = new Win32TunnelService(network, this.accessToken, this.event, this.api);
+                        this.processList.push(process);
+                        break;
                     case 'darwin':
-                        this.logError('darwin tunnel service');
-                        network.tunnel.process = new DarwinTunnelService(network, this.accessToken, this.event, this.api); break;
+                        process = new DarwinTunnelService(network, this.accessToken, this.event, this.api);
+                        this.processList.push(process);
+                        break;
                     default:
                         throw new Error('not implemented for os:' + platform);
                 }
 
             }
-            if (!network.tunnel.process.isWorking) {
+            if (!process.isWorking) {
                 this.logError(`no tunnel created for ${network.name} starting new one`);
-                await network.tunnel.process.openTunnel();
+                await process.openTunnel();
 
             }
-            network.tunnel.isWorking = network.tunnel.process.isWorking;
-            network.tunnel.lastError = network.tunnel.process.lastError;
+
+            network.tunnel.isWorking = process.isWorking;
+            network.tunnel.lastError = process.lastError;
             return undefined;
         } catch (err: any) {
 
@@ -215,12 +312,10 @@ export class TunnelController {
             //if ((new Date().getTime() - this.lastMessageToParent) < 30000) return;
             this.logInfo("sync network status " + new Date().toISOString());
             this.lastMessageToParent = new Date().getTime();
-            function replacer(this: any, key: string, value: any) {
-                if (key == "process") return undefined;
-                else return value;
-            }
-            const cloned = JSON.parse(JSON.stringify(this.networks, replacer));
-            await this.writeToParent({ type: 'networkStatusReply', data: cloned })
+
+
+            this.logInfo(`sync network status ${JSON.stringify(this.networks)}`);
+            await this.writeToParent({ type: 'networkStatusReply', data: this.networks })
 
         } catch (err: any) {
             this.logError(err.message || err.toString())
