@@ -2,7 +2,8 @@
 import chai, { util } from 'chai';
 import { Util } from '../src/service/util';
 const expect = chai.expect;
-
+import ping from 'ping';
+import { Resolver } from 'dns/promises';
 
 describe('util ', async () => {
 
@@ -36,4 +37,16 @@ describe('util ', async () => {
         const output = await Util.exec('ls');
         expect(output).exist;
     })
+    it('ping', async () => {
+        const output = await ping.promise.probe('1.1.1.1', {
+            timeout: 2
+        })
+        console.log(output);
+    }).timeout(10000)
+    it('resolve', async () => {
+        const resolver = new Resolver({ tries: 1, timeout: 2000 })
+        resolver.setServers(['1.1.1.1'])
+        const result = await resolver.resolve4(`ferrumgate.com`);
+        console.log(result);
+    }).timeout(10000)
 })

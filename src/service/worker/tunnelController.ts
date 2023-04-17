@@ -197,7 +197,7 @@ export class TunnelController {
             for (const network of this.networks) {
                 const process = this.getNetworkProcess(network);
                 if (network.tunnel.isWorking) {
-                    if (network.tunnel.resolvErrorCount > 3) {//dns could not resolved 3 times
+                    if (network.tunnel.resolvErrorCount > 3) {//ping failed could not resolved 3 times
                         this.logError(`network cannot reach ${network.name}`);
                         await process?.closeTunnel();
                         network.tunnel.isWorking = false;

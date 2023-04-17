@@ -8,6 +8,7 @@ import { NetworkEx } from "../worker/models";
 import { TunnelApiService } from "../worker/tunnelApiService";
 const { EOL } = require('os');
 import { Resolver } from 'dns/promises';
+import ping from 'ping';
 /**
  * @summary unix tunnel controller, this service works on root worker process
  */
@@ -306,12 +307,19 @@ export class UnixTunnelService extends TunnelService {
 
             if (this.isTunnelCreated && this.net.tunnel.resolvIp) {
                 this.resolver.setServers([this.net.tunnel.resolvIp]);
+                const pStart = process.hrtime();
+                //const dnsResult = await this.resolver.resolve4(`dns.${this.net.tunnel.resolvSearch}`);
 
-                const ping = process.hrtime();
-                const dnsResult = await this.resolver.resolve4(`dns.${this.net.tunnel.resolvSearch}`);
-                const pong = process.hrtime(ping);
-                const latency = (pong[0] * 1000000000 + pong[1]) / 1000000;
+                const result = await ping.promise.probe(this.net.tunnel.resolvIp, {
+                    timeout: 1,
+                });
+                if (!result.alive)
+                    throw new Error("ping failed");
+                //const pong = process.hrtime(pStart);
+                //const latency = (pong[0] * 1000000000 + pong[1]) / 1000000;
                 //this.logInfo(`dns resolution ${dnsResult} milisecond:${latency}`);
+                const latency = Number(result.time) || 3000;
+
                 this.net.tunnel.resolvErrorCount = 0;
                 this.net.tunnel.resolvTimes.splice(0, 0, latency);
 
