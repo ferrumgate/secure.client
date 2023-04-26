@@ -98,7 +98,7 @@ export class SudoService extends BaseService {
                 break;
             case 'darwin':
                 {
-                    const start = `ELECTRON_RUN_AS_NODE=true ${process.execPath} ${workerJS} --url=${url} --socket=${pipename}`
+                    const start = `ELECTRON_RUN_AS_NODE=true ${process.execPath} ${workerJS} --url=${url}  --socket=${pipename}`
                     //const start = `ls`
                     this.logInfo(`starting worker: ${start}`)
                     const pipe = this.sudoOptions.darwin as { server: PipeServer, client: nodenet.Socket };

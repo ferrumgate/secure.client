@@ -1,7 +1,7 @@
 
 import Axios, { AxiosRequestConfig } from "axios";
 import { EventService } from "../eventsService";
-import { NetworkEx } from "./models";
+import { ClientDevicePosture, DevicePostureParameter, NetworkEx } from "./models";
 
 /**
  * @summary http requests
@@ -96,6 +96,7 @@ export class TunnelApiService {
 
     }
 
+
     public async createTunnel(accessToken: string, tunneKey: string) {
         console.log("/api/client/tunnel")
         let url = this.getUrl();
@@ -111,6 +112,38 @@ export class TunnelApiService {
 
         return response.data as {}
 
+
+
+    }
+    public async getDevicePostureParameters(accessToken: string) {
+        console.log("/api/user/current/deviceposture/parameters")
+        let url = this.getUrl();
+
+        let options: AxiosRequestConfig = {
+            timeout: 15 * 1000,
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        };
+
+        const response = await Axios.get(url.toString() + 'api/user/current/deviceposture/parameters', options)
+
+        return response.data as { items: DevicePostureParameter[] };
+
+    }
+    public async saveDevicePosture(accessToken: string, posture: ClientDevicePosture) {
+        console.log("/api/user/current/deviceposture/parameters")
+        let url = this.getUrl();
+
+        let options: AxiosRequestConfig = {
+            timeout: 15 * 1000,
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        };
+
+        const response = await Axios.post(url.toString() + 'api/user/current/deviceposture', posture, options)
+        return response.data as {};
 
 
     }

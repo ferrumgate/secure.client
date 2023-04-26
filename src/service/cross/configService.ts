@@ -8,6 +8,7 @@ import getAppDataPath from 'appdata-path';
  */
 export interface Config {
     host: string;
+    id: string;
 }
 
 /**

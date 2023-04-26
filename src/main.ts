@@ -43,7 +43,20 @@ export async function init(token: string) {
     config = new ConfigService();
     log = new LogService();
 
-    const conf = await config.getConf();
+    //check conf with default values
+    let conf = await config.getConf();
+    if (!conf) {
+        await config.saveConfig({
+            host: 'https://ztna.ferrumgate.com', id: Util.randomNumberString()
+        })
+        conf = await config.getConf();
+    }
+    if (conf && !conf.id) {
+        conf.id = Util.randomNumberString(16);
+        await config.saveConfig(conf)
+    }
+
+
     api = new ApiService(conf?.host || 'http://localhost', events);
     sudo = new SudoService(events);
     sudo.setToken(token || '');

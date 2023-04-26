@@ -3,7 +3,7 @@ import fspromise from 'fs/promises';
 import fs from 'fs';
 import { app } from 'electron';
 import childprocess from 'child_process';
-
+import crypto from 'crypto';
 /**
  * @summary util functions
  */
@@ -67,6 +67,19 @@ export class Util {
                             resolve('')
             })
         })
+    }
+
+    static randomNumberString(string_length: number = 8) {
+
+
+        var chars = "0123456789abcdefghiklmnopqrstuvwxyzABCDEFGHIKLMNOPQRSTUVWXYZ";
+        const bytes = crypto.randomBytes(string_length * 2);
+        var randomstring = '';
+        for (var i = 0; i < string_length; i++) {
+            //var rnum = Math.floor(bytes[i] * chars.length);
+            randomstring += chars[bytes[i] % chars.length];
+        }
+        return randomstring;
     }
 
 

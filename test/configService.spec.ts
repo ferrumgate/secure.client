@@ -27,7 +27,7 @@ describe('configService ', async () => {
     })
     it('saveConfig', async () => {
         const configService = new ConfigService();
-        await configService.saveConfig({ host: 'test' });
+        await configService.saveConfig({ host: 'test', id: '123123' });
         //get again and verify
         const config1 = await configService.getConfig();
         expect(config1).to.be.not.null;

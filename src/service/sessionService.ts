@@ -190,6 +190,9 @@ export class SessionService extends BaseHttpService {
                 case 'tokenRequest':
                     await this.executeTokenRequest();
                     break;
+                case 'confRequest':
+                    await this.executeConfResponse();
+                    break;
                 case 'tunnelFailed':
                     await this.executeTunnelFailed(cmd.data);
                     break;
@@ -226,6 +229,12 @@ export class SessionService extends BaseHttpService {
     async executeTokenRequest() {
         if (this.accessToken && this.refreshToken)
             await this.writeToWorker({ type: 'tokenResponse', data: { accessToken: this.accessToken, refreshToken: this.refreshToken } });
+
+
+    }
+    async executeConfResponse() {
+        const conf = await this.config.getConf();
+        await this.writeToWorker({ type: 'confResponse', data: conf });
 
 
     }
