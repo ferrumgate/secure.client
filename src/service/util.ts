@@ -52,7 +52,7 @@ export class Util {
         })
     }
 
-    static async exec(cmd: string) {
+    static async exec(cmd: string, throwStdErr = true) {
         return new Promise((resolve, reject) => {
             childprocess.exec(cmd, (error, stdout, stderr) => {
                 if (error)

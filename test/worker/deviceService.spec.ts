@@ -83,14 +83,20 @@ describe('deviceService ', async () => {
                 break;
 
         }
-        const registry2 = await deviceService.getRegistry('HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters2')
-        switch (platform) {
+        let isError = false;
+        try {
+            const registry2 = await deviceService.getRegistry('HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters2')
+            switch (platform) {
 
-            case 'win32':
-                expect(registry2.isExists).to.be.false;
-                break;
+                case 'win32':
+                    expect(registry2.isExists).to.be.false;
+                    break;
 
+            }
+        } catch (err) {
+            isError = true;
         }
+        expect(isError).to.be.true;
         const registry3 = await deviceService.getRegistry('HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters', 'ICSDomain')
         switch (platform) {
 
@@ -180,8 +186,11 @@ describe('deviceService ', async () => {
         const result = await deviceService.getAntivirus();
 
         console.log(result);
-
-        expect(result[0].isEnabled).false;
+        const platform = await deviceService.getPlatform();
+        if (platform == 'win32')
+            expect(result[0].isEnabled).true;
+        else
+            expect(result[0].isEnabled).false;
 
 
     })

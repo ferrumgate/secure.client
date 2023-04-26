@@ -72,7 +72,7 @@ export class DeviceService {
             case 'win32':
                 {
                     const lines: string = (await Util.exec(`cmd.exe /c certUtil -hashfile "${file}" SHA256`)) as string;
-                    const sha256 = lines.split('\n')[1];
+                    const sha256 = lines.replace(/\r/g, '').split('\n')[1];
                     return sha256;
                 }
             case 'darwin':
@@ -116,15 +116,19 @@ export class DeviceService {
             case 'win32':
                 {
                     const output = (await Util.exec(`systeminfo`)) as string;
-                    const lines = output.split('\n');
+                    const lines = output.replace(/\r/g, '').split('\n');
                     let osname = ''
                     let osversion = '';
                     lines.forEach(x => {
                         if (x.startsWith('OS Name:')) {
-                            osname = x.split('\t')[1];
+                            osname = x.split(':')[1];
+                            if (osname)
+                                osname = osname.trim();
                         }
                         if (x.startsWith('OS Version:')) {
-                            osversion = x.split('\t')[1];
+                            osversion = x.split(':')[1];
+                            if (osversion)
+                                osversion = osversion.trim();
                         }
                     })
                     return { name: osname, version: osversion?.split(' ')[0] };
@@ -162,7 +166,7 @@ export class DeviceService {
     async getRegistry(path: string, key?: string): Promise<{ isExists: boolean, path: string, key?: string, value?: string }> {
 
         if (os.platform() == 'win32') {
-            const output = (await Util.exec(`reg query ${path} ${key ? '/v' : ''} ${key ? key : ''}`)) as string;
+            const output = (await Util.exec(`reg query ${path} ${key ? '/v' : ''} ${key ? key : ''} 2> nul`)) as string;
             return { isExists: !output.includes('ERROR:'), path: path }
         } return { isExists: false, path: path, key: key }
 
@@ -187,7 +191,7 @@ export class DeviceService {
             case 'win32':
                 {
                     const output = (await Util.exec(`tasklist`)) as string;
-                    const lines = output.split('\n');
+                    const lines = output.replace(/\r/g, '').split('\n');
                     const processlist = [];
                     for (const line of lines) {
                         const finded = search.some(y => line.includes(y))
@@ -229,18 +233,21 @@ export class DeviceService {
                     if (!serialNumber) {
                         serialNumber = (await Util.exec(`${sudo ? 'sudo' : ''} dmidecode -s system-uuid`)) as string;
                     }
-                    return { serial: serialNumber.replace('\n', '').trim() }
+                    return { serial: serialNumber.replace(/\n/g, '').trim() }
                 }
             case 'win32':
                 {
                     const output = (await Util.exec(`wmic bios get serialnumber`)) as string;
-                    const lines = output.split('\n');
+                    const lines = output.replace(/\r/g, '').split('\n');
                     let serialnumber = lines[1];
-                    if (!serialnumber) {
+                    serialnumber = serialnumber?.trim()
+                    if (!serialnumber || serialnumber == '0') {
                         const output = (await Util.exec(`wmic csproduct get uuid`)) as string;
-                        const lines = output.split('\n');
+                        const lines = output.replace(/\r/g, '').split('\n');
                         serialnumber = lines[1];
                     }
+                    if (serialnumber)
+                        serialnumber = serialnumber.trim()
 
                     return { serial: serialnumber };
 
@@ -275,12 +282,12 @@ export class DeviceService {
             case 'linux':
                 {
                     const result = (await Util.exec(`lsblk|grep crypt|wc -l`)) as string;
-                    return [{ isEncrypted: result.replace('\n', '').trim() == '0' ? false : true }]
+                    return [{ isEncrypted: result.replace(/\n/g, '').trim() == '0' ? false : true }]
                 }
             case 'win32':
                 {
-                    const output = (await Util.exec(`manage-bde -status`)) as string;
-                    const lines = output.split('\n');
+                    const output = (await Util.exec(`manage-bde -status 2> nul`)) as string;
+                    const lines = output.replace(/\r/g, '').split('\n');
                     let isEncrytped = false;
                     for (const line of lines) {
                         if (line.includes('Lock Status')) {
@@ -330,13 +337,11 @@ export class DeviceService {
             case 'win32':
                 {
                     const output = (await Util.exec(`netsh advfirewall show publicprofile`)) as string;
-                    const lines = output.split('\n');
+                    const lines = output.replace(/\r/g, '').split('\n');
                     let isEnabled = false;
                     for (const line of lines) {
-                        if (line.includes('State')) {
-                            let tmp = line.split('\t')[1];
-                            if (tmp)
-                                tmp = tmp.trim();
+                        if (line.startsWith('State')) {
+                            let tmp = line.replace('State', '').trim();
                             if (tmp.toLowerCase() != 'off')
                                 isEnabled = true
                         }
@@ -380,13 +385,15 @@ export class DeviceService {
             case 'win32':
                 {
                     const output = (await Util.exec(`powershell.exe Get-MpComputerStatus`)) as string;
-                    const lines = output.split('\n');
+                    const lines = output.replace(/\r/g, '').split('\n');
                     let isEnabled = false;
                     for (const line of lines) {
                         if (line.includes('AntispywareEnabled')) {
+                            console.log(line);
                             let tmp = line.split(':')[1];
                             if (tmp)
                                 tmp = tmp.trim();
+
                             if (tmp.toLowerCase() == 'true')
                                 isEnabled = true
                         }
@@ -428,7 +435,7 @@ export class DeviceService {
         const items = postures.filter(x => x.os == platform && x.registry).map(x => x.registry).filter(x => x)
         for (const item of items) {
             if (item) {
-                let res = await this.getRegistry(item.path, item.key);
+                let res = await this.tryCatchorDefault(async () => { return await this.getRegistry(item.path, item.key); }, { isExists: false, path: item.path, key: item.key })
                 results.push(res);
             }
         }
