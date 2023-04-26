@@ -1,6 +1,6 @@
 import { EventService } from "../eventsService";
 import { Util } from "../util";
-import { ClientDevice, OSType, UserDevicePosture } from "./models";
+import { ClientDevicePosture, DevicePostureParameter, OSType } from "./models";
 import os from 'os';
 import child_process from 'child_process';
 import fsp from 'fs/promises';
@@ -298,7 +298,7 @@ export class DeviceService {
                 }
             case 'darwin':
                 {
-                    const result = (await Util.exec(`diskutil /System/Volumes/Data|grep FileVault`)) as string;
+                    const result = (await Util.exec(`diskutil info /System/Volumes/Data 2>/dev/null |grep FileVault`)) as string;
                     const lines = result.split('\n');
                     let serial = '';
                     let uuid = '';
@@ -348,7 +348,7 @@ export class DeviceService {
                 }
             case 'darwin':
                 {
-                    const result = (await Util.exec(`pfctl -s info`)) as string;
+                    const result = (await Util.exec(`pfctl -s info 2>/dev/null`)) as string;
                     const lines = result.split('\n');
                     let isEnabled = false;
                     for (const line of lines) {
@@ -356,8 +356,9 @@ export class DeviceService {
                             let tmp = line.split(':')[1];
                             if (tmp)
                                 tmp = tmp.trim();
-                            if (tmp != 'Disabled')
+                            if (!tmp.includes('Disabled')) {
                                 isEnabled = true;
+                            }
                         }
                     }
 
@@ -420,7 +421,7 @@ export class DeviceService {
             return def;
         }
     }
-    async getRegistries(postures: UserDevicePosture[]) {
+    async getRegistries(postures: DevicePostureParameter[]) {
         const platform = os.platform() as OSType;
 
         let results = [];
@@ -433,7 +434,7 @@ export class DeviceService {
         }
         return results;
     }
-    async getFiles(postures: UserDevicePosture[]) {
+    async getFiles(postures: DevicePostureParameter[]) {
         const platform = os.platform() as OSType;
 
         let results = [];
@@ -446,7 +447,7 @@ export class DeviceService {
         }
         return results;
     }
-    async getProcesses(postures: UserDevicePosture[]) {
+    async getProcesses(postures: DevicePostureParameter[]) {
         const platform = os.platform() as OSType;
 
         let results: { name: string }[] = [];
@@ -459,7 +460,7 @@ export class DeviceService {
         return results;
     }
 
-    async getProcessSearch(postures: UserDevicePosture[]) {
+    async getProcessSearch(postures: DevicePostureParameter[]) {
         const platform = os.platform() as OSType;
         let search = [];
         const items = postures.filter(x => x.os == platform && x.process).map(x => x.process).filter(x => x)
@@ -470,8 +471,8 @@ export class DeviceService {
         return search;
     }
 
-    async getDevice(devicePostures: UserDevicePosture[]) {
-        const device: ClientDevice = {
+    async getDevice(devicePostures: DevicePostureParameter[]) {
+        const device: ClientDevicePosture = {
             clientId: this.id,
             clientVersion: await this.tryCatchorDefault(this.getCurrentVersion, ''),
             clientSha256: await this.tryCatchorDefault(this.getCurrentSHA256, ''),

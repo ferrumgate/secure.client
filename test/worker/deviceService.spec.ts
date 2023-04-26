@@ -65,7 +65,7 @@ describe('deviceService ', async () => {
                 expect(os.name.includes('Windows')).to.be.true;
                 break;
             case 'darwin':
-                expect(os.name.includes('Windows')).to.be.true;
+                expect(os.name.includes('OS')).to.be.true;
                 break;
         }
 
@@ -107,10 +107,19 @@ describe('deviceService ', async () => {
         const deviceService = new DeviceService(new EventService());
 
         const platform = await deviceService.getPlatform();
-        const result = await deviceService.getProcessLike(['code'])
-        console.log(result);
+        if (platform == 'linux') {
+            const result = await deviceService.getProcessLike(['code'])
+            console.log(result);
 
-        expect(result.length > 0).to.be.true;
+            expect(result.length > 0).to.be.true;
+        }
+
+        if (platform == 'darwin') {
+            const result = await deviceService.getProcessLike(['syslogd'])
+            console.log(result);
+
+            expect(result.length > 0).to.be.true;
+        }
 
     })
 
@@ -151,6 +160,7 @@ describe('deviceService ', async () => {
 
 
     })
+
     it('getFirewall', async () => {
 
         const deviceService = new DeviceService(new EventService());
