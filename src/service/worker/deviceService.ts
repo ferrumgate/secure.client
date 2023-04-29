@@ -202,7 +202,7 @@ export class DeviceService {
                     for (const line of lines) {
                         const finded = search.some(y => line.includes(y))
                         if (finded)
-                            processlist.push({ path: line, sha256: await this.tryCalculateSha256(line) });
+                            processlist.push({ path: line, sha256: undefined/*  await this.tryCalculateSha256(line) */ });
                     }
 
                     return processlist;
