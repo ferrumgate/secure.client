@@ -128,6 +128,13 @@ describe('deviceService ', async () => {
             expect(result.length > 0).to.be.true;
         }
 
+        if (platform == 'win32') {
+            const result = await deviceService.getProcessLike(['chrome'])
+            console.log(result);
+
+            expect(result.length > 0).to.be.true;
+        }
+
     })
 
     it('getMemory', async () => {

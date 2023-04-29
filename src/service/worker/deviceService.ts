@@ -200,7 +200,8 @@ export class DeviceService {
                     const lines = output.replace(/\r/g, '').split('\n');
                     const processlist = [];
                     for (const line of lines) {
-                        const finded = search.some(y => line.includes(y))
+                        const process = line.split('\t')[0];
+                        const finded = search.some(y => process.includes(y))
                         if (finded)
                             processlist.push({ path: line, sha256: undefined/*  await this.tryCalculateSha256(line) */ });
                     }
