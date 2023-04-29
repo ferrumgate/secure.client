@@ -323,8 +323,8 @@ export class TunnelController {
 
             }
 
-            network.tunnel.isWorking = process?.isWorking;
-            network.tunnel.lastError = process?.lastError;
+            network.tunnel.isWorking = process.isWorking;
+            network.tunnel.lastError = process.lastError;
             return undefined;
         } catch (err: any) {
 
