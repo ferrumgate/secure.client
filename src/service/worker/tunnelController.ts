@@ -214,8 +214,8 @@ export class TunnelController {
         } catch (err: any) {
             console.log(err);
             this.lastErrorOccured = new Date().getTime();
-            // this.logError(err.message || err.toString())
-            this.logError(err.toString())
+            this.logError(err.message || err.toString())
+
         }
 
     }
@@ -287,8 +287,8 @@ export class TunnelController {
         } catch (err: any) {
             console.log(err);
             this.lastErrorOccured = new Date().getTime();
-            //this.logError(err.message || err.toString())
-            this.logError(err.toString())
+            this.logError(err.message || err.toString())
+
         }
     }
     async checkTunnel(network: NetworkEx): Promise<{} | undefined> {
@@ -323,14 +323,13 @@ export class TunnelController {
 
             }
 
-            network.tunnel.isWorking = process.isWorking;
-            network.tunnel.lastError = process.lastError;
+            network.tunnel.isWorking = process?.isWorking;
+            network.tunnel.lastError = process?.lastError;
             return undefined;
         } catch (err: any) {
 
             network.tunnel.tryCount++;
-            //network.tunnel.lastError = err.message || err.toString();
-            network.tunnel.lastError = err.toString();
+            network.tunnel.lastError = err.message || err.toString();
 
 
         } finally {
