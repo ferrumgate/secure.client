@@ -115,22 +115,24 @@ export class DeviceService {
                 }
             case 'win32':
                 {
-                    const output = (await Util.exec(`systeminfo`)) as string;
-                    const lines = output.replace(/\r/g, '').split('\n');
+                    let output = (await Util.exec(`wmic os get Caption,Version /value`)) as string;
+                    let lines = output.replace(/\r/g, '').split('\n');
                     let osname = ''
                     let osversion = '';
                     lines.forEach(x => {
-                        if (x.startsWith('OS Name:')) {
-                            osname = x.split(':')[1];
+                        if (x.startsWith('Caption=')) {
+                            osname = x.split('=')[1];
                             if (osname)
                                 osname = osname.trim();
                         }
-                        if (x.startsWith('OS Version:')) {
-                            osversion = x.split(':')[1];
+                        if (x.startsWith('Version=')) {
+                            osversion = x.split('=')[1];
                             if (osversion)
                                 osversion = osversion.trim();
                         }
+
                     })
+
                     return { name: osname, version: osversion?.split(' ')[0] };
 
                 }
@@ -393,28 +395,33 @@ export class DeviceService {
                 }
             case 'win32':
                 {
-                    const output = (await Util.exec(`powershell.exe Get-MpComputerStatus`)) as string;
+                    const output = (await Util.exec(`wmic /namespace:\\\\root\\SecurityCenter2 path AntivirusProduct get * /value`)) as string;
                     const lines = output.replace(/\r/g, '').split('\n');
                     let isEnabled = false;
                     for (const line of lines) {
-                        if (line.includes('AntispywareEnabled')) {
+                        if (line.includes('displayName')) {
                             console.log(line);
-                            let tmp = line.split(':')[1];
+                            let tmp = line.split('=')[1];
                             if (tmp)
                                 tmp = tmp.trim();
 
-                            if (tmp.toLowerCase() == 'true')
-                                isEnabled = true
+
                         }
-                        if (line.includes('AntivirusEnabled')) {
-                            let tmp = line.split(':')[1];
-                            if (tmp)
+                        if (line.includes('productState')) {
+                            let tmp = line.split('=')[1];
+                            if (tmp) {
                                 tmp = tmp.trim();
-                            if (tmp.toLowerCase() == 'true')
-                                isEnabled = true
+
+                                let result = Number(tmp) & 0x0000f000 & 0x1000;
+
+                                if (result)
+                                    isEnabled = true;
+                            }
+
                         }
 
                     }
+
 
                     return [{ isEnabled: isEnabled }];
 
