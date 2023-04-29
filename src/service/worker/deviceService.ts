@@ -196,14 +196,16 @@ export class DeviceService {
                 }
             case 'win32':
                 {
-                    const output = (await Util.exec(`tasklist`)) as string;
+                    const output = (await Util.exec(`tasklist /FO list`)) as string;
                     const lines = output.replace(/\r/g, '').split('\n');
                     const processlist = [];
                     for (const line of lines) {
-                        const process = line.split('\t')[0];
+                        if (!line.startsWith('Image Name:'))
+                            continue;
+                        const process = line.split(':')[1];
                         const finded = search.some(y => process.includes(y))
                         if (finded)
-                            processlist.push({ path: line, sha256: undefined/*  await this.tryCalculateSha256(line) */ });
+                            processlist.push({ path: process.trim(), sha256: undefined/*  await this.tryCalculateSha256(line) */ });
                     }
 
                     return processlist;
