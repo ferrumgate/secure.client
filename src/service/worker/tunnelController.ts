@@ -222,8 +222,9 @@ export class TunnelController {
         try {
 
             for (const network of this.networks) {
+
                 const process = this.getNetworkProcess(network);
-                if (network.tunnel.isWorking) {
+                if (network.tunnel?.isWorking) {
                     if (network.tunnel.resolvErrorCount > 3) {//ping failed could not resolved 3 times
                         this.logError(`network cannot reach ${network.name}`);
                         await process?.closeTunnel();
@@ -232,8 +233,9 @@ export class TunnelController {
                         this.event.emit('tunnelClosed', network);
                     }
                 }
+
             }
-            const workingTunnels = this.networks.filter(x => x.tunnel.isWorking);
+            const workingTunnels = this.networks.filter(x => x.action == 'allow' && x.tunnel.isWorking);
             if (workingTunnels.length) {
                 const items = workingTunnels.map(x => {
                     let median = workingTunnels.length > 1 ? 0 : 1;//dont wait on first tunnel
@@ -313,7 +315,7 @@ export class TunnelController {
                 }
 
             }
-            if (!process.isWorking) {
+            if (!process?.isWorking) {
                 this.logError(`no tunnel created for ${network.name} starting new one`);
                 await process.openTunnel();
 
@@ -337,8 +339,9 @@ export class TunnelController {
     async processDevicePosture() {
         //dont use try catch
         this.logInfo(`getting device posture with ${JSON.stringify(this.devicePostureParameters)}`)
-        const dservice = new DeviceService(this.event, this.config?.id);
-        const item = await dservice.getDevice(this.devicePostureParameters);
+        this.logInfo(`config is ${JSON.stringify(this.config)}`)
+        const dservice = new DeviceService(this.event);
+        const item = await dservice.getDevice(this.config?.id || '', this.devicePostureParameters);
         this.logInfo(`device posture is ${JSON.stringify(item)}`);
         await this.api.saveDevicePosture(this.accessToken, item);
 
@@ -409,7 +412,7 @@ export class TunnelController {
         this.refreshToken = data.refreshToken;
     }
     async executeConfResponse(data: Config) {
-
+        this.logInfo(`conf response is ${JSON.stringify(this.config)}`)
         this.config = data;
 
     }

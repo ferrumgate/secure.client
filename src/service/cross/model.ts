@@ -10,5 +10,6 @@ export interface Network {
     needsIp: boolean;
     needsTime: boolean;
     sshHost?: string;
+    needsDevicePosture?: boolean;
 
 }

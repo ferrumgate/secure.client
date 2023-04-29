@@ -11,7 +11,7 @@ export class DeviceService {
     /**
      *
      */
-    constructor(protected events: EventService, protected id = '00000000'
+    constructor(protected events: EventService
     ) {
 
     }
@@ -157,21 +157,27 @@ export class DeviceService {
     }
 
 
-    async getFile(path: string): Promise<{ isExists: boolean, path: string, sha256?: string }> {
+    async getFile(path: string): Promise<{ path: string, sha256?: string } | undefined> {
 
         const isExists = await fs.existsSync(path);
-        return { isExists: isExists, path: path, sha256: isExists ? await this.calculateSHA256(path) : '' }
+        if (isExists)
+            return { path: path, sha256: isExists ? await this.tryCalculateSha256(path) : '' }
+        return undefined;
 
     }
-    async getRegistry(path: string, key?: string): Promise<{ isExists: boolean, path: string, key?: string, value?: string }> {
+    async getRegistry(path: string, key?: string): Promise<{ path: string, key?: string, value?: string } | undefined> {
 
         if (os.platform() == 'win32') {
             const output = (await Util.exec(`reg query ${path} ${key ? '/v' : ''} ${key ? key : ''} 2> nul`)) as string;
-            return { isExists: !output.includes('ERROR:'), path: path }
-        } return { isExists: false, path: path, key: key }
+            if (!output.includes('ERROR:'))
+                return { path: path, key: key }
+        } return undefined
 
     }
-    async getProcessLike(names: string[]): Promise<{ name: string }[]> {
+    async tryCalculateSha256(path: string) {
+        return await this.tryCatchorDefault(async () => this.calculateSHA256(path), '');
+    }
+    async getProcessLike(names: string[]): Promise<{ path: string, sha256?: string }[]> {
         const search = names.map(x => x.toLowerCase());
         const platform = os.platform();
         switch (platform) {
@@ -183,7 +189,7 @@ export class DeviceService {
                     for (const line of lines) {
                         const finded = search.some(y => line.includes(y))
                         if (finded)
-                            processlist.push({ name: line });
+                            processlist.push({ path: line, sha256: await this.tryCalculateSha256(line) });
                     }
 
                     return processlist;
@@ -196,7 +202,7 @@ export class DeviceService {
                     for (const line of lines) {
                         const finded = search.some(y => line.includes(y))
                         if (finded)
-                            processlist.push({ name: line });
+                            processlist.push({ path: line, sha256: await this.tryCalculateSha256(line) });
                     }
 
                     return processlist;
@@ -210,7 +216,7 @@ export class DeviceService {
                     for (const line of lines) {
                         const finded = search.some(y => line.includes(y))
                         if (finded)
-                            processlist.push({ name: line });
+                            processlist.push({ path: line, sha256: await this.tryCalculateSha256(line) });
                     }
 
                     return processlist;
@@ -233,7 +239,7 @@ export class DeviceService {
                     if (!serialNumber) {
                         serialNumber = (await Util.exec(`${sudo ? 'sudo' : ''} dmidecode -s system-uuid`)) as string;
                     }
-                    return { serial: serialNumber.replace(/\n/g, '').trim() }
+                    return { value: serialNumber.replace(/\n/g, '').trim() }
                 }
             case 'win32':
                 {
@@ -249,7 +255,7 @@ export class DeviceService {
                     if (serialnumber)
                         serialnumber = serialnumber.trim()
 
-                    return { serial: serialnumber };
+                    return { value: serialnumber };
 
                 }
             case 'darwin':
@@ -269,7 +275,7 @@ export class DeviceService {
                         serial = '';
 
                     uuid = uuid?.trim();
-                    return { serial: serial || uuid };
+                    return { value: serial || uuid };
                 }
             default:
                 throw new Error('not implemented for os:' + platform);
@@ -435,8 +441,9 @@ export class DeviceService {
         const items = postures.filter(x => x.os == platform && x.registry).map(x => x.registry).filter(x => x)
         for (const item of items) {
             if (item) {
-                let res = await this.tryCatchorDefault(async () => { return await this.getRegistry(item.path, item.key); }, { isExists: false, path: item.path, key: item.key })
-                results.push(res);
+                let res = await this.tryCatchorDefault(async () => { return await this.getRegistry(item.path, item.key); }, undefined)
+                if (res)
+                    results.push(res);
             }
         }
         return results;
@@ -449,7 +456,8 @@ export class DeviceService {
         for (const item of items) {
             if (item) {
                 let res = await this.getFile(item.path);
-                results.push(res);
+                if (res)
+                    results.push(res);
             }
         }
         return results;
@@ -457,7 +465,7 @@ export class DeviceService {
     async getProcesses(postures: DevicePostureParameter[]) {
         const platform = os.platform() as OSType;
 
-        let results: { name: string }[] = [];
+        let results: { path: string, sha256?: string }[] = [];
         const items = postures.filter(x => x.os == platform && x.process).map(x => x.process).filter(x => x)
         let search = await this.getProcessSearch(postures);
         if (search.length) {
@@ -478,9 +486,9 @@ export class DeviceService {
         return search;
     }
 
-    async getDevice(devicePostures: DevicePostureParameter[]) {
+    async getDevice(clientId: string, devicePostures: DevicePostureParameter[]) {
         const device: ClientDevicePosture = {
-            clientId: this.id,
+            clientId: clientId,
             clientVersion: await this.tryCatchorDefault(this.getCurrentVersion, ''),
             clientSha256: await this.tryCatchorDefault(this.getCurrentSHA256, ''),
             hostname: await this.tryCatchorDefault(this.getHostname, ''),
@@ -492,7 +500,7 @@ export class DeviceService {
             processes: await this.tryCatchorDefault(async () => { return await this.getProcesses(devicePostures) }, []),
             processSearch: await this.tryCatchorDefault(async () => { return this.getProcessSearch(devicePostures) }, []),
             memory: await this.tryCatchorDefault(this.getMemory, { total: 1, free: 1 }),
-            serial: await this.tryCatchorDefault(this.getSerial, { serial: '' }),
+            serial: await this.tryCatchorDefault(this.getSerial, { value: '' }),
             encryptedDiscs: await this.tryCatchorDefault(this.getDiscEncrypted, [{ isEncrypted: false }]),
             antiviruses: await this.tryCatchorDefault(this.getAntivirus, [{ isEnabled: false }]),
             firewalls: await this.tryCatchorDefault(this.getFirewall, [{ isEnabled: false }]),

@@ -116,7 +116,7 @@ export class TunnelApiService {
 
     }
     public async getDevicePostureParameters(accessToken: string) {
-        console.log("/api/user/current/deviceposture/parameters")
+        console.log("/api/user/current/device/posture/parameters")
         let url = this.getUrl();
 
         let options: AxiosRequestConfig = {
@@ -126,13 +126,13 @@ export class TunnelApiService {
             }
         };
 
-        const response = await Axios.get(url.toString() + 'api/user/current/deviceposture/parameters', options)
+        const response = await Axios.get(url.toString() + 'api/user/current/device/posture/parameters', options)
 
         return response.data as { items: DevicePostureParameter[] };
 
     }
     public async saveDevicePosture(accessToken: string, posture: ClientDevicePosture) {
-        console.log("/api/user/current/deviceposture/parameters")
+        console.log("/api/user/current/device/posture")
         let url = this.getUrl();
 
         let options: AxiosRequestConfig = {
@@ -142,7 +142,7 @@ export class TunnelApiService {
             }
         };
 
-        const response = await Axios.post(url.toString() + 'api/user/current/deviceposture', posture, options)
+        const response = await Axios.post(url.toString() + 'api/user/current/device/posture', posture, options)
         return response.data as {};
 
 

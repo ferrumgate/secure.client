@@ -52,12 +52,12 @@ export interface ClientDevicePosture {
     macs: string[]
     platform: string;
     os: { name: string, version: string };
-    registries: { isExists: boolean, path: string, key?: string, value?: string }[];
-    files: { isExists: boolean, path: string, sha256?: string }[];
-    processes: { name: string }[];
+    registries: { path: string, key?: string, value?: string }[];
+    files: { path: string, sha256?: string }[];
+    processes: { path: string, sha256?: string }[];
     processSearch: string[];
     memory: { total: number, free: number };
-    serial: { serial: string };
+    serial: { value: string };
     encryptedDiscs: { isEncrypted: boolean }[];
     antiviruses: { isEnabled: boolean }[];
     firewalls: { isEnabled: boolean }[];

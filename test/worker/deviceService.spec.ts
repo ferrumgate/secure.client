@@ -79,7 +79,7 @@ describe('deviceService ', async () => {
         switch (platform) {
 
             case 'win32':
-                expect(registry.isExists).to.be.true;
+                expect(registry).exist;
                 break;
 
         }
@@ -89,19 +89,20 @@ describe('deviceService ', async () => {
             switch (platform) {
 
                 case 'win32':
-                    expect(registry2.isExists).to.be.false;
+                    expect(registry2).not.exist
                     break;
 
             }
         } catch (err) {
             isError = true;
         }
-        expect(isError).to.be.true;
+        if (platform == 'win32')
+            expect(isError).to.be.true;
         const registry3 = await deviceService.getRegistry('HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters', 'ICSDomain')
         switch (platform) {
 
             case 'win32':
-                expect(registry3.isExists).to.be.true;
+                expect(registry3).exist;
                 break;
 
         }
@@ -150,7 +151,7 @@ describe('deviceService ', async () => {
 
         console.log(result);
 
-        expect(result.serial).exist;
+        expect(result.value).exist;
 
 
     })
