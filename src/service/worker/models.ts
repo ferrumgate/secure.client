@@ -2,7 +2,7 @@ import { Network } from "../cross/model";
 import { TunnelService } from "./tunnelService";
 
 export interface Cmd {
-    type: 'logRequest' | 'tokenRequest' | 'tokenResponse' | 'tunnelFailed' | 'tunnelClosed' | 'tunnelOpened' | 'networkStatusReply' | 'networkStatusRequest' | 'confRequest' | 'confResponse';
+    type: 'logRequest' | 'tokenRequest' | 'tokenResponse' | 'tunnelFailed' | 'tunnelClosed' | 'tunnelOpened' | 'networkStatusReply' | 'networkStatusRequest' | 'confRequest' | 'confResponse' | 'checkingDevice';
     data: any;
 }
 /**

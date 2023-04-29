@@ -205,6 +205,9 @@ export class SessionService extends BaseHttpService {
                 case 'networkStatusReply':
                     await this.executeNetworkStatusReply(cmd.data);
                     break;
+                case 'checkingDevice':
+                    await this.executeCheckingDevice(cmd.data);
+                    break;
                 default:
                     break;
             }
@@ -259,6 +262,9 @@ export class SessionService extends BaseHttpService {
 
     async executeNetworkStatusReply(data: NetworkEx[]) {
         this.events.emit('networkStatusReply', data);
+    }
+    async executeCheckingDevice(data: NetworkEx[]) {
+        this.notifyInfo(`Checking device wait`);
     }
 
     async startSession() {

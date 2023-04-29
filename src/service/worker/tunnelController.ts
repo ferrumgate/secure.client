@@ -70,6 +70,12 @@ export class TunnelController {
                 await this.writeToParent({ type: 'tunnelClosed', data: { msg: data } })
             } catch (ignore) { }
         })
+        event.on('checkingDevice', async (data: NetworkEx) => {
+            try {
+                //                const cloned = JSON.parse(JSON.stringify(data, replacer));
+                await this.writeToParent({ type: 'checkingDevice', data: { msg: data } })
+            } catch (ignore) { }
+        })
     }
     async start() {
         if (!this.ipcClient) {
@@ -172,6 +178,7 @@ export class TunnelController {
             }
             if (!this.devicePostureLastCheck) {
                 this.logInfo('getting device posture');
+                await this.writeToParent({ type: 'checkingDevice', data: {} })
                 const data = await this.api.getDevicePostureParameters(this.accessToken);
                 this.logInfo(`device posture:${JSON.stringify(data)}`);
                 this.devicePostureParameters = data.items;
