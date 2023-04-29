@@ -235,7 +235,7 @@ export class TunnelController {
                 }
 
             }
-            const workingTunnels = this.networks.filter(x => x.action == 'allow' && x.tunnel.isWorking);
+            const workingTunnels = this.networks.filter(x => x.action == 'allow' && x.tunnel?.isWorking);
             if (workingTunnels.length) {
                 const items = workingTunnels.map(x => {
                     let median = workingTunnels.length > 1 ? 0 : 1;//dont wait on first tunnel
