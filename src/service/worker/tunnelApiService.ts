@@ -2,16 +2,25 @@
 import Axios, { AxiosRequestConfig } from "axios";
 import { EventService } from "../eventsService";
 import { ClientDevicePosture, DevicePostureParameter, NetworkEx } from "./models";
-
+import https from 'https';
+import { Config } from "../cross/configService";
 /**
  * @summary http requests
  */
 export class TunnelApiService {
 
-
+    conf?: Config;
     constructor(protected url: string, protected events: EventService) {
+        this.events.on('confResponse', (conf: Config) => {
+            this.conf = conf;
+        })
 
+    }
 
+    private createHttpsAgent() {
+        return new https.Agent({
+            rejectUnauthorized: this.conf?.sslVerify,
+        })
     }
 
     private getUrl() {
@@ -31,7 +40,9 @@ export class TunnelApiService {
             timeout: 15 * 1000,
             headers: {
                 TunnelKey: tunnelKey
-            }
+            },
+            httpsAgent: this.createHttpsAgent()
+
         };
         const response = await Axios.get(url.toString() + 'api/client/tunnel/ip', options)
         return response.data as { assignedIp: string, serviceNetwork: string, resolvIp?: string, resolvSearch: string };
@@ -47,7 +58,8 @@ export class TunnelApiService {
             timeout: 15 * 1000,
             headers: {
                 TunnelKey: tunnelKey
-            }
+            },
+            httpsAgent: this.createHttpsAgent()
         };
         const response = await Axios.post(url.toString() + 'api/client/tunnel/confirm', {}, options)
         return response.data as {};
@@ -61,7 +73,8 @@ export class TunnelApiService {
             timeout: 15 * 1000,
             headers: {
                 TunnelKey: tunnelKey
-            }
+            },
+            httpsAgent: this.createHttpsAgent()
         };
         const response = await Axios.get(url.toString() + 'api/client/tunnel/alive', options)
         return response.data as {};
@@ -86,7 +99,8 @@ export class TunnelApiService {
             timeout: 15 * 1000,
             headers: {
                 Authorization: `Bearer ${accessToken}`
-            }
+            },
+            httpsAgent: this.createHttpsAgent()
         };
 
         const response = await Axios.get(url.toString() + 'api/user/current/network', options)
@@ -105,7 +119,8 @@ export class TunnelApiService {
             timeout: 15 * 1000,
             headers: {
                 Authorization: `Bearer ${accessToken}`
-            }
+            },
+            httpsAgent: this.createHttpsAgent()
         };
 
         const response = await Axios.post(url.toString() + 'api/client/tunnel', { tunnelKey: tunneKey }, options)
@@ -123,7 +138,8 @@ export class TunnelApiService {
             timeout: 15 * 1000,
             headers: {
                 Authorization: `Bearer ${accessToken}`
-            }
+            },
+            httpsAgent: this.createHttpsAgent()
         };
 
         const response = await Axios.get(url.toString() + 'api/user/current/device/posture/parameters', options)
@@ -139,7 +155,8 @@ export class TunnelApiService {
             timeout: 15 * 1000,
             headers: {
                 Authorization: `Bearer ${accessToken}`
-            }
+            },
+            httpsAgent: this.createHttpsAgent()
         };
 
         const response = await Axios.post(url.toString() + 'api/user/current/device/posture', posture, options)

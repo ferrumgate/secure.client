@@ -423,6 +423,7 @@ export class TunnelController {
     async executeConfResponse(data: Config) {
         this.logInfo(`conf response is ${JSON.stringify(this.config)}`)
         this.config = data;
+        this.event.emit('confResponse', data);
 
     }
     async executeNetworkInfo(data: {}) {
