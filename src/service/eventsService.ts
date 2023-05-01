@@ -18,6 +18,7 @@ export class EventService extends EventEmitter {
     protected knownEvents = ['openSession', 'closeSession', 'sessionOpening', 'sessionOpened', 'sessionClosed', 'tunnelFailed', 'tunnelOpened', 'tunnelClosed', 'appExit', 'closeWindow',
         'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow', 'showStatusWindow', 'closeStatusWindow',
         "openLink", "notify", "appVersion", "config", "configChanged", "saveConfig", "log", "throwError", 'release',
+        'confRequest', 'confResponse', 'checkingDevice',
         'loadingWindowClosed', 'openTunnel', 'sudoIsReady', 'sudoFailed', 'workerConnected', 'workerDisconnected', 'networkStatusReply', 'networkStatusRequest', 'logFile'];
     /**
      *

@@ -32,7 +32,7 @@ export class ConfigUI extends WindowUI {
     override showWindow(pos?: string | undefined): void {
         super.showWindow(pos);
         this.config.getConf().then(x => {
-            this.window.webContents.send('configReply', { host: x?.host || '' });
+            this.window.webContents.send('configReply', { ...x });
         })
     }
 

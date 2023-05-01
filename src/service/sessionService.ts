@@ -190,6 +190,9 @@ export class SessionService extends BaseHttpService {
                 case 'tokenRequest':
                     await this.executeTokenRequest();
                     break;
+                case 'confRequest':
+                    await this.executeConfResponse();
+                    break;
                 case 'tunnelFailed':
                     await this.executeTunnelFailed(cmd.data);
                     break;
@@ -201,6 +204,9 @@ export class SessionService extends BaseHttpService {
                     break;
                 case 'networkStatusReply':
                     await this.executeNetworkStatusReply(cmd.data);
+                    break;
+                case 'checkingDevice':
+                    await this.executeCheckingDevice(cmd.data);
                     break;
                 default:
                     break;
@@ -229,6 +235,12 @@ export class SessionService extends BaseHttpService {
 
 
     }
+    async executeConfResponse() {
+        const conf = await this.config.getConf();
+        await this.writeToWorker({ type: 'confResponse', data: conf });
+
+
+    }
 
     async executeTunnelFailed(data: { msg: NetworkEx | string }) {
         if (typeof (data.msg) == 'string') {
@@ -250,6 +262,9 @@ export class SessionService extends BaseHttpService {
 
     async executeNetworkStatusReply(data: NetworkEx[]) {
         this.events.emit('networkStatusReply', data);
+    }
+    async executeCheckingDevice(data: NetworkEx[]) {
+        this.notifyInfo(`Checking device wait`);
     }
 
     async startSession() {

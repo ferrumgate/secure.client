@@ -1,6 +1,6 @@
 import { EventService } from "../eventsService";
 import net from 'net';
-import { Cmd, NetworkEx } from "./models";
+import { Cmd, DevicePostureParameter, NetworkEx } from "./models";
 import { setIntervalAsync, clearIntervalAsync } from 'set-interval-async';
 import { UnixTunnelService } from "../unix/unixTunnelService";
 import child_process from 'child_process';
@@ -11,6 +11,8 @@ import { Win32TunnelService } from "../win32/win32TunnelService";
 import fs from 'fs';
 import { DarwinTunnelService } from "../darwin/darwinTunnelService";
 import { TunnelService } from "./tunnelService";
+import { Config } from "../cross/configService";
+import { DeviceService } from "./deviceService";
 
 /**
  * @summary tunnel controller, watch every tunnal
@@ -23,6 +25,7 @@ export class TunnelController {
     //private socketReadBuffer: Buffer = Buffer.from([]);
     accessToken: string = '';
     refreshToken: string = '';
+    config: Config | null = null;
 
     networks: NetworkEx[] = [];
     processList: TunnelService[] = [];
@@ -30,6 +33,8 @@ export class TunnelController {
     lastErrorOccured = 0;
     lastMessageToParent = 0;
     checkSystemIsWorking = false;
+    devicePostureLastCheck = 0;
+    devicePostureParameters: DevicePostureParameter[] = [];
 
 
     constructor(protected pipename: string, protected event: EventService, protected api: TunnelApiService) {
@@ -65,13 +70,19 @@ export class TunnelController {
                 await this.writeToParent({ type: 'tunnelClosed', data: { msg: data } })
             } catch (ignore) { }
         })
+        event.on('checkingDevice', async (data: NetworkEx) => {
+            try {
+                //                const cloned = JSON.parse(JSON.stringify(data, replacer));
+                await this.writeToParent({ type: 'checkingDevice', data: { msg: data } })
+            } catch (ignore) { }
+        })
     }
     async start() {
         if (!this.ipcClient) {
             this.ipcClient = new PipeClient(this.pipename);
             this.ipcClient.onConnect = async () => {
                 await this.closeAllTunnels();
-
+                await this.getConf();
                 setIntervalAsync(async () => {
                     await this.checkSystem();
                 }, 2000);
@@ -80,8 +91,6 @@ export class TunnelController {
                 this.logInfo("ipc client closed");
                 this.ipcClient = null;
                 await this.stop();
-
-
 
             }
             this.ipcClient.onError = async (err: any) => {
@@ -141,15 +150,40 @@ export class TunnelController {
     getNetworkProcess(net: NetworkEx) {
         return this.processList.find(x => x.networkId == net.id);
     }
+    async getConf() {
+        try {
+            await this.writeToParent({ type: 'confRequest', data: {} })
+        } catch (err: any) {
+            console.log(err);
+
+            this.logError(err.message || err.toString())
+        }
+    }
     async checkSystem() {
 
         try {
 
             if (this.lastErrorOccured && (new Date().getTime() - this.lastErrorOccured) < 15000)
                 return;
-            if (!this.accessToken) {
-                await this.writeToParent({ type: 'tokenRequest', data: {} })
+            if (!this.accessToken || !this.config) {
+                if (!this.accessToken)
+                    await this.writeToParent({ type: 'tokenRequest', data: {} })
+                if (!this.config)
+                    await this.writeToParent({ type: 'confRequest', data: {} })
                 return;
+            }
+            if (!this.config) {
+                await this.writeToParent({ type: 'confRequest', data: {} })
+                return;
+            }
+            if (!this.devicePostureLastCheck) {
+                this.logInfo('getting device posture');
+                await this.writeToParent({ type: 'checkingDevice', data: {} })
+                const data = await this.api.getDevicePostureParameters(this.accessToken);
+                this.logInfo(`device posture:${JSON.stringify(data)}`);
+                this.devicePostureParameters = data.items;
+                await this.processDevicePosture();
+                this.devicePostureLastCheck = new Date().getTime();
             }
             if (!this.networksLastCheck) {
                 this.logInfo('getting networks');
@@ -188,6 +222,7 @@ export class TunnelController {
             console.log(err);
             this.lastErrorOccured = new Date().getTime();
             this.logError(err.message || err.toString())
+
         }
 
     }
@@ -195,8 +230,9 @@ export class TunnelController {
         try {
 
             for (const network of this.networks) {
+
                 const process = this.getNetworkProcess(network);
-                if (network.tunnel.isWorking) {
+                if (network.tunnel?.isWorking) {
                     if (network.tunnel.resolvErrorCount > 3) {//ping failed could not resolved 3 times
                         this.logError(`network cannot reach ${network.name}`);
                         await process?.closeTunnel();
@@ -205,8 +241,9 @@ export class TunnelController {
                         this.event.emit('tunnelClosed', network);
                     }
                 }
+
             }
-            const workingTunnels = this.networks.filter(x => x.tunnel.isWorking);
+            const workingTunnels = this.networks.filter(x => x.action == 'allow' && x.tunnel?.isWorking);
             if (workingTunnels.length) {
                 const items = workingTunnels.map(x => {
                     let median = workingTunnels.length > 1 ? 0 : 1;//dont wait on first tunnel
@@ -258,6 +295,7 @@ export class TunnelController {
             console.log(err);
             this.lastErrorOccured = new Date().getTime();
             this.logError(err.message || err.toString())
+
         }
     }
     async checkTunnel(network: NetworkEx): Promise<{} | undefined> {
@@ -286,7 +324,7 @@ export class TunnelController {
                 }
 
             }
-            if (!process.isWorking) {
+            if (!process?.isWorking) {
                 this.logError(`no tunnel created for ${network.name} starting new one`);
                 await process.openTunnel();
 
@@ -305,6 +343,17 @@ export class TunnelController {
             network.tunnel.lastTryTime = new Date().getTime();
 
         }
+    }
+
+    async processDevicePosture() {
+        //dont use try catch
+        this.logInfo(`getting device posture with ${JSON.stringify(this.devicePostureParameters)}`)
+        this.logInfo(`config is ${JSON.stringify(this.config)}`)
+        const dservice = new DeviceService(this.event);
+        const item = await dservice.getDevice(this.config?.id || '', this.devicePostureParameters);
+        this.logInfo(`device posture is ${JSON.stringify(item)}`);
+        await this.api.saveDevicePosture(this.accessToken, item);
+
     }
 
     async syncNetworkStatus() {
@@ -350,6 +399,9 @@ export class TunnelController {
                 case 'tokenResponse':
                     await this.executeTokenResponse(cmd.data);
                     break;
+                case 'confResponse':
+                    await this.executeConfResponse(cmd.data);
+                    break;
 
                 case 'networkStatusRequest':
                     await this.executeNetworkInfo(cmd.data);
@@ -367,6 +419,12 @@ export class TunnelController {
 
         this.accessToken = data.accessToken;
         this.refreshToken = data.refreshToken;
+    }
+    async executeConfResponse(data: Config) {
+        this.logInfo(`conf response is ${JSON.stringify(this.config)}`)
+        this.config = data;
+        this.event.emit('confResponse', data);
+
     }
     async executeNetworkInfo(data: {}) {
 

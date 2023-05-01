@@ -15,7 +15,7 @@
                 "ELECTRON_ENABLE_LOGGING": "true",
                 "ELECTRON_ENABLE_STACK_DUMPING": "true",
                 "ELECTRON_RUN_AS_NODE": "false",
-                "NODE_ENV": "development2"
+                "NODE_ENV": "development"
             },
             "windows": {
                 "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd",

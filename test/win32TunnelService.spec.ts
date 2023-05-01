@@ -23,7 +23,7 @@ describe('win32TunnelService ', async () => {
     it('getResolvSearchList', async () => {
         const net: NetworkEx = {
             action: 'allow', id: 'someid', name: 'test',
-            needs2FA: false, needsIp: false, needsTime: false, tunnel: {} as any
+            needs2FA: false, needsIp: false, needsTime: false, needsDevicePosture: false, tunnel: {} as any
         }
         const win = new Win32TunnelService(net, '', new EventService(), new TunnelApiService('', new EventService()));
         const items = await win.getResolvSearchList();
@@ -34,7 +34,7 @@ describe('win32TunnelService ', async () => {
     it('saveResolvSearchList', async () => {
         const net: NetworkEx = {
             action: 'allow', id: 'someid', name: 'test',
-            needs2FA: false, needsIp: false, needsTime: false, tunnel: {} as any
+            needs2FA: false, needsIp: false, needsTime: false, needsDevicePosture: false, tunnel: {} as any
         }
         const win = new Win32TunnelService(net, '', new EventService(), new TunnelApiService('', new EventService()));
         await win.saveResolvSearchList(['test.ferrumgate.zero', 'ops.ferrumgate.zero']);

@@ -56,6 +56,7 @@
             needs2FA: boolean;
             needsIp: boolean;
             needsTime: boolean;
+            needsDevicePosture: boolean;
             sshHost?: string;
 
         }
@@ -81,7 +82,7 @@
                 let css2 = '';
                 let css3 = '';
                 let why = '';
-                if ((network.needs2FA || network.needsIp || !network.sshHost || network.needsTime)) {
+                if ((network.needs2FA || network.needsIp || !network.sshHost || network.needsTime || network.needsDevicePosture)) {
                     css0 = 'skipped';
                     css1 = 'ferrum-display-none';
                     css2 = 'ferrum-display-none';
@@ -90,6 +91,7 @@
                     why += network.needsIp ? "location does not match" : '';
                     why += (!network.sshHost) ? 'network host invalid' : '';
                     why += (network.needsTime) ? 'time is invalid' : '';
+                    why += (network.needsDevicePosture) ? 'device is invalid' : '';
                 } else
                     if (network.tunnel.isWorking) {
                         css0 = 'ok';

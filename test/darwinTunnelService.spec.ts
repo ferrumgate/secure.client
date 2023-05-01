@@ -27,7 +27,7 @@ describe('darwinTunnelService ', async () => {
         //
         const net: NetworkEx = {
             action: 'allow', id: 'someid', name: 'test',
-            needs2FA: false, needsIp: false, needsTime: false, tunnel: {} as any
+            needs2FA: false, needsIp: false, needsTime: false, needsDevicePosture: false, tunnel: {} as any
         }
         const darwin = new DarwinTunnelService(net, '', new EventService(), new TunnelApiService('', new EventService()));
         const items = await darwin.getResolvSearchList();
@@ -40,7 +40,7 @@ describe('darwinTunnelService ', async () => {
     it('saveResolvSearchList', async () => {
         const net: NetworkEx = {
             action: 'allow', id: 'someid', name: 'test',
-            needs2FA: false, needsIp: false, needsTime: false, tunnel: {} as any
+            needs2FA: false, needsIp: false, needsTime: false, needsDevicePosture: false, tunnel: {} as any
         }
         const darwin = new DarwinTunnelService(net, '', new EventService(), new TunnelApiService('', new EventService()));
         const svc = await darwin.getMacNetworkList();
@@ -61,7 +61,7 @@ describe('darwinTunnelService ', async () => {
     it('flushDnsCache', async () => {
         const net: NetworkEx = {
             action: 'allow', id: 'someid', name: 'test',
-            needs2FA: false, needsIp: false, needsTime: false, tunnel: {} as any
+            needs2FA: false, needsIp: false, needsTime: false, needsDevicePosture: false, tunnel: {} as any
         }
         const darwin = new DarwinTunnelService(net, '', new EventService(), new TunnelApiService('', new EventService()));
         const svc = await darwin.flushDnsCache();

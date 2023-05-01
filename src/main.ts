@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Tray, screen, Menu, shell, Notification, ipcRenderer } from 'electron';
+import electron, { app, BrowserWindow, ipcMain, Tray, screen, Menu, shell, Notification, ipcRenderer } from 'electron';
 
 import path from 'path';
 import { EventService } from './service/eventsService';
@@ -43,7 +43,33 @@ export async function init(token: string) {
     config = new ConfigService();
     log = new LogService();
 
-    const conf = await config.getConf();
+    //check conf with default values
+    let conf = await config.getConf();
+    if (!conf) {
+        await config.saveConfig({
+            host: 'https://ztna.ferrumgate.com', id: Util.randomNumberString()
+        })
+        conf = await config.getConf();
+    }
+    if (conf && !conf.id) {
+        conf.id = Util.randomNumberString(16);
+        await config.saveConfig(conf)
+    }
+    if (conf && conf.sslVerify == undefined) {
+        conf.sslVerify = true;
+        await config.saveConfig(conf)
+    }
+    //ssl verify
+    electron.session.defaultSession.setCertificateVerifyProc(
+        (req, callback) => {
+            if (conf?.sslVerify)
+                callback(-3);
+            else
+                callback(0); // All good
+        }
+    )
+
+
     api = new ApiService(conf?.host || 'http://localhost', events);
     sudo = new SudoService(events);
     sudo.setToken(token || '');
@@ -102,6 +128,9 @@ export async function init(token: string) {
     })
     ipcMain.on('saveConfig', async (event: Electron.IpcMainEvent, ...args: any[]) => {
         events.emit('saveConfig', ...args);
+    })
+    ipcMain.on('notify', async (event: Electron.IpcMainEvent, ...args: any[]) => {
+        events.emit('notify', ...args);
     })
 
 
@@ -166,6 +195,9 @@ app.on('ready', async () => {
     // if (!gotTheLock) {
     //     app.quit()
     // } else
+
+
+
     if (process.platform === 'win32') {
 
     }
