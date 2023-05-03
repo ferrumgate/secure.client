@@ -29,8 +29,8 @@ export class SudoService extends BaseService {
             }
         },
         child: null,
-        darwin: { server: null, client: null }
-    } as { name: string, onstdout: any, onstderr: any, child: any, darwin: { server: PipeServer | null, client: nodenet.Socket | null } };
+        bashjs: { server: null, client: null },
+    } as { name: string, onstdout: any, onstderr: any, child: any, bashjs: { server: PipeServer | null, client: nodenet.Socket | null } };
     protected isRootShellWorking = false;
     protected isWorkerWorking = false;
     // we are using for test 
@@ -101,7 +101,7 @@ export class SudoService extends BaseService {
                     const start = `ELECTRON_RUN_AS_NODE=true ${process.execPath} ${workerJS} --url=${url}  --socket=${pipename}`
                     //const start = `ls`
                     this.logInfo(`starting worker: ${start}`)
-                    const pipe = this.sudoOptions.darwin as { server: PipeServer, client: nodenet.Socket };
+                    const pipe = this.sudoOptions.bashjs as { server: PipeServer, client: nodenet.Socket };
                     let pr = {
                         cmd: process.execPath,
                         args: [workerJS, `--url=${url}`, `--socket=${pipename}`],
@@ -118,14 +118,38 @@ export class SudoService extends BaseService {
             case 'win32':
                 {
                     // for testing open this section, build and run as administroator, npm run startwin32
-                    //root.stdin?.write(`set  ELECTRON_RUN_AS_NODE = true \r\n`);
-                    //const start = `${process.execPath} ${workerJS} --url=${url} --socket=${pipename} \r\n`
-                    //this.logInfo(`starting worker: ${start} `)
-                    //root.stdin?.write(start);
+                    function testMode() {
+                        // root.stdin?.write(`set  ELECTRON_RUN_AS_NODE=true \r\n`);
+                        // const start = `${process.execPath} ${workerJS} --url=${url} --socket=${pipename} \r\n`
+                        // this.logInfo(`starting worker: ${start} `)
+                        // root.stdin?.write(start);
+                    }
 
-                    // this section is for production
+
+                    // this section is for production when using service
+
                     this.logInfo(`starting worker on service`);
                     await this.trigger_win32_svc(url, pipename);
+
+
+                    // when using runas administrator
+                    function withoutServiceMode() {
+                        /*
+                        const start = `ELECTRON_RUN_AS_NODE=true ${process.execPath} ${workerJS} --url=${url}  --socket=${pipename}`
+                        
+                        this.logInfo(`starting worker: ${start}`)
+                        const pipe = this.sudoOptions.bashjs as { server: PipeServer, client: nodenet.Socket };
+                        let pr = {
+                            cmd: process.execPath,
+                            args: [workerJS, `--url=${url}`, `--socket=${pipename}`],
+                            env: {
+                                ELECTRON_RUN_AS_NODE: true
+                            }
+                        }
+                        pipe.server.write(pipe.client, Buffer.from(JSON.stringify(pr)));
+                        */
+                    }
+
                 }
 
                 break;
@@ -185,21 +209,19 @@ export class SudoService extends BaseService {
         })
         this.events.emit('sudoIsReady');
     }
-
-    async darwinStartShell() {
-        console.log('starting darwing root shell');
+    async windowsStartRootShell() {
+        console.log('starting windows root shell');
         if (this.isRootShellWorking) {
             this.events.emit('sudoIsReady');
             return;
         }
-
         const bashJS = path.join(__dirname, '../bash.js');
         const socketPath = `ferrumgate.${Math.floor(Math.random() * 100000)}.sock`;
         let bashPipe = new PipeServer(socketPath);
-        this.sudoOptions.darwin.server = bashPipe;
+        this.sudoOptions.bashjs.server = bashPipe;
         bashPipe.onListen = async () => {
             this.isRootShellWorking = true;
-            const cmd = `ELECTRON_RUN_AS_NODE=true ${process.execPath} ${bashJS} --socket=${socketPath} `;
+            const cmd = `set ELECTRON_RUN_AS_NODE=true & "${process.execPath}" "${bashJS}" --socket=${socketPath} `;
             this.logInfo(`starting root shell ${cmd} `);
             this.isRootShellWorking = true;
             sudo.exec(cmd, this.sudoOptions, (error?: Error, stdout?: any, stderr?: any) => {
@@ -224,7 +246,58 @@ export class SudoService extends BaseService {
         }
         bashPipe.onConnect = async (socket: nodenet.Socket) => {
             this.logInfo(`root shell connected`);
-            this.sudoOptions.darwin.client = socket;
+            this.sudoOptions.bashjs.client = socket;
+            this.events.emit('sudoIsReady');
+        }
+        bashPipe.onData = async (data: Buffer) => {
+
+            this.logInfo(data.toString());
+        }
+
+
+        await bashPipe.listen();
+    }
+
+
+    async darwinStartShell() {
+        console.log('starting darwing root shell');
+        if (this.isRootShellWorking) {
+            this.events.emit('sudoIsReady');
+            return;
+        }
+
+        const bashJS = path.join(__dirname, '../bash.js');
+        const socketPath = `ferrumgate.${Math.floor(Math.random() * 100000)}.sock`;
+        let bashPipe = new PipeServer(socketPath);
+        this.sudoOptions.bashjs.server = bashPipe;
+        bashPipe.onListen = async () => {
+            this.isRootShellWorking = true;
+            const cmd = `ELECTRON_RUN_AS_NODE=true "${process.execPath}" "${bashJS}" --socket=${socketPath} `;
+            this.logInfo(`starting root shell ${cmd} `);
+            this.isRootShellWorking = true;
+            sudo.exec(cmd, this.sudoOptions, (error?: Error, stdout?: any, stderr?: any) => {
+                this.isRootShellWorking = false;
+                if (error) {
+                    this.logError(`root shell error: ${error.message} `);
+                }
+                else
+                    if (stderr) {
+                        this.logError(`root shell failed:${stderr.toString()} `);
+                    }
+                    else
+                        if (stdout) {
+                            this.logInfo(`root shell exited ${stdout} `);
+                        }
+
+            })
+
+        }
+        bashPipe.onClose = async () => {
+            this.isRootShellWorking = false;
+        }
+        bashPipe.onConnect = async (socket: nodenet.Socket) => {
+            this.logInfo(`root shell connected`);
+            this.sudoOptions.bashjs.client = socket;
             this.events.emit('sudoIsReady');
         }
         bashPipe.onData = async (data: Buffer) => {
@@ -248,7 +321,8 @@ export class SudoService extends BaseService {
                 await this.darwinStartShell();
                 break;
             case 'win32':
-                await this.windowsStartShell();
+                //await this.windowsStartRootShell()
+                await this.windowsStartShell();// when using windows service
                 break;
             default:
                 break;

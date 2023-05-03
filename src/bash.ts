@@ -70,6 +70,6 @@ async function main() {
 
 main().catch(err => {
     console.log(err);
-    fs.appendFileSync('/tmp/test.log', JSON.stringify(err) + '\n');
+    //fs.appendFileSync('/tmp/test.log', JSON.stringify(err) + '\n');
     process.exit(1);
 })

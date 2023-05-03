@@ -107,6 +107,7 @@ async function executeBuilder() {
     //<ServiceControl Id="StartService" Start="install" Stop="both" Remove="uninstall" 
     //Name="FerrumGateService" Wait="yes"   />  
 
+    // windows service definition
     const service = findTree(null, null, msiObj, '@_Name', 'FerrumGateService.exe');
     if (!service)
         throw new Error('service file not found');
@@ -127,6 +128,8 @@ async function executeBuilder() {
                 '@_Name': "FerrumGateService", '@_Wait': "yes"
             }
         })
+
+    ///////////
 
 
     const builder = new XMLBuilder({
