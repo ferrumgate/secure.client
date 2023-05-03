@@ -4,7 +4,7 @@
   <description asmv2:publisher="FerrumGate" co.v1:suiteName="FerrumGate" asmv2:product="FerrumGate" asmv2:supportUrl="https://ferrumgate.com/" co.v1:errorReportUrl="https://ferrumgate.com/" xmlns="urn:schemas-microsoft-com:asm.v1" />
   <application />
   <entryPoint>
-    <assemblyIdentity name="FerrumGateService" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
+    <assemblyIdentity name="FerrumGateService" version="1.1.0.0" language="neutral" processorArchitecture="msil" />
     <commandLine file="FerrumGateService.exe" parameters="" />
   </entryPoint>
   <co.v1:useManifestForTrust xmlns="urn:schemas-microsoft-com:asm.v1" />
@@ -44,14 +44,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="FerrumGateService.exe" size="32768">
-      <assemblyIdentity name="FerrumGateService" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="FerrumGateService.exe" size="34304">
+      <assemblyIdentity name="FerrumGateService" version="1.1.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>tviH7YcjeUkxQSwf0W4oODUB9P6coKKAZargVsfapCY=</dsig:DigestValue>
+        <dsig:DigestValue>1Jova19Le5Gv1LAHWbikjaEnBxB9G+O5QO0+zLQ+GG4=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
