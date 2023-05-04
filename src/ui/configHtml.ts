@@ -15,6 +15,15 @@
 
     let config: { host: string, id: string, sslVerify: boolean } = { host: '', id: '', sslVerify: true };
     function configInit() {
+
+        document.querySelector('#myform')?.addEventListener('keypress', (e: any) => {
+            var key = e.charCode || e.keyCode || 0;
+            if (key == 13) {
+
+                e.preventDefault();
+            }
+        })
+
         document.querySelector('#el-login')?.addEventListener('input', (e: any) => {
 
             config.host = e.target.value;

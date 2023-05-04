@@ -47,7 +47,7 @@ export async function init(token: string) {
     let conf = await config.getConf();
     if (!conf) {
         await config.saveConfig({
-            host: 'https://ztna.ferrumgate.com', id: Util.randomNumberString()
+            host: 'https://ztna.ferrumgate.com', id: Util.randomNumberString(), sslVerify: true
         })
         conf = await config.getConf();
     }
@@ -127,6 +127,7 @@ export async function init(token: string) {
         event.reply('logFileReply', await log.logfile || '');
     })
     ipcMain.on('saveConfig', async (event: Electron.IpcMainEvent, ...args: any[]) => {
+        console.log(...args);
         events.emit('saveConfig', ...args);
     })
     ipcMain.on('notify', async (event: Electron.IpcMainEvent, ...args: any[]) => {
@@ -259,7 +260,8 @@ async function trigger_win32_svc_config() {
                 log.write('info', `config received`);
                 const substr = msg.substring("config:".length);
                 if (substr) {
-                    config.saveConfig(JSON.parse(substr));
+                    //we are not using any more
+                    //config.saveConfig(JSON.parse(substr));
                 }
             } catch (err) {
                 console.log(err);
