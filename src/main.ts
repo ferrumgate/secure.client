@@ -47,11 +47,16 @@ export async function init(token: string) {
     let conf = await config.getConf();
     if (!conf) {
         await config.saveConfig({
-            host: 'https://ztna.ferrumgate.com', id: Util.randomNumberString(), sslVerify: true
+            host: 'https://ztna.ferrumgate.com', id: Util.randomNumberString(16), sslVerify: true
         })
         conf = await config.getConf();
     }
     if (conf && !conf.id) {
+        conf.id = Util.randomNumberString(16);
+        await config.saveConfig(conf)
+    }
+    //bug fix for an error
+    if (conf && conf.id && conf.id.length < 16) {
         conf.id = Util.randomNumberString(16);
         await config.saveConfig(conf)
     }
