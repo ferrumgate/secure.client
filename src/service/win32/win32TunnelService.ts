@@ -46,8 +46,17 @@ export class Win32TunnelService extends UnixTunnelService {
         }
 
     }
+    async tryCatchorDefault<T>(func: () => Promise<T>, def: T) {
+        try {
+            return await func();
+        } catch (err: any) {
+            this.logError(err.message || err.toString())
+            return def;
+        }
+    }
     public async getResolvSearchList() {
-        const result = (await this.execOnShell(`reg query HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters /v SearchList`) as string);
+        const result = await this.tryCatchorDefault(async () => { return await this.execOnShell(`reg query HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters /v SearchList`) as string }
+            , '');
         const item = result.split('\r\n').map(x => x.trim()).find(x => x.startsWith('SearchList'));
         if (!item) return [];
         const values = item.replace('SearchList', '').replace('REG_SZ', '').split(' ').map(x => x.trim()).filter(y => y).find(x => x);
