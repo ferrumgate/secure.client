@@ -72,7 +72,8 @@
     "linux": {
       "target": [
         "deb",
-        "zip"
+        "zip",
+        "rpm"
       ],
       "category": "Network"
     },
