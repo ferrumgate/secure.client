@@ -26,9 +26,9 @@ export class TrayUI {
         const platform = Util.getPlatform()
         switch (platform) {
             case 'darwin':
-                logored = 'logo-red-16.png';
-                logogreen = 'logo-green-16.png';
-                logoyellow = 'logo-yellow-16.png'; break;
+                logored = 'logo-red-32-2.png';
+                logogreen = 'logo-green-32-2.png';
+                logoyellow = 'logo-yellow-32-2.png'; break;
             default:
                 break;
         }
