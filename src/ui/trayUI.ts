@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Tray, screen, Menu, MenuItem } from 'electron';
+import { app, BrowserWindow, ipcMain, Tray, screen, Menu, MenuItem, nativeImage } from 'electron';
 import path from 'path';
 import { Util } from '../service/util';
 import { EventService } from '../service/eventsService';
@@ -19,10 +19,10 @@ export class TrayUI {
     }
 
     private createTray() {
-
-        let logored = 'logo-red.png';
-        let logogreen = 'logo-green.png';
-        let logoyellow = 'logo-yellow.png';
+        nativeImage.createFromPath('')
+        let logored = 'logo-red-32-2@2x.png';
+        let logogreen = 'logo-green-32-2@2x.png';
+        let logoyellow = 'logo-yellow-32-2@2x.png';
         const platform = Util.getPlatform()
         switch (platform) {
             case 'darwin':
