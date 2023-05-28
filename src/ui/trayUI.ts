@@ -19,7 +19,7 @@ export class TrayUI {
     }
 
     private createTray() {
-        nativeImage.createFromPath('')
+
         let logored = 'logo-red-32-2@2x.png';
         let logogreen = 'logo-green-32-2@2x.png';
         let logoyellow = 'logo-yellow-32-2@2x.png';
