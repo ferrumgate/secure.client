@@ -20,9 +20,9 @@ export class TrayUI {
 
     private createTray() {
 
-        let logored = 'logo-red-32-2@2x.png';
-        let logogreen = 'logo-green-32-2@2x.png';
-        let logoyellow = 'logo-yellow-32-2@2x.png';
+        let logored = 'logo-red-32-2.png';
+        let logogreen = 'logo-green-32-2.png';
+        let logoyellow = 'logo-yellow-32-2.png';
         const platform = Util.getPlatform()
         switch (platform) {
             case 'darwin':
