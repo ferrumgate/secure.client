@@ -21,10 +21,13 @@ export interface NetworkEx extends Network {
         serviceNetwork?: string,
         resolvIp?: string,
         resolvSearch?: string,
-        resolvTimes: number[],
-        resolvErrorCount: number,
+        pingTimes: number[],
+        pingErrorCount: number,
+        dnsTimes: number[],
+        dnsErrorCount: number;
         tun?: string;
         isMasterResolv?: boolean;
+        isResolvConfigured?: boolean;
         resolvTunDomains?: { tun: string, domains: string[] }[]
 
     }

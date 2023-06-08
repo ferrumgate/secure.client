@@ -20,7 +20,7 @@ describe('UnixTunnelService ', async () => {
     })
     function createNet() {
         const net: NetworkEx = {
-            id: '123', name: '123', action: 'allow', sshHost: 'localhost:2323', needs2FA: false, needsIp: false, needsTime: false, needsDevicePosture: false, tunnel: { isWorking: false, lastTryTime: 0, tryCount: 0, resolvErrorCount: 0, resolvTimes: [] }
+            id: '123', name: '123', action: 'allow', sshHost: 'localhost:2323', needs2FA: false, needsIp: false, needsTime: false, needsDevicePosture: false, tunnel: { isWorking: false, lastTryTime: 0, tryCount: 0, pingErrorCount: 0, pingTimes: [], dnsTimes: [], dnsErrorCount: 0 }
         }
         return net;
     }

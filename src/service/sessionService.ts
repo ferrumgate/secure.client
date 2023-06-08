@@ -249,6 +249,9 @@ export class SessionService extends BaseHttpService {
         } else {
             this.notifyError(`Connecting to network ${data.msg.name} failed: ${data.msg.tunnel.lastError || ''}`)
             this.events.emit('tunnelFailed', data.msg);
+            if (data.msg.tunnel.lastError?.includes("Request failed with status code 401")) {
+                await this.closeSession();
+            }
         }
     }
     async executeTunnelOpened(data: { msg: NetworkEx }) {
@@ -346,7 +349,7 @@ export class SessionService extends BaseHttpService {
             //await this.writeToWorker({ type: 'tokenResponse', data: { accessToken: this.accessToken, refreshToken: this.refreshToken } })
             this.sessionInterval = setIntervalAsync(async () => {
                 await this.getTokens();
-            }, 1 * 60 * 1000);
+            }, 30 * 1000);
 
         } catch (err: any) {
 
@@ -358,7 +361,7 @@ export class SessionService extends BaseHttpService {
 
     async getTokens() {
         try {
-            this.logInfo("get tokens");
+            //this.logInfo("get tokens");
             if (new Date().getTime() - this.sessionLastCheck < 3 * 60 * 1000) {
                 return;
             }
@@ -381,7 +384,7 @@ export class SessionService extends BaseHttpService {
         }
     }
     async closeSession() {
-        //TODO hamza delete session
+        //TODO delete session
         const wasThereASession = this.sessionInterval ? true : false;
         if (this.sessionInterval)
             clearIntervalAsync(this.sessionInterval);

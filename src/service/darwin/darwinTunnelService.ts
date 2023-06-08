@@ -136,6 +136,7 @@ export class DarwinTunnelService extends UnixTunnelService {
                 await this.saveResolvSearchList(item.svc, item.domains);
             }
         }
+        this.net.tunnel.isResolvConfigured = true;
 
     }
 
@@ -147,7 +148,7 @@ export class DarwinTunnelService extends UnixTunnelService {
 
         if (primary) {
             if (!this.net.tunnel.isMasterResolv) {
-                this.logInfo(`make default dns router ${this.net.tunnel.tun}`);
+                this.logInfo(`make dns router ${this.net.name}`);
                 const nets = await this.getResolvIpList();
                 for (const net of nets) {
                     if (this.net.tunnel.resolvIp && !net.ips.includes(this.net.tunnel.resolvIp)) {
@@ -160,7 +161,7 @@ export class DarwinTunnelService extends UnixTunnelService {
             this.net.tunnel.isMasterResolv = true;
         } else {
             if (this.net.tunnel.isMasterResolv) {
-                this.logInfo(`remove default dns router ${this.net.tunnel.tun}`);
+                this.logInfo(`remove dns router ${this.net.name}`);
                 const nets = await this.getResolvIpList();
                 for (const net of nets) {
                     if (this.net.tunnel.resolvIp && net.ips.includes(this.net.tunnel.resolvIp)) {
@@ -170,6 +171,7 @@ export class DarwinTunnelService extends UnixTunnelService {
             }
             this.net.tunnel.isMasterResolv = false;
         }
+
     }
 
 

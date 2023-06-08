@@ -31,12 +31,12 @@ export class TunnelController {
     processList: TunnelService[] = [];
     networksLastCheck = 0;
     lastErrorOccured = 0;
+    lastErrorCount = 0;
     lastMessageToParent = 0;
     checkSystemIsWorking = false;
     devicePostureLastCheck = 0;
     devicePostureParameters: DevicePostureParameter[] = [];
-
-
+    checkSystemInterval: any = null;
     constructor(protected pipename: string, protected event: EventService, protected api: TunnelApiService) {
         function replacer(this: any, key: string, value: any) {
             if (key == "process") return undefined;
@@ -83,7 +83,7 @@ export class TunnelController {
             this.ipcClient.onConnect = async () => {
                 await this.closeAllTunnels();
                 await this.getConf();
-                setIntervalAsync(async () => {
+                this.checkSystemInterval = setIntervalAsync(async () => {
                     await this.checkSystem();
                 }, 2000);
             };
@@ -202,7 +202,7 @@ export class TunnelController {
                 const process = this.getNetworkProcess(network);
                 if (network.action == 'allow') {
                     if (!network.tunnel) {
-                        network.tunnel = { tryCount: 0, lastTryTime: 0, isWorking: false, resolvErrorCount: 0, resolvTimes: [] }
+                        network.tunnel = { tryCount: 0, lastTryTime: 0, isWorking: false, pingErrorCount: 0, pingTimes: [], dnsTimes: [], dnsErrorCount: 0 }
                     }
                     if ((new Date().getTime() - network.tunnel.lastTryTime) < 15000) {
                         network.tunnel.isWorking = process?.isWorking || false;
@@ -212,28 +212,35 @@ export class TunnelController {
                     await this.checkTunnel(network);
                 }
             }
-            // check healthy and dns routing
+            // check healthy over ping
+            await this.checkHealthyPing();
             await this.checkHealthyDns();
-            this.lastErrorOccured = 0;
 
+            this.lastErrorOccured = 0;
+            this.lastErrorCount = 0;
 
 
         } catch (err: any) {
+            this.lastErrorCount++;
             console.log(err);
             this.lastErrorOccured = new Date().getTime();
-            this.logError(err.message || err.toString())
+
+            this.logError(err.message || err.toString());
+
+        } finally {
+
 
         }
 
     }
-    async checkHealthyDns() {
+    async checkHealthyPing() {
         try {
 
             for (const network of this.networks) {
 
                 const process = this.getNetworkProcess(network);
                 if (network.tunnel?.isWorking) {
-                    if (network.tunnel.resolvErrorCount > 3) {//ping failed could not resolved 3 times
+                    if (network.tunnel.pingErrorCount > 5) {//ping failed could not resolved 5 times
                         this.logError(`network cannot reach ${network.name}`);
                         await process?.closeTunnel();
                         network.tunnel.isWorking = false;
@@ -243,44 +250,76 @@ export class TunnelController {
                 }
 
             }
+
+
+        } catch (err: any) {
+            console.log(err);
+            this.lastErrorOccured = new Date().getTime();
+            this.logError(err.message || err.toString())
+
+        }
+    }
+
+    async checkHealthyDns() {
+        try {
+            //this.logInfo(`dns healty check`);
             const workingTunnels = this.networks.filter(x => x.action == 'allow' && x.tunnel?.isWorking);
             if (workingTunnels.length) {
                 const items = workingTunnels.map(x => {
                     let median = workingTunnels.length > 1 ? 0 : 1;//dont wait on first tunnel
-                    if (x.tunnel.resolvTimes.length > 5) {
-                        median = x.tunnel.resolvTimes.reduce((a, b) => a + b) / x.tunnel.resolvTimes.length;
+                    if (x.tunnel.dnsTimes.length > 5) {
+                        median = x.tunnel.dnsTimes.reduce((a, b) => a + b) / x.tunnel.dnsTimes.length;
                     }
                     //this.logInfo(`${x.name} resolution median is ${median}`);
                     return {
-                        net: x, median: median
+                        net: x, median: median, makePrimary: false
                     }
                 })
-                const sortedList = items.sort((a, b) => a.median - b.median);
-                let isMadedPrimaryDns = false;
-                let isChangedSomething = false;
-                for (const item of sortedList) {
-                    const process = this.getNetworkProcess(item.net);
-                    if (!item.median || isMadedPrimaryDns) {
-                        if (item.net.tunnel.isMasterResolv) {
-                            this.logInfo(`making ${item.net.name} for ${item.net.tunnel.tun} secondary dns`);
-                            isChangedSomething = true;
-                        }
-                        await process?.makeDns(false);
-                    } else {
-                        if (!item.net.tunnel.isMasterResolv) {
-                            this.logInfo(`making ${item.net.name} for ${item.net.tunnel.tun} primary dns ${item.median}`);
-                            isChangedSomething = true;
-                        }
-                        await process?.makeDns(true);
-                        isMadedPrimaryDns = true;
-                    }
 
+                let needsToChangePrimaryDns = false;
+                const sortedList = items.sort((a, b) => a.median - b.median);
+                //this.logInfo(`${sortedList.map(x => x.net.name + ' ' + x.median + ' ').join(',')}`)
+                if (sortedList.length == 1) {
+                    if (!sortedList[0].net.tunnel.isMasterResolv) {
+                        sortedList[0].makePrimary = true;
+                        needsToChangePrimaryDns = true
+                        this.logInfo(`dns routing will change to ${sortedList[0].net.name}`);
+                    }
+                }
+                else {
+                    const master = sortedList.find(x => x.net.tunnel.isMasterResolv);
+                    if (!master) {
+                        sortedList[0].makePrimary = true;
+                        needsToChangePrimaryDns = true;
+                        this.logInfo(`dns routing will change to ${sortedList[0].net.name}`);
+                    } else {
+                        let diff = master.median - sortedList[0].median;
+                        if (diff > sortedList[0].median * 0.3 && !sortedList[0].net.tunnel.isMasterResolv) {
+                            sortedList[0].makePrimary = true;
+                            this.logInfo(`dns routing will change to ${sortedList[0].net.name}, diff is ${diff}`);
+                            needsToChangePrimaryDns = true;
+                        }
+                    }
+                }
+                if (needsToChangePrimaryDns) {
+
+                    for (const item of sortedList) {
+                        const process = this.getNetworkProcess(item.net);
+                        await process?.makeDns(false);
+                    }
+                    for (const item of sortedList) {
+                        if (item.makePrimary) {
+                            const process = this.getNetworkProcess(item.net);
+                            await process?.makeDns(true);
+                            this.logInfo(`making ${item.net.name} for ${item.net.tunnel.tun} primary dns ${item.median}`);
+                        }
+                    }
                 }
 
                 //we need to write more log, for debug
-                if (isChangedSomething) {
+                if (needsToChangePrimaryDns) {
                     workingTunnels.forEach(y => {
-                        this.logInfo(`network ${y.name} resolution times ${y.tunnel.resolvTimes.join(', ')}`);
+                        this.logInfo(`network ${y.name} resolution times ${y.tunnel.dnsTimes.join(', ')}`);
                     })
                     sortedList.forEach(x => {
                         this.logInfo(`network ${x.net.name} resolution median is ${x.median}`);
@@ -298,6 +337,10 @@ export class TunnelController {
 
         }
     }
+
+
+
+
     async checkTunnel(network: NetworkEx): Promise<{} | undefined> {
 
         try {
@@ -382,6 +425,13 @@ export class TunnelController {
             this.logError(err.message || err.toString());
         }
         await this.closeAllTunnels();
+        try {
+            if (this.checkSystemInterval)
+                clearIntervalAsync(this.checkSystemInterval);
+            this.checkSystemInterval = null;
+        } catch (ignore) {
+
+        }
         try {
             process.exit(0);
         } catch (ignore) {

@@ -21,7 +21,8 @@ export class UnixTunnelService extends TunnelService {
     sshPID = '';
     isTunnelCreated = false;
     iamAliveInterval: any;
-    healthCheckInterval: any;
+    pingCheckInterval: any;
+    dnsCheckInterval: any;
     isSSHTunnelStarting: any;
     port = '2223';
     host = 'localhost';
@@ -140,7 +141,8 @@ export class UnixTunnelService extends TunnelService {
                             clearTimeout(this.isSSHTunnelStarting);
                         this.isSSHTunnelStarting = null;
                         await this.startIAmAlive();
-                        await this.startHealthCheck();
+                        await this.startPingCheck();
+                        await this.startDnsCheck();
                         this.lastError = '';
 
                     }
@@ -154,7 +156,7 @@ export class UnixTunnelService extends TunnelService {
                     if (this.isSSHTunnelStarting)
                         clearTimeout(this.isSSHTunnelStarting);
                     this.isSSHTunnelStarting = null;
-                    this.lastError = data;
+                    this.lastError = data.includes('ferrum_exit') ? 'Closed' : data;
                     if (wasWorking)
                         this.events.emit('tunnelClosed', this.net);
 
@@ -192,7 +194,10 @@ export class UnixTunnelService extends TunnelService {
             await this.execOnShell(`resolvectl llmnr ${tun} false`);
             await this.execOnShell(`resolvectl default-route ${tun} false`);
             await this.execOnShell(`resolvectl dns ${tun} ${conf.resolvIp}`);
+
         }
+        this.net.tunnel.isResolvConfigured = true;
+
     }
     public async getInterfaceResolvDomains() {
         const result: string = (await this.execOnShell(`resolvectl domain`)) as string;
@@ -221,7 +226,7 @@ export class UnixTunnelService extends TunnelService {
         const allRoute = `~.`;
         if (primary) {
             if (!this.net.tunnel.isMasterResolv) {
-                this.logInfo(`make default dns router ${this.net.tunnel.tun}`);
+                this.logInfo(`make dns router ${this.net.name}`);
                 await this.execOnShell(`resolvectl domain ${this.net.tunnel.tun} '${this.net.tunnel.resolvSearch}' '~.'`);
                 await this.execOnShell(`resolvectl default-route ${this.net.tunnel.tun} true`);
                 const domains = await this.getInterfaceResolvDomains();
@@ -237,7 +242,7 @@ export class UnixTunnelService extends TunnelService {
             this.net.tunnel.isMasterResolv = true;
         } else {
             if (this.net.tunnel.isMasterResolv) {
-                this.logInfo(`remove default dns router ${this.net.tunnel.tun}`);
+                this.logInfo(`remove dns router ${this.net.name}`);
                 await this.execOnShell(`resolvectl default-route ${this.net.tunnel.tun} false`);
                 await this.execOnShell(`resolvectl domain ${this.net.tunnel.tun} '${this.net.tunnel.resolvSearch}'`);
             }
@@ -285,55 +290,101 @@ export class UnixTunnelService extends TunnelService {
     }
 
 
-    public async startHealthCheck() {
-        if (this.healthCheckInterval)
-            clearIntervalAsync(this.healthCheckInterval);
-        this.healthCheckInterval = null;
-        this.healthCheckInterval = setIntervalAsync(async () => {
-            await this.healthCheck();
+    public async startPingCheck() {
+        if (this.pingCheckInterval)
+            clearIntervalAsync(this.pingCheckInterval);
+        this.pingCheckInterval = null;
+        this.pingCheckInterval = setIntervalAsync(async () => {
+            await this.pingCheck();
         }, 3 * 1000)
 
     }
     public async stopHealthCheck() {
-        this.net.tunnel.resolvErrorCount = 0;
-        this.net.tunnel.resolvTimes = [];
-        if (this.iamAliveInterval)
-            clearIntervalAsync(this.iamAliveInterval);
-        this.iamAliveInterval = null;
+        this.net.tunnel.pingErrorCount = 0;
+        this.net.tunnel.pingTimes = [];
+        if (this.pingCheckInterval)
+            clearIntervalAsync(this.pingCheckInterval);
+        this.pingCheckInterval = null;
 
     }
-    public async healthCheck() {
+    public async pingCheck() {
         try {
 
             if (this.isTunnelCreated && this.net.tunnel.resolvIp) {
-                this.resolver.setServers([this.net.tunnel.resolvIp]);
-                const pStart = process.hrtime();
-                //const dnsResult = await this.resolver.resolve4(`dns.${this.net.tunnel.resolvSearch}`);
+
 
                 const result = await ping.promise.probe(this.net.tunnel.resolvIp, {
                     timeout: 1,
                 });
                 if (!result.alive)
                     throw new Error("ping failed");
-                //const pong = process.hrtime(pStart);
-                //const latency = (pong[0] * 1000000000 + pong[1]) / 1000000;
-                //this.logInfo(`dns resolution ${dnsResult} milisecond:${latency}`);
                 const latency = Number(result.time) || 3000;
 
-                this.net.tunnel.resolvErrorCount = 0;
-                this.net.tunnel.resolvTimes.splice(0, 0, latency);
+                this.net.tunnel.pingErrorCount = 0;
+                this.net.tunnel.pingTimes.splice(0, 0, latency);
+
 
             }
         } catch (err: any) {
             this.logError(err.toString());
-            this.net.tunnel.resolvTimes.push(3000);
-            this.net.tunnel.resolvErrorCount++;
+            this.net.tunnel.pingTimes.push(3000);
+            this.net.tunnel.pingErrorCount++;
         } finally {
             // only 1.5 minutes data
-            if (this.net.tunnel.resolvTimes.length > 30)
-                this.net.tunnel.resolvTimes.splice(29);// slice it
+            if (this.net.tunnel.pingTimes.length > 30)
+                this.net.tunnel.pingTimes.splice(29);// slice it
         }
     }
+
+
+    public async startDnsCheck() {
+        if (this.dnsCheckInterval)
+            clearIntervalAsync(this.dnsCheckInterval);
+        this.dnsCheckInterval = null;
+        this.dnsCheckInterval = setIntervalAsync(async () => {
+            await this.dnsCheck();
+        }, 5 * 1000)
+
+    }
+    public async stopDnsCheck() {
+        this.net.tunnel.dnsErrorCount = 0;
+        this.net.tunnel.dnsTimes = [];
+        if (this.dnsCheckInterval)
+            clearIntervalAsync(this.dnsCheckInterval);
+        this.dnsCheckInterval = null;
+
+    }
+
+    public async dnsCheck() {
+        try {
+
+            if (this.isTunnelCreated && this.net.tunnel.resolvIp) {
+
+
+                this.resolver.setServers([this.net.tunnel.resolvIp]);
+                const pStart = process.hrtime();
+                const dnsResult = await this.resolver.resolve4(`dns.${this.net.tunnel.resolvSearch}`);
+                const pong = process.hrtime(pStart);
+                const latency = (pong[0] * 1000000000 + pong[1]) / 1000000;
+                //if(new Date().getTime()%7==0)
+                //this.logInfo(`dns resolution ${dnsResult} milisecond:${latency}`);
+                this.net.tunnel.dnsErrorCount = 0;
+                this.net.tunnel.dnsTimes.splice(0, 0, latency);
+
+            }
+        } catch (err: any) {
+            this.logError(err.toString());
+            this.net.tunnel.dnsTimes.push(1000);
+            this.net.tunnel.dnsErrorCount++;
+        } finally {
+            // only 1.5 minutes data
+            if (this.net.tunnel.dnsTimes.length > 30)
+                this.net.tunnel.dnsTimes.splice(29);// slice it
+        }
+    }
+
+
+
 
 
     public async startSSHFerrum() {
@@ -461,10 +512,15 @@ export class UnixTunnelService extends TunnelService {
         }
     }
     protected async forceKillPid() {
-        if (this.sshPID) {
-            this.logInfo(`forcing to kill ${this.sshPID}`);
-            await this.execOnShell('kill -9 ' + this.sshPID);
-            this.sshPID = '';
+        try {
+            if (this.sshPID) {
+                this.logInfo(`forcing to kill ${this.sshPID}`);
+                let pid = this.sshPID;
+                this.sshPID = '';
+                await this.execOnShell('kill -9 ' + pid);
+            }
+        } catch (ignore) {
+
         }
     }
 }

@@ -47,7 +47,7 @@ export async function init(token: string) {
     let conf = await config.getConf();
     if (!conf) {
         await config.saveConfig({
-            host: 'https://ztna.ferrumgate.com', id: Util.randomNumberString(16), sslVerify: true
+            host: 'https://ztna.ferrumgate.com', id: Util.randomNumberString(16), sslVerify: false
         })
         conf = await config.getConf();
     }
@@ -61,7 +61,7 @@ export async function init(token: string) {
         await config.saveConfig(conf)
     }
     if (conf && conf.sslVerify == undefined) {
-        conf.sslVerify = true;
+        conf.sslVerify = false;
         await config.saveConfig(conf)
     }
     //ssl verify

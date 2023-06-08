@@ -97,6 +97,7 @@ export class Win32TunnelService extends UnixTunnelService {
             items.splice(0, 0, conf.resolvSearch);
             await this.saveResolvSearchList(items);
         }
+        this.net.tunnel.isResolvConfigured = true;
 
 
     }
@@ -116,18 +117,19 @@ export class Win32TunnelService extends UnixTunnelService {
 
         if (primary) {
             if (!this.net.tunnel.isMasterResolv) {
-                this.logInfo(`make default dns router ${this.net.tunnel.tun}`);
+                this.logInfo(`make dns router ${this.net.name}`);
                 await this.execOnShell(`netsh interface ip set dns ${this.net.tunnel.tun} static ${this.net.tunnel.resolvIp}`)
                 await this.flushDnsCache();
             }
             this.net.tunnel.isMasterResolv = true;
         } else {
             if (this.net.tunnel.isMasterResolv) {
-                this.logInfo(`remove default dns router ${this.net.tunnel.tun}`);
+                this.logInfo(`remove dns router ${this.net.name}`);
                 await this.execOnShell(`netsh interface ip delete dns ${this.net.tunnel.tun} all`)
             }
             this.net.tunnel.isMasterResolv = false;
         }
+
     }
 
     public override async configureNetwork(tun: string, conf: { assignedIp: string; serviceNetwork: string; resolvIp?: string, resolvSearch: string }) {
