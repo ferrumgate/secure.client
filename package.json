@@ -14,12 +14,16 @@
     "startdarwin": "NODE_ENV=development2 ./node_modules/electron/dist/Electron.app/Contents/MacOS/Electron ./build/src/main.js",
     "packlinux": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src --platform=linux --arch=x64 --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
     "distlinux": "npx electron-builder build --linux --x64",
+    "publishlinux": "npm run clean && npm run build && npm run packlinux && npm run distlinux",
     "packwin32": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src FerrumGate --platform=win32 --arch=x64 --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
     "distwin32": "node ./src_installer/wix.js",
+    "publishwin32": "npm run clean && npm run build && npm run packwin32 && npm run distwin32",
     "packdarwin": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src --platform=darwin --arch=x64  --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
     "distdarwin": "npx electron-builder build --mac --x64",
+    "publishdarwin": "npm run clean && npm run build && npm run packdarwin && npm run distdarwin",
     "packdarwin-arm": "cd ./build/src && npm install --only=prod && cd ../../ && electron-packager ./build/src --platform=darwin --arch=arm64  --out=pack --icon=./build/src/assets/img/logo.png --overwrite",
     "distdarwin-arm": "npx electron-builder build --mac --arm64",
+    "publishdarwin-arm": "npm run clean && npm run build && npm run packdarwin-arm && npm run distdarwin-arm",
     "showasar": "npx asar l dist/linux-unpacked/resources/app.asar"
   },
   "build": {
