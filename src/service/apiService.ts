@@ -14,19 +14,22 @@ import Axios, { AxiosRequestConfig } from "axios";
 export class ApiService extends BaseHttpService {
 
 
-
-
+    isRedirect = false;
+    isRedirectChecked = false;
     constructor(protected url: string, protected events: EventService, private headless = false) {
         super(events);
 
     }
 
     private getUrl() {
-
-        return new URL(this.url);
+        let url = this.url;
+        if (this.isRedirect && this.url.startsWith('http://'))
+            url = this.url.replace('http://', 'https://');
+        return new URL(url);
     }
     public setUrl(url: string) {
-
+        this.isRedirectChecked = false;
+        this.isRedirect = false;
         this.url = url;
     }
 
@@ -34,15 +37,50 @@ export class ApiService extends BaseHttpService {
     private urlPort(url: URL) {
         if (url.port)
             return Number(url.port);
-
         if (url.protocol.startsWith('https')) return 443;
         return 80;
 
+    }
+    public clear() {
+        this.isRedirect = false;
+        this.isRedirectChecked = false;
+    }
+    public async checkRedirect() {
+        if (this.isRedirectChecked) return;
+        if (this.url.startsWith('https://')) {
+            this.isRedirectChecked = true;
+            this.isRedirect = false;
+            return;
+        }
+        let url = this.getUrl();
+        const response: Buffer = await new Promise((resolve, reject) => {
 
+            const request = net.request({
+                method: 'GET',
+                protocol: url.protocol,
+                hostname: url.hostname,
+                port: this.urlPort(url),
+                path: '/api/test',
+                redirect: 'follow',
+
+
+            });
+
+            this.prepareRequest(request, resolve, reject);
+            request.setHeader('Accept', "Accept: application/json");
+            request.on('redirect', () => {
+                this.isRedirect = true;
+            })
+            request.end();
+        });
+        const data = response.toString();
+        this.isRedirectChecked = true;
+        return
     }
 
     public async getExchangeToken() {
         console.log("/api/auth/exchangetoken")
+        await this.checkRedirect();
         let url = this.getUrl();
         const response: Buffer = await new Promise((resolve, reject) => {
 
@@ -52,9 +90,11 @@ export class ApiService extends BaseHttpService {
                 hostname: url.hostname,
                 port: this.urlPort(url),
                 path: '/api/auth/exchangetoken',
-                redirect: 'follow',
+                redirect: 'error',
+
 
             });
+
             this.prepareRequest(request, resolve, reject);
             request.setHeader('Accept', "Accept: application/json");
             request.end();
@@ -63,6 +103,7 @@ export class ApiService extends BaseHttpService {
     }
     public async changeExchangeToken(token: string) {
         console.log("/api/auth/exchangetoken")
+        await this.checkRedirect();
         let url = this.getUrl();
         const response: Buffer = await new Promise((resolve, reject) => {
 
@@ -72,7 +113,7 @@ export class ApiService extends BaseHttpService {
                 hostname: url.hostname,
                 port: this.urlPort(url),
                 path: '/api/auth/exchangetoken',
-                redirect: 'follow',
+                redirect: 'error',
 
             });
             this.prepareRequest(request, resolve, reject);
@@ -86,6 +127,7 @@ export class ApiService extends BaseHttpService {
 
     public async refreshToken(accessToken: string, refreshToken: string) {
         console.log("/api/auth/refreshtoken")
+        await this.checkRedirect();
         let url = this.getUrl();
         const response: Buffer = await new Promise((resolve, reject) => {
 
@@ -95,7 +137,7 @@ export class ApiService extends BaseHttpService {
                 hostname: url.hostname,
                 port: this.urlPort(url),
                 path: '/api/auth/refreshtoken',
-                redirect: 'follow',
+                redirect: 'error',
 
             });
             this.prepareRequest(request, resolve, reject);

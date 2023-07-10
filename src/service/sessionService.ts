@@ -385,6 +385,7 @@ export class SessionService extends BaseHttpService {
     }
     async closeSession() {
         //TODO delete session
+        this.api.clear();
         const wasThereASession = this.sessionInterval ? true : false;
         if (this.sessionInterval)
             clearIntervalAsync(this.sessionInterval);
