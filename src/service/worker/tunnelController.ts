@@ -26,7 +26,6 @@ export class TunnelController {
     accessToken: string = '';
     refreshToken: string = '';
     config: Config | null = null;
-
     networks: NetworkEx[] = [];
     processList: TunnelService[] = [];
     networksLastCheck = 0;
@@ -135,10 +134,13 @@ export class TunnelController {
                 case 'freebsd':
                 case 'netbsd':
                 case 'darwin':
-                    await this.execOnShell('pkill ssh_ferrum'); break;
+                    await this.execOnShell('pkill ssh_ferrum').catch(err => this.logError(err.message || err.toString()));
+                    await this.execOnShell('pkill quic_ferrum').catch(err => this.logError(err.message || err.toString()));
+                    break;
 
                 case 'win32':
-                    await this.execOnShell('taskkill.exe /IM "ssh_ferrum.exe" /F'); break;
+                    await this.execOnShell('taskkill.exe /IM "ssh_ferrum.exe" /F').catch(err => this.logError(err.message || err.toString()));
+                    await this.execOnShell('taskkill.exe /IM "quic_ferrum.exe" /F').catch(err => this.logError(err.message || err.toString())); break;
                 default:
                     throw new Error('not implemented for os:' + platform);
             }
@@ -471,8 +473,8 @@ export class TunnelController {
         this.refreshToken = data.refreshToken;
     }
     async executeConfResponse(data: Config) {
-        this.logInfo(`conf response is ${JSON.stringify(this.config)}`)
         this.config = data;
+        this.logInfo(`conf response is ${JSON.stringify(this.config)}`)
         this.event.emit('confResponse', data);
 
     }

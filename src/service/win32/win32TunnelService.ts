@@ -155,10 +155,10 @@ export class Win32TunnelService extends UnixTunnelService {
 
     protected async forceKillPid() {
         //taskkill /F /PID pid_number
-        if (this.sshPID) {
-            this.logInfo(`forcing to kill ${this.sshPID}`);
-            await this.execOnShell(`taskkill.exe /F /PID ${this.sshPID}`);
-            this.sshPID = '';
+        if (this.processPID) {
+            this.logInfo(`forcing to kill ${this.processPID}`);
+            await this.execOnShell(`taskkill.exe /F /PID ${this.processPID}`);
+            this.processPID = '';
         }
     }
 

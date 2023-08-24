@@ -21,6 +21,21 @@ export class DarwinTunnelService extends UnixTunnelService {
                 throw new Error(`no ssh program found for arch: ${arch}`);
         }
     }
+    public override getQuicPath(): { quicFile: string; } {
+        const arch = process.arch;
+        this.logInfo(`current arch is ${arch}`);
+        switch (arch) {
+            case 'x64':
+                const quicFile = path.join(__dirname, 'x86_64', 'quic_ferrum');
+                return { quicFile, };
+            case 'arm64':
+                const quicFile2 = path.join(__dirname, 'arm64', 'quic_ferrum');
+
+                return { quicFile: quicFile2 };
+            default:
+                throw new Error(`no quic program found for arch: ${arch}`);
+        }
+    }
     public async configureNetwork(tun: string, conf: { assignedIp: string, serviceNetwork: string, resolvIp?: string, resolvSearch: string }) {
         this.logInfo(`configuring tunnel: ${tun} with ${JSON.stringify(conf)}`)
         // prepare network for connection
