@@ -21,21 +21,14 @@ export class Win32TunnelService extends UnixTunnelService {
         super(net, accessToken, event, api);
         this.tun = '';
     }
-    public override prepareCommand() {
-
+    public override getSSHPath() {
         const sshFile = path.join(__dirname, 'ssh_ferrum.exe');
         const sshConfigFile = path.join(__dirname, 'ssh_config');
-
-        const parameters = ['-N', '-F', `"${sshConfigFile}"`, "-w", "any", "-o", '"StrictHostKeyChecking no"', "-o", '"UserKnownHostsFile /dev/null"'];
-
-        this.sshCommand = `"${sshFile}" ${parameters.join(' ')} ferrum@${this.host} -p${this.port}`;
-        this.sshCommands = [];
-        this.sshCommands.push(`${sshFile}`);
-        this.sshCommands.push(...['-N', '-F', `${sshConfigFile}`, "-w", "any", "-o", 'StrictHostKeyChecking no', '-o', 'UserKnownHostsFile /dev/null']);
-        this.sshCommands.push(`ferrum@${this.host}`);
-        this.sshCommands.push(`-p${this.port}`);
-
-
+        return { sshFile, sshConfigFile };
+    }
+    public override getQuicPath() {
+        const quicFile = path.join(__dirname, 'quic_ferrum.exe');
+        return { quicFile };
     }
 
     public override async onStdOut(data: string) {
