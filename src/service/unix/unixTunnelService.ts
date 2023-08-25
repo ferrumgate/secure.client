@@ -468,8 +468,10 @@ export class UnixTunnelService extends TunnelService {
             this.checkQuic ? this.quicCommands[0] : this.sshCommands[0],
             this.checkQuic ? this.quicCommands.slice(1) : this.sshCommands.slice(1))
         this.logInfo(`process started with pid: ${child.pid}`);
+        let outputData = '';
         child.stdout?.on('data', (data: Buffer) => {
             this.newLineBufferStdout += data.toString();
+            outputData += data.toString();
             while (true) {
                 let index = this.newLineBufferStdout.indexOf('\n');
                 if (index < 0)
@@ -480,7 +482,7 @@ export class UnixTunnelService extends TunnelService {
             }
         });
         child.stderr?.on('data', (data: Buffer) => {
-
+            outputData += data.toString();
             this.newLineBufferStderr += data.toString();
             while (true) {
                 let index = this.newLineBufferStderr.indexOf('\n');
@@ -491,8 +493,7 @@ export class UnixTunnelService extends TunnelService {
                 this.newLineBufferStderr = this.newLineBufferStderr.substring(index + 1);
             }
         });
-        const exitFunc = async () => {
-            let isQuicCommmandExecuted = this.checkQuic;
+        const exitFunc = async (tryAgain = false) => {
             this.checkQuic = false;
             this.childProcess = null;
             this.isTunnelCreated = false;
@@ -502,16 +503,14 @@ export class UnixTunnelService extends TunnelService {
             this.isTunnelStarting = null;
             await this.stopIAmAlive();
             await this.stopHealthCheck();
-            if (isQuicCommmandExecuted)
+            if (tryAgain)
                 await this.startProcess();
         }
-        child.on('error', async (err) => {
-            this.logInfo(`process error: ${err.message}`);
-            await exitFunc();
-        })
+
         child.on('exit', async () => {
             this.logInfo(`process exited`);
-            await exitFunc();
+            let processFailed = this.checkQuic && outputData.includes("ferrum_exit") && (outputData.includes('could not connect') || outputData.includes('ERROR'));
+            await exitFunc(processFailed);
         })
         this.childProcess = child;
 
