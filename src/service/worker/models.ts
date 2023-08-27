@@ -14,7 +14,6 @@ export interface NetworkEx extends Network {
     tunnel: {
         lastTryTime: number;
         tryCount: number;
-
         lastError?: string;
         isWorking: boolean;
         assignedIp?: string,
