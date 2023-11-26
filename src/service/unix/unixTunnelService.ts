@@ -417,7 +417,7 @@ export class UnixTunnelService extends TunnelService {
         this.isTunnelStarting = setTimeout(async () => {
 
             this.tryKillProcess();
-        }, 60000)
+        }, 110000)
     }
 
 
