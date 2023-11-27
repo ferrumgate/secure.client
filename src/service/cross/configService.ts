@@ -10,6 +10,7 @@ export interface Config {
     host: string;
     id: string;
     sslVerify?: boolean;
+    protocol?: string;
 }
 
 /**

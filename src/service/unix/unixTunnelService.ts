@@ -13,7 +13,7 @@ import ping from 'ping';
  * @summary unix tunnel controller, this service works on root worker process
  */
 export class UnixTunnelService extends TunnelService {
-    checkQuic = true;
+
     isRootShellWorking = false;
     sshCommand = '';
     sshCommands: string[] = [];
@@ -36,6 +36,8 @@ export class UnixTunnelService extends TunnelService {
     newLineBufferStderr = '';
     newLineBufferStdout = '';
     resolver: Resolver;
+    selectedProtocol: 'auto' | 'tcp' | 'udp' = 'udp';
+    selectedProtocolIndex = 0;
     constructor(net: NetworkEx, accessToken: string, event: EventService, api: TunnelApiService) {
         super(event, api);
         this.net = net;
@@ -49,6 +51,16 @@ export class UnixTunnelService extends TunnelService {
                 this.port = parts[1];
         }
         this.resolver = new Resolver({ tries: 1, timeout: 2000 })
+        this.selectedProtocol = this.findProtocol();
+    }
+    public findProtocol() {
+        if (this.net.tunnel.protocol == 'auto')
+            return 'auto';
+        if (this.net.tunnel.protocol == 'tcp')
+            return 'tcp';
+        if (this.net.tunnel.protocol == 'udp')
+            return 'udp';
+        return 'udp';
     }
     public getSSHPath() {
         const sshFile = path.join(__dirname, 'ssh_ferrum');
@@ -289,13 +301,15 @@ export class UnixTunnelService extends TunnelService {
         await this.init();
         await this.startFerrumTunnel();
     }
+    iAmAliveLastCheck = new Date().getTime();
     public async startIAmAlive() {
+        this.iAmAliveLastCheck = new Date().getTime();
         if (this.iamAliveInterval)
             clearIntervalAsync(this.iamAliveInterval);
         this.iamAliveInterval = null;
         this.iamAliveInterval = setIntervalAsync(async () => {
             await this.sendIAmAlive();
-        }, 3 * 60 * 1000)
+        }, 30 * 1000)
 
     }
     public async stopIAmAlive() {
@@ -307,8 +321,12 @@ export class UnixTunnelService extends TunnelService {
     public async sendIAmAlive() {
         try {
             if (this.isTunnelCreated) {
+                if (new Date().getTime() - this.iAmAliveLastCheck < 3 * 60 * 1000) {
+                    return;
+                }
                 this.logInfo('sending I am alive');
                 await this.api.iAmAlive(this.tunnelKey);
+                this.iAmAliveLastCheck = new Date().getTime();
             }
         } catch (err: any) {
             this.logError(err.toString())
@@ -453,20 +471,31 @@ export class UnixTunnelService extends TunnelService {
     }
 
 
-
     /**
      * @summary start a bash shell with sudo
      * @returns 
      */
     public async startProcess() {
 
+        let useQuic = true;
+        if (this.selectedProtocol == 'udp')
+            useQuic = true;
+        else
+            if (this.selectedProtocol == 'tcp')
+                useQuic = false;
+            else {//auto
+                if ((this.selectedProtocolIndex % 2) == 0)
+                    useQuic = true;
+                else useQuic = false;
+            }
 
-        this.logInfo(`executing process command ${this.checkQuic ? "quic" : "ssh"}`);
-        this.logInfo(`executing process command ${this.checkQuic ? this.quicCommand : this.sshCommand}`);
-        this.logInfo(`${this.quicCommands.join(' ')}`);
+
+        this.logInfo(`executing process command ${useQuic ? "quic" : "ssh"}`);
+        this.logInfo(`executing process command ${useQuic ? this.quicCommand : this.sshCommand}`);
+        //this.logInfo(`${this.quicCommands.join(' ')}`);
         const child = child_process.spawn(
-            this.checkQuic ? this.quicCommands[0] : this.sshCommands[0],
-            this.checkQuic ? this.quicCommands.slice(1) : this.sshCommands.slice(1))
+            useQuic ? this.quicCommands[0] : this.sshCommands[0],
+            useQuic ? this.quicCommands.slice(1) : this.sshCommands.slice(1))
         this.logInfo(`process started with pid: ${child.pid}`);
         let outputData = '';
         child.stdout?.on('data', (data: Buffer) => {
@@ -494,7 +523,7 @@ export class UnixTunnelService extends TunnelService {
             }
         });
         const exitFunc = async (tryAgain = false) => {
-            this.checkQuic = false;
+            this.selectedProtocolIndex++;
             this.childProcess = null;
             this.isTunnelCreated = false;
             this.isWorking = false;
@@ -503,13 +532,13 @@ export class UnixTunnelService extends TunnelService {
             this.isTunnelStarting = null;
             await this.stopIAmAlive();
             await this.stopHealthCheck();
-            if (tryAgain)
+            if (this.selectedProtocol == 'auto' && tryAgain)
                 await this.startProcess();
         }
 
         child.on('exit', async () => {
             this.logInfo(`process exited`);
-            let processFailed = this.checkQuic && outputData.includes("ferrum_exit") && (outputData.includes('could not connect') || outputData.includes('ERROR'));
+            let processFailed = outputData.includes("ferrum_exit") && (outputData.includes('could not connect') || outputData.includes('ERROR'));
             await exitFunc(processFailed);
         })
         this.childProcess = child;

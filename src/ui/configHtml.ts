@@ -13,7 +13,7 @@
 
 
 
-    let config: { host: string, id: string, sslVerify: boolean } = { host: '', id: '', sslVerify: true };
+    let config: { host: string, id: string, sslVerify: boolean, protocol: string } = { host: '', id: '', sslVerify: true, protocol: '' };
     function configInit() {
 
         document.querySelector('#myform')?.addEventListener('keypress', (e: any) => {
@@ -47,6 +47,9 @@
         document.querySelector('#el-save-config')?.addEventListener('click', () => {
             windowx.electronAPI.emit('saveConfig', config);
         })
+        document.querySelector('#el-protocol')?.addEventListener('change', (ev: any) => {
+            config.protocol = ev.target.value;
+        })
 
         windowx.electronAPI.on('appVersionReply', (data: any) => {
             const versionEl = document.querySelector('#el-version');
@@ -55,8 +58,14 @@
         })
 
         windowx.electronAPI.emit('appVersion');
+        function findProtocolIndex(val: string) {
+            if (val == 'auto') return 0;
+            if (val == 'udp') return 1;
+            if (val == 'tcp') return 2;
+            return 1;
+        }
 
-        windowx.electronAPI.on('configReply', (data: { host: string, id: string, sslVerify: boolean }) => {
+        windowx.electronAPI.on('configReply', (data: { host: string, id: string, sslVerify: boolean, protocol: string }) => {
             console.log('reply config ' + new Date().toISOString());
             config = data;
             const inputServer = document.querySelector('#el-login') as HTMLInputElement;
@@ -66,6 +75,11 @@
             const inputSSLVerify = document.querySelector('#el-ssl-verify') as HTMLInputElement;
             if (inputSSLVerify && config)
                 inputSSLVerify.checked = config.sslVerify;
+
+
+            const inputProtocol = document.querySelector('#el-protocol') as HTMLSelectElement;
+            if (inputProtocol && config)
+                inputProtocol.selectedIndex = findProtocolIndex(config.protocol);
 
         })
 
