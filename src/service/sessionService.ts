@@ -52,6 +52,7 @@ export class SessionService extends BaseHttpService {
         });
         this.events.on('closeSession', async (exit: boolean) => {
             try {
+                this.logInfo("disconnecting");
                 await this.closeSession();
 
 
@@ -323,7 +324,7 @@ export class SessionService extends BaseHttpService {
         try {
 
             if (this.isTokenChecking) return;
-            if (new Date().getTime() - this.tokenCheckStart > 60000) {//1 minute elapsed
+            if (new Date().getTime() - this.tokenCheckStart > 110000) {//nearly 2 minutes elapsed, sshd default config is 120 seconds
                 if (this.tokenCheckInterval)
                     clearIntervalAsync(this.tokenCheckInterval);
                 this.tokenCheckInterval = null;

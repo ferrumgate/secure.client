@@ -204,13 +204,14 @@ export class TunnelController {
                 const process = this.getNetworkProcess(network);
                 if (network.action == 'allow') {
                     if (!network.tunnel) {
-                        network.tunnel = { tryCount: 0, lastTryTime: 0, isWorking: false, pingErrorCount: 0, pingTimes: [], dnsTimes: [], dnsErrorCount: 0 }
+                        network.tunnel = { tryCount: 0, lastTryTime: 0, isWorking: false, pingErrorCount: 0, pingTimes: [], dnsTimes: [], dnsErrorCount: 0, protocol: this.config.protocol }
                     }
                     if ((new Date().getTime() - network.tunnel.lastTryTime) < 15000) {
                         network.tunnel.isWorking = process?.isWorking || false;
                         network.tunnel.lastError = process?.lastError || '';
                         continue;
                     }
+
                     await this.checkTunnel(network);
                 }
             }
@@ -242,7 +243,7 @@ export class TunnelController {
 
                 const process = this.getNetworkProcess(network);
                 if (network.tunnel?.isWorking) {
-                    if (network.tunnel.pingErrorCount > 5) {//ping failed could not resolved 5 times
+                    if (network.tunnel.pingErrorCount >= 15) {//ping failed could not resolved 15 times, 15*3->45 seconds
                         this.logError(`network cannot reach ${network.name}`);
                         await process?.closeTunnel();
                         network.tunnel.isWorking = false;

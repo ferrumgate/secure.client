@@ -27,7 +27,8 @@ export interface NetworkEx extends Network {
         tun?: string;
         isMasterResolv?: boolean;
         isResolvConfigured?: boolean;
-        resolvTunDomains?: { tun: string, domains: string[] }[]
+        resolvTunDomains?: { tun: string, domains: string[] }[],
+        protocol?: string
 
     }
 }
