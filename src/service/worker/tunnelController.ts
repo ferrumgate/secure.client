@@ -243,7 +243,7 @@ export class TunnelController {
 
                 const process = this.getNetworkProcess(network);
                 if (network.tunnel?.isWorking) {
-                    if (network.tunnel.pingErrorCount >= 19) {//ping failed could not resolved 18 times, 18*3->54 seconds
+                    if (network.tunnel.pingErrorCount >= 15) {//ping failed could not resolved 15 times, 15*3->45 seconds
                         this.logError(`network cannot reach ${network.name}`);
                         await process?.closeTunnel();
                         network.tunnel.isWorking = false;
