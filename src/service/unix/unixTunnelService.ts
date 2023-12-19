@@ -246,14 +246,16 @@ export class UnixTunnelService extends TunnelService {
             const parts = line.split(':');
             const part1 = parts[0];
             const part2 = parts[1];
-            if (part2) {
+            if (part2 && part1.includes('(') && part1.includes(')')) {
                 let tmp1 = part1.split('(')[1];
-                let tun = tmp1.replace(')', '').trim();
-                let domains = part2.split(' ').map(x => x.trim()).filter(y => y);
-                items.push({
-                    tun: tun,
-                    domains: domains
-                })
+                if (tmp1) {
+                    let tun = tmp1.replace(')', '').trim();
+                    let domains = part2.split(' ').map(x => x.trim()).filter(y => y);
+                    items.push({
+                        tun: tun,
+                        domains: domains
+                    })
+                }
             }
 
         }
