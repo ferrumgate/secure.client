@@ -366,7 +366,7 @@ export class SessionService extends BaseHttpService {
             if (new Date().getTime() - this.sessionLastCheck < 3 * 60 * 1000) {
                 return;
             }
-            if (new Date().getTime() - this.sessionLastCheck > 5 * 60 * 1000) {
+            if (new Date().getTime() - this.sessionLastCheck > 12 * 60 * 1000) {
                 clearIntervalAsync(this.sessionInterval);
                 this.sessionInterval = null;
                 this.notifyError("Session lost");
