@@ -156,8 +156,6 @@ export async function init(token: string) {
     app.setName('FerrumGate');
     events.emit("log", 'info', 'starting app with token:' + token);
 
-
-
     tray = new TrayUI(events);
     configUI = new ConfigUI(events, config, tray.tray);
     statusUI = new StatusUI(events, tray.tray);
@@ -190,7 +188,6 @@ export async function init(token: string) {
     return { log, events };
 
 }
-
 
 
 

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Tray, screen, Menu, MenuItem, nativeImage } from 'electron';
+import { app, BrowserWindow, ipcMain, Tray, screen, Menu, MenuItem, nativeImage, nativeTheme } from 'electron';
 import path from 'path';
 import { Util } from '../service/util';
 import { EventService } from '../service/eventsService';
@@ -39,13 +39,13 @@ export class TrayUI {
         //some menu items
         const connect: MenuItem = {
             id: 'connect',
-            label: 'Connect', type: 'normal', icon: path.join(assetsDirectory, 'img', 'connect.png'),
+            label: 'Connect', type: 'normal', icon: path.join(assetsDirectory, 'img', nativeTheme.shouldUseDarkColors ? 'connect-white.png' : 'connect.png'),
             click: () => { this.events.emit('openSession') }
 
         } as unknown as MenuItem;
         const connecting: MenuItem = {
             id: 'connect',
-            label: 'Connecting', type: 'normal', icon: path.join(assetsDirectory, 'img', 'connect.png'),
+            label: 'Connecting', type: 'normal', icon: path.join(assetsDirectory, 'img', nativeTheme.shouldUseDarkColors ? 'connect-white.png' : 'connect.png'),
             click: () => { }
 
         } as unknown as MenuItem;
@@ -54,7 +54,7 @@ export class TrayUI {
         const disconnect: MenuItem = {
             id: 'disconnect',
             label: 'Disconnect', type: 'normal', visible: false,
-            icon: path.join(assetsDirectory, 'img', 'disconnect.png'),
+            icon: path.join(assetsDirectory, 'img', nativeTheme.shouldUseDarkColors ? 'disconnect-white.png' : 'disconnect.png'),
             click: () => { this.events.emit('closeSession') }
         } as unknown as MenuItem;
         const update: MenuItem = {
@@ -67,7 +67,7 @@ export class TrayUI {
 
         const status: MenuItem = {
             id: 'status',
-            label: 'Status', type: 'normal', icon: path.join(assetsDirectory, 'img', 'status.png'),
+            label: 'Status', type: 'normal', icon: path.join(assetsDirectory, 'img', nativeTheme.shouldUseDarkColors ? 'status-white.png' : 'status.png'),
             click: () => {
                 this.events.emit("showStatusWindow");
             }
@@ -76,13 +76,13 @@ export class TrayUI {
 
         const options = {
             label: 'Options', type: 'normal',
-            icon: path.join(assetsDirectory, 'img', 'settings-14.png'), click: () => {
+            icon: path.join(assetsDirectory, 'img', nativeTheme.shouldUseDarkColors ? 'settings-white-14.png' : 'settings-14.png'), click: () => {
                 this.events.emit("showOptionsWindow");
             }
         } as unknown as MenuItem;
         const quit = {
             label: 'Quit', type: 'normal',
-            icon: path.join(assetsDirectory, 'img', 'close-14.png'), click: () => {
+            icon: path.join(assetsDirectory, 'img', nativeTheme.shouldUseDarkColors ? 'close-white-14.png' : 'close-14.png'), click: () => {
                 this.events.emit("appExit");
             }
         } as unknown as MenuItem;
@@ -157,7 +157,10 @@ export class TrayUI {
         })
 
         tray.setToolTip('Zero trust access')
-        tray.setTitle('FerrumGate')
+        if (platform != 'darwin') {
+            tray.setTitle('FerrumGate')
+        }
+
         tray.setContextMenu(contextMenu);
         tray.setIgnoreDoubleClickEvents(true);
 

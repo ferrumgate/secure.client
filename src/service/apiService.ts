@@ -57,7 +57,7 @@ export class ApiService extends BaseHttpService {
 
             const request = net.request({
                 method: 'GET',
-                protocol: url.protocol,
+                protocol: url.protocol as any,
                 hostname: url.hostname,
                 port: this.urlPort(url),
                 path: '/api/test',
@@ -79,14 +79,14 @@ export class ApiService extends BaseHttpService {
     }
 
     public async getExchangeToken() {
-        console.log("/api/auth/exchangetoken")
+        console.log("getExchangeToken")
         await this.checkRedirect();
         let url = this.getUrl();
         const response: Buffer = await new Promise((resolve, reject) => {
 
             const request = net.request({
                 method: 'GET',
-                protocol: url.protocol,
+                protocol: url.protocol as any,
                 hostname: url.hostname,
                 port: this.urlPort(url),
                 path: '/api/auth/exchangetoken',
@@ -102,14 +102,14 @@ export class ApiService extends BaseHttpService {
         return JSON.parse(response.toString()) as { token: string }
     }
     public async changeExchangeToken(token: string) {
-        console.log("/api/auth/exchangetoken")
+        console.log("changeExchangeToken")
         await this.checkRedirect();
         let url = this.getUrl();
         const response: Buffer = await new Promise((resolve, reject) => {
 
             const request = net.request({
                 method: 'POST',
-                protocol: url.protocol,
+                protocol: url.protocol as any,
                 hostname: url.hostname,
                 port: this.urlPort(url),
                 path: '/api/auth/exchangetoken',
@@ -122,10 +122,10 @@ export class ApiService extends BaseHttpService {
             request.write(JSON.stringify({ exchangeKey: token }));
             request.end();
         });
-        return JSON.parse(response.toString()) as { accessToken: string, refreshToken: string }
+        return JSON.parse(response.toString()) as { accessToken: string, refreshToken: string, accessTokenExpiresAt: string, refreshTokenExpiresAt: string }
     }
 
-    public async refreshToken(accessToken: string, refreshToken: string) {
+    public async refreshToken(accessToken: string, refreshToken: string, timeInMs = 12 * 60 * 60 * 1000) {
         console.log("/api/auth/refreshtoken")
         await this.checkRedirect();
         let url = this.getUrl();
@@ -133,7 +133,7 @@ export class ApiService extends BaseHttpService {
 
             const request = net.request({
                 method: 'POST',
-                protocol: url.protocol,
+                protocol: url.protocol as any,
                 hostname: url.hostname,
                 port: this.urlPort(url),
                 path: '/api/auth/refreshtoken',
@@ -144,10 +144,10 @@ export class ApiService extends BaseHttpService {
             request.setHeader('Accept', "Accept: application/json");
             request.setHeader('Content-type', 'application/json');
             request.setHeader('Authorization', `Bearer ${accessToken}`);
-            request.write(JSON.stringify({ refreshToken: refreshToken }));
+            request.write(JSON.stringify({ refreshToken: refreshToken, timeInMs }));
             request.end();
         });
-        return JSON.parse(response.toString()) as { accessToken: string, refreshToken: string }
+        return JSON.parse(response.toString()) as { accessToken: string, refreshToken: string, refreshTokenExpiresAt: string, accessTokenExpiresAt: string }
     }
 
 

@@ -31,6 +31,7 @@ export class SessionService extends BaseHttpService {
     protected isTokenChecking = false;
     protected accessToken = '';
     protected refreshToken = '';
+    protected accessTokenExpiresAt = new Date(0, 0, 0);
 
     /////
     protected sessionInterval: any;
@@ -283,29 +284,43 @@ export class SessionService extends BaseHttpService {
             }
         }
     }
-
+    isAccessTokenValid() {
+        if (this.accessTokenExpiresAt.getTime() > new Date().getTime()) {
+            this.logInfo(`token is valid`);
+            return true;
+        }
+        this.logInfo(`token is not valid`);
+        return false;
+    }
 
 
     async openSession() {
         try {
             await this.createIPCServer();
-            const token = await this.api.getExchangeToken();
-            this.exchangeToken = token.token;
+            if (!this.isAccessTokenValid()) {
+                const token = await this.api.getExchangeToken();
+                this.exchangeToken = token.token;
+            }
             await this.sudo.start();
         } catch (err: any) {
             this.logError(err.message || err.toString());
-            this.notifyError(`Could not connect:${err.message}`);
+            if (err.message == 'net::ERR_CERT_AUTHORITY_INVALID')
+                this.notifyError(`Could not connect: Certificate verification failed`);
+            else
+                this.notifyError(`Could not connect:${err.message}`);
         }
     }
     async continueToOpenSession() {
         try {
-
+            this.logInfo("continue to open session");
             if (!this.exchangeToken)
                 throw new Error("no exchange token");
-            this.events.emit('sessionOpening');
-            const url = `${(await this.config.getConf())?.host}/login?exchange=${this.exchangeToken}`;
-            this.logInfo(`open link ${url}`);
-            this.events.emit('openLink', url);
+            if (!this.isAccessTokenValid()) {
+                this.events.emit('sessionOpening');
+                const url = `${(await this.config.getConf())?.host}/login?exchange=${this.exchangeToken}`;
+                this.logInfo(`open link ${url}`);
+                this.events.emit('openLink', url);
+            }
             if (this.tokenCheckInterval)
                 clearIntervalAsync(this.tokenCheckInterval);
             this.tokenCheckInterval = null;
@@ -335,14 +350,19 @@ export class SessionService extends BaseHttpService {
                 return;
             }
             this.isTokenChecking = true;
+            if (!this.isAccessTokenValid()) {
+                const result = await this.api.changeExchangeToken(this.exchangeToken);
+                this.accessToken = result.accessToken;
+                this.refreshToken = result.refreshToken;
+                //for the first time, we don't want to set it
+                this.accessTokenExpiresAt = new Date(new Date().getTime() + 2 * 60 * 1000);
+                this.logInfo(`access token expires at ${this.accessTokenExpiresAt}`);
+            }
 
-            const result = await this.api.changeExchangeToken(this.exchangeToken);
-            this.accessToken = result.accessToken;
-            this.refreshToken = result.refreshToken;
             if (this.tokenCheckInterval)
                 clearIntervalAsync(this.tokenCheckInterval);
             this.tokenCheckInterval = null;
-            this.logInfo(`Session created`);
+            this.logInfo(`session created`);
             this.notifyInfo(`Session created`);
             this.events.emit("sessionOpened");
             this.sessionLastCheck = new Date().getTime();
@@ -359,14 +379,16 @@ export class SessionService extends BaseHttpService {
         }
         this.isTokenChecking = false;
     }
+    RefreshTokenInMs = 6 * 60 * 60 * 1000;
 
     async getTokens() {
         try {
-            //this.logInfo("get tokens");
-            if (new Date().getTime() - this.sessionLastCheck < 3 * 60 * 1000) {
+
+            if ((this.accessTokenExpiresAt.getTime() - new Date().getTime()) > 3 * 60 * 1000) {
                 return;
             }
-            if (new Date().getTime() - this.sessionLastCheck > 12 * 60 * 1000) {
+            if (this.accessTokenExpiresAt.getTime() <= new Date().getTime()) {
+                this.logError("access token expired");
                 clearIntervalAsync(this.sessionInterval);
                 this.sessionInterval = null;
                 this.notifyError("Session lost");
@@ -375,15 +397,18 @@ export class SessionService extends BaseHttpService {
             }
 
             this.logInfo("refresh token");
-            const result = await this.api.refreshToken(this.accessToken, this.refreshToken);
+            const result = await this.api.refreshToken(this.accessToken, this.refreshToken, this.RefreshTokenInMs);
             this.refreshToken = result.refreshToken;
             this.accessToken = result.accessToken;
+            this.accessTokenExpiresAt = new Date(result.accessTokenExpiresAt);
+            this.logInfo(`access token expires at ${this.accessTokenExpiresAt}`);
             //await this.writeToWorker({ type: 'tokenResponse', data: { accessToken: this.accessToken, refreshToken: this.refreshToken } })
             this.sessionLastCheck = new Date().getTime();
         } catch (err: any) {
             this.logError(err.message || err.toString());
         }
     }
+
     async closeSession() {
         //TODO delete session
         this.api.clear();
@@ -405,9 +430,14 @@ export class SessionService extends BaseHttpService {
         this.ipcClient = null;
         this.ipcServer = null
         this.ipcServerCreated = false;
-        this.accessToken = '';
-        this.refreshToken = '';
-        this.exchangeToken = '';
+
+
+        if (!this.isAccessTokenValid()) {
+            this.exchangeToken = '';
+            this.accessToken = '';
+            this.refreshToken = '';
+            this.accessTokenExpiresAt = new Date(0, 0, 0);
+        }
         this.events.emit("sessionClosed");
         if (wasThereASession)
             this.notifyInfo("Session closed");
