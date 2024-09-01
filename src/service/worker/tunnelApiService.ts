@@ -162,14 +162,11 @@ export class TunnelApiService {
         };
 
         const response = await Axios.get(url.toString() + 'api/user/current/network', options)
-
         return response.data as { items: NetworkEx[] };
-
-
     }
 
 
-    public async createTunnel(accessToken: string, tunneKey: string) {
+    public async createTunnel(accessToken: string, tunnelKey: string) {
         console.log("/api/client/tunnel")
         await this.checkRedirect();
         let url = this.getUrl();
@@ -183,14 +180,12 @@ export class TunnelApiService {
             httpAgent: this.createHttpAgent(url),
             maxRedirects: 0
         };
-
-        const response = await Axios.post(url.toString() + 'api/client/tunnel', { tunnelKey: tunneKey }, options)
-
-        return response.data as {}
-
-
-
+        var data = { tunnelKey: tunnelKey, clientId: this.conf?.id }
+        const response = await Axios.post(url.toString() + 'api/client/tunnel', { tunnelKey: tunnelKey, clientId: this.conf?.id }, options);
+        //return response.data as {}
+        return data;
     }
+
     public async getDevicePostureParameters(accessToken: string) {
         console.log("/api/user/current/device/posture/parameters")
         await this.checkRedirect();
@@ -207,10 +202,9 @@ export class TunnelApiService {
         };
 
         const response = await Axios.get(url.toString() + 'api/user/current/device/posture/parameters', options)
-
         return response.data as { items: DevicePostureParameter[] };
-
     }
+
     public async saveDevicePosture(accessToken: string, posture: ClientDevicePosture) {
         console.log("/api/user/current/device/posture")
         await this.checkRedirect();
@@ -228,10 +222,6 @@ export class TunnelApiService {
 
         const response = await Axios.post(url.toString() + 'api/user/current/device/posture', posture, options)
         return response.data as {};
-
-
     }
-
-
 
 }

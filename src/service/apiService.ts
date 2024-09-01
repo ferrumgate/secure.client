@@ -78,6 +78,33 @@ export class ApiService extends BaseHttpService {
         return
     }
 
+    public async test() {
+        let url = this.getUrl();
+        let statusCode = 0;
+        const response: Buffer = await new Promise((resolve, reject) => {
+
+            const request = net.request({
+                method: 'GET',
+                protocol: url.protocol as any,
+                hostname: url.hostname,
+                port: this.urlPort(url),
+                path: '/api/test',
+                redirect: 'follow',
+            });
+
+            this.prepareRequest(request, resolve, reject);
+            request.setHeader('Accept', "Accept: application/json");
+
+            request.on('response', (response) => {
+                statusCode = response.statusCode as number;
+            });
+            request.end();
+        });
+        const data = response.toString();
+        if (statusCode !== 200) throw new Error("HTTP error: " + statusCode);
+        return JSON.parse(data) as { result: string };
+    }
+
     public async getExchangeToken() {
         console.log("getExchangeToken")
         await this.checkRedirect();

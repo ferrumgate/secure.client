@@ -210,6 +210,12 @@ export class SessionService extends BaseHttpService {
                 case 'checkingDevice':
                     await this.executeCheckingDevice(cmd.data);
                     break;
+                case 'notify':
+                    if (cmd.data.type == 'error')
+                        await this.notifyError(cmd.data.message);
+                    else
+                        await this.notifyInfo(cmd.data.message);
+                    break;
                 default:
                     break;
             }
@@ -297,15 +303,19 @@ export class SessionService extends BaseHttpService {
     async openSession() {
         try {
             await this.createIPCServer();
-            if (!this.isAccessTokenValid()) {
-                const token = await this.api.getExchangeToken();
-                this.exchangeToken = token.token;
-            }
+            // we need to get again to check if network and our api is ready
+            const test = await this.api.test();
+            const token = await this.api.getExchangeToken();
+            this.exchangeToken = token.token;
             await this.sudo.start();
         } catch (err: any) {
             this.logError(err.message || err.toString());
             if (err.message == 'net::ERR_CERT_AUTHORITY_INVALID')
                 this.notifyError(`Could not connect: Certificate verification failed`);
+            else if (err.message == 'net::ERR_CONNECTION_REFUSED')
+                this.notifyError(`Could not connect: Connection refused`);
+            else if (err.message == 'net::ERR_CONNECTION_TIMED_OUT')
+                this.notifyError(`Could not connect: Connection timed out`);
             else
                 this.notifyError(`Could not connect:${err.message}`);
         }

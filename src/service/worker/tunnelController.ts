@@ -194,7 +194,10 @@ export class TunnelController {
                 this.networks = data.items;
                 this.networks.sort((a, b) => {
                     return a.name.localeCompare(b.name);
-                })
+                });
+                if (this.networks.length == 0) {
+                    await this.writeToParent({ type: 'notify', data: { type: 'error', message: 'No network found, please contact with your administrator' } });
+                }
                 this.networksLastCheck = new Date().getTime();
 
 

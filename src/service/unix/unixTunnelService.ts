@@ -125,7 +125,7 @@ export class UnixTunnelService extends TunnelService {
             try {
                 await this.onStdOut(data);
                 this.processLastOutput = data;
-                //console.log(data);
+
                 this.logInfo(`${data}`);
                 if (data.includes('ferrum_pid:')) {
                     const items = data.split(EOL);
@@ -145,7 +145,8 @@ export class UnixTunnelService extends TunnelService {
                             this.tunnelKey = parts[1].trim();
                         }
                         if (this.tunnelKey) {
-                            await this.api.createTunnel(this.accessToken, this.tunnelKey);
+                            var datax = await this.api.createTunnel(this.accessToken, this.tunnelKey);
+                            this.logInfo(`tunnel created with clientId ${datax.clientId}`);
                         }
                     }
                 }
@@ -296,6 +297,7 @@ export class UnixTunnelService extends TunnelService {
         await this.configureDns(tun, conf);
         await this.execOnShell(`ip link set ${tun} up`);
         await this.execOnShell(`ip route add ${conf.serviceNetwork} dev ${tun}`)
+        await this.flushDnsCache();
     }
     ////./ssh_ferrum -c none -N -F ../etc/ssh_config -w any  -o "StrictHostKeyChecking no"  ferrum@192.168.88.243 -p3333
     public override async openTunnel(isRoot = true): Promise<void> {

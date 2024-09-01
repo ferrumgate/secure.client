@@ -144,6 +144,7 @@ export class Win32TunnelService extends UnixTunnelService {
         else
             await this.execOnShell(`cmd.exe /c route ADD  ${conf.serviceNetwork}  ${conf.assignedIp}`);
         await this.configureDns(tun, conf);
+        await this.flushDnsCache();
     }
 
     protected async forceKillPid() {
