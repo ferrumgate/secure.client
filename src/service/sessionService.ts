@@ -17,7 +17,7 @@ import net from 'net';
 import { Logger } from 'selenium-webdriver/lib/logging';
 import { Cmd, NetworkEx } from './worker/models';
 import { clearIntervalAsync, setIntervalAsync } from 'set-interval-async';
-import { app } from 'electron';
+import { app, safeStorage } from 'electron';
 
 
 /**
@@ -320,6 +320,81 @@ export class SessionService extends BaseHttpService {
                 this.notifyError(`Could not connect:${err.message}`);
         }
     }
+    decrypt(data?: string) {
+        if (safeStorage.isEncryptionAvailable() && data) {
+            try {
+                var decryptedCert = safeStorage.decryptString(Buffer.from(data, 'base64'));
+                return decryptedCert;
+            } catch (e) {
+                console.log("decrypt", e);
+                return null;
+            }
+        }
+        return null;
+    }
+
+    encrypt(data: string) {
+        if (safeStorage.isEncryptionAvailable() && data) {
+            try {
+                var encyrptedCert = safeStorage.encryptString(data);
+                return Buffer.from(encyrptedCert).toString('base64');
+            } catch (err: any) {
+                this.logError(err.message || err.toString());
+                return null;
+            }
+        }
+        return null;
+    }
+
+    async authenticateWithCert() {
+        var conf = await this.config.getConf();
+        if (!conf?.certLogin) {
+            this.logInfo("no cert login");
+            return false;
+        }
+        if (!conf?.cert) {
+            this.logError("no certificate");
+            return false;
+        }
+        try {
+            var certificate = this.decrypt(conf.cert);;
+            if (!certificate) return false;
+            const result = await this.api.authenticateWithCert(certificate);
+            this.accessToken = result.accessToken;
+            this.refreshToken = result.refreshToken;
+            //for the first time, we don't want to set it
+            this.accessTokenExpiresAt = new Date(new Date().getTime() + 2 * 60 * 1000);
+            this.logInfo(`authenticated with certificate`);
+            this.logInfo(`access token expires at ${this.accessTokenExpiresAt}`);
+
+        } catch (err: any) {
+            this.logError("authenticateWithCert:" + err.message || err.toString());
+            if(err.message == 'http response status code: 401'){
+                this.events.emit('certChanged',{cert:''})
+            }
+            return false;
+        }
+        return true;
+
+    }
+    async openWebPageForLogin() {
+        const url = `${(await this.config.getConf())?.host}/login?exchange=${this.exchangeToken}`;
+        this.logInfo(`open link ${url}`);
+        this.events.emit('openLink', url);
+    }
+    async downloadCertificate() {
+        try {
+            this.logInfo("downloading certificate");
+            var retData = await this.api.downloadCertificate(this.accessToken);
+            if (retData.cert?.publicCrt) {
+                var encryptedCert = this.encrypt(retData.cert?.publicCrt);
+                this.events.emit('certChanged', { cert: encryptedCert, apiKey: '' });
+            }
+
+        } catch (err: any) {
+            this.logError("downloadCertificate:"+ err.message || err.toString());
+        }
+    }
     async continueToOpenSession() {
         try {
             this.logInfo("continue to open session");
@@ -327,9 +402,11 @@ export class SessionService extends BaseHttpService {
                 throw new Error("no exchange token");
             if (!this.isAccessTokenValid()) {
                 this.events.emit('sessionOpening');
-                const url = `${(await this.config.getConf())?.host}/login?exchange=${this.exchangeToken}`;
-                this.logInfo(`open link ${url}`);
-                this.events.emit('openLink', url);
+                var authenticated = await this.authenticateWithCert();
+                if (!authenticated) {
+                    await this.openWebPageForLogin();
+                }
+                
             }
             if (this.tokenCheckInterval)
                 clearIntervalAsync(this.tokenCheckInterval);
@@ -366,7 +443,9 @@ export class SessionService extends BaseHttpService {
                 this.refreshToken = result.refreshToken;
                 //for the first time, we don't want to set it
                 this.accessTokenExpiresAt = new Date(new Date().getTime() + 2 * 60 * 1000);
+                this.logInfo(`authenticated with webpage`);
                 this.logInfo(`access token expires at ${this.accessTokenExpiresAt}`);
+                await this.downloadCertificate();
             }
 
             if (this.tokenCheckInterval)

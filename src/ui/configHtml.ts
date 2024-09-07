@@ -13,7 +13,7 @@
 
 
 
-    let config: { host: string, id: string, sslVerify: boolean, protocol: string } = { host: '', id: '', sslVerify: true, protocol: '' };
+    let config: { host: string, id: string, sslVerify: boolean, protocol: string, certLogin:boolean } = { host: '', id: '', sslVerify: true, protocol: '' ,certLogin:false};
     function configInit() {
 
         document.querySelector('#myform')?.addEventListener('keypress', (e: any) => {
@@ -32,6 +32,11 @@
 
             config.sslVerify = e.target.checked;
             windowx.electronAPI.emit('notify', { type: 'info', msg: 'Needs restart for applying verification' });
+        })
+
+        document.querySelector('#el-cert-login')?.addEventListener('click', (e: any) => {
+
+            config.certLogin = e.target.checked;
         })
 
 
@@ -65,7 +70,7 @@
             return 1;
         }
 
-        windowx.electronAPI.on('configReply', (data: { host: string, id: string, sslVerify: boolean, protocol: string }) => {
+        windowx.electronAPI.on('configReply', (data: { host: string, id: string, sslVerify: boolean, protocol: string, certLogin:boolean }) => {
             console.log('reply config ' + new Date().toISOString());
             config = data;
             const inputServer = document.querySelector('#el-login') as HTMLInputElement;

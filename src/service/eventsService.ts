@@ -19,7 +19,7 @@ export class EventService extends EventEmitter {
         'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow', 'showStatusWindow', 'closeStatusWindow',
         "openLink", "notify", "appVersion", "config", "configChanged", "saveConfig", "log", "throwError", 'release',
         'confRequest', 'confResponse', 'checkingDevice',
-        'loadingWindowClosed', 'openTunnel', 'sudoIsReady', 'sudoFailed', 'workerConnected', 'workerDisconnected', 'networkStatusReply', 'networkStatusRequest', 'logFile'];
+        'loadingWindowClosed', 'openTunnel', 'sudoIsReady', 'sudoFailed', 'workerConnected', 'workerDisconnected', 'networkStatusReply', 'networkStatusRequest', 'logFile','certChanged'];
     /**
      *
      */

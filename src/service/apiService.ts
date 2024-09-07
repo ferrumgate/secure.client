@@ -7,6 +7,7 @@ import child_process from 'child_process';
 import { net } from "electron";
 import { NetworkEx } from "./worker/models";
 import Axios, { AxiosRequestConfig } from "axios";
+import { safeStorage } from "electron/main";
 
 /**
  * @summary http requests
@@ -16,7 +17,7 @@ export class ApiService extends BaseHttpService {
 
     isRedirect = false;
     isRedirectChecked = false;
-    constructor(protected url: string, protected events: EventService, private headless = false) {
+    constructor(protected url: string, protected events: EventService, protected cert?:string) {
         super(events);
 
     }
@@ -63,7 +64,6 @@ export class ApiService extends BaseHttpService {
                 path: '/api/test',
                 redirect: 'follow',
 
-
             });
 
             this.prepareRequest(request, resolve, reject);
@@ -104,6 +104,7 @@ export class ApiService extends BaseHttpService {
         if (statusCode !== 200) throw new Error("HTTP error: " + statusCode);
         return JSON.parse(data) as { result: string };
     }
+
 
     public async getExchangeToken() {
         console.log("getExchangeToken")
@@ -175,6 +176,78 @@ export class ApiService extends BaseHttpService {
             request.end();
         });
         return JSON.parse(response.toString()) as { accessToken: string, refreshToken: string, refreshTokenExpiresAt: string, accessTokenExpiresAt: string }
+    }
+
+    public async downloadCertificate(accessToken:string) {
+        
+        await this.checkRedirect();
+        let url = this.getUrl();
+        const response: Buffer = await new Promise((resolve, reject) => {
+
+            const request = net.request({
+                method: 'GET',
+                protocol: url.protocol as any,
+                hostname: url.hostname,
+                port: this.urlPort(url),
+                path: '/api/user/current/sensitiveData',
+                redirect: 'error',
+
+            });
+            this.prepareRequest(request, resolve, reject);
+            request.setHeader('Accept', "Accept: application/json");
+            request.setHeader('Content-type', 'application/json');
+            request.setHeader('Authorization', `Bearer ${accessToken}`);
+            request.end();
+        });
+        const retData = await JSON.parse(response.toString()) as { cert?: {publicCrt?:string}, apiKey?:{key?:string} };
+        return retData;
+
+    }
+
+    public async authenticateWithCert(cert:string){
+        console.log("posting cert to /api/auth")
+        await this.checkRedirect();
+        let url = this.getUrl();
+        const response: Buffer = await new Promise((resolve, reject) => {
+
+            const request = net.request({
+                method: 'POST',
+                protocol: url.protocol as any,
+                hostname: url.hostname,
+                port: this.urlPort(url),
+                path: '/api/auth',
+                redirect: 'error',
+
+            });
+
+            this.prepareRequest(request, resolve, reject);
+            request.setHeader('Accept', "Accept: application/json");
+            request.setHeader('Cert', Buffer.from(cert).toString('base64'));
+            request.end();
+        });
+
+        var retData=  JSON.parse(response.toString()) as { key: string }
+        console.log("posting key to /api/auth/accesstoken")
+
+        const response2: Buffer = await new Promise((resolve, reject) => {
+
+            const request = net.request({
+                method: 'POST',
+                protocol: url.protocol as any,
+                hostname: url.hostname,
+                port: this.urlPort(url),
+                path: '/api/auth/accesstoken',
+                redirect: 'error',
+            });
+
+            this.prepareRequest(request, resolve, reject);
+            request.setHeader('Accept', "Accept: application/json");
+            request.setHeader('Content-type', 'application/json');
+            request.write(JSON.stringify({ key: retData.key,timeInMs : 12 * 60 * 60 * 1000 }));
+            request.end();
+        });
+
+        return  JSON.parse(response2.toString()) as { accessToken: string,refreshToken:string,accessTokenExpiresAt:string,refreshTokenExpiresAt:string }
     }
 
 

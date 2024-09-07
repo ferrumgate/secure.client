@@ -75,7 +75,7 @@ export async function init(token: string) {
     )
 
 
-    api = new ApiService(conf?.host || 'http://localhost', events);
+    api = new ApiService(conf?.host || 'http://localhost', events, (conf?.certLogin) ? conf.cert : '');
     sudo = new SudoService(events);
     sudo.setToken(token || '');
 
@@ -147,6 +147,18 @@ export async function init(token: string) {
         events.emit("log", 'info', 'saving config');
         api.setUrl(data.host || 'http://localhost')
         events.emit('configChanged', data);
+    })
+    events.on('certChanged', async (data: {cert:string,apiKey:string}) => {
+        const conf = await config.getConfig();
+        if(!conf) return;
+
+        if(conf.cert == data.cert) return;
+
+        conf.cert = data.cert;
+        await config.saveConfig(conf);
+        //new Notification({ title: 'FerrumGate', body: 'Certificate downloaded' }).show();
+        events.emit("log", 'info', 'saving config');
+        events.emit('configChanged', conf);
     })
     events.on('throwError', (msg: string) => {
         throw new Error(msg);
