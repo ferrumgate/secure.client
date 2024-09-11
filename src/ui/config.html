@@ -60,10 +60,23 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="form-group ferrum-form-group">
+                        <div class="form-group ferrum-form-group" id="el-cert-login-container">
                             <label>
                                 Login with Certificate <input type="checkbox" id="el-cert-login"
                                     class="form-control-ssl" style="margin-left:5px">
+
+                            </label>
+                            <div class="ferrum-error ferrum-display-none"
+                                style="padding-top: 10px; padding-left: 10px;">
+                                <span class="icon icon-alert">
+                                    <span id="ssl-verify-error">error</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group ferrum-form-group" id="el-autostart-container">
+                            <label>
+                                Auto start <input type="checkbox" id="el-autostart" class="form-control-ssl"
+                                    style="margin-left:5px">
 
                             </label>
                             <div class="ferrum-error ferrum-display-none"

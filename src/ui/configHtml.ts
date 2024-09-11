@@ -13,7 +13,7 @@
 
 
 
-    let config: { host: string, id: string, sslVerify: boolean, protocol: string, certLogin:boolean } = { host: '', id: '', sslVerify: true, protocol: '' ,certLogin:false};
+    let config: { host: string, id: string, sslVerify: boolean, protocol: string, certLogin:boolean, autoStart: boolean } = { host: '', id: '', sslVerify: true, protocol: '' ,certLogin:false, autoStart: false };
     function configInit() {
 
         document.querySelector('#myform')?.addEventListener('keypress', (e: any) => {
@@ -39,6 +39,11 @@
             config.certLogin = e.target.checked;
         })
 
+        document.querySelector('#el-autostart')?.addEventListener('click', (e: any) => {
+
+            config.autoStart = e.target.checked;
+        })
+
 
         document.querySelector('#el-close-window')?.addEventListener('click', () => {
             windowx.electronAPI.emit('closeOptionsWindow');
@@ -61,8 +66,19 @@
             if (versionEl)
                 versionEl.textContent = data;
         })
+        windowx.electronAPI.on('systemInfoReply',(data:{platform:string,isEncryptionSupport:boolean})=>{
+            if(!data.isEncryptionSupport){
+                document.querySelector('#el-cert-login-container')?.classList.add('ferrum-hide');
+            }
+            if(data.platform != 'win32' && data.platform != 'darwin'){
+                document.querySelector('#el-autostart-container')?.classList.add('ferrum-hide');
+            }
+        });
+
 
         windowx.electronAPI.emit('appVersion');
+        windowx.electronAPI.emit('systemInfo');
+
         function findProtocolIndex(val: string) {
             if (val == 'auto') return 0;
             if (val == 'udp') return 1;
@@ -70,7 +86,7 @@
             return 1;
         }
 
-        windowx.electronAPI.on('configReply', (data: { host: string, id: string, sslVerify: boolean, protocol: string, certLogin:boolean }) => {
+        windowx.electronAPI.on('configReply', (data: { host: string, id: string, sslVerify: boolean, protocol: string, certLogin:boolean,autoStart:boolean }) => {
             console.log('reply config ' + new Date().toISOString());
             config = data;
             const inputServer = document.querySelector('#el-login') as HTMLInputElement;
@@ -95,6 +111,7 @@
                 x.classList.add('ferrum-display-none');
             })
         }
+        
     }
 
     function testError() {

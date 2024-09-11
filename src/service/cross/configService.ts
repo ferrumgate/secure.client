@@ -13,6 +13,7 @@ export interface Config {
     protocol?: string;
     cert?:string;
     certLogin?:boolean;
+    autoStart?:boolean;
 }
 
 /**
