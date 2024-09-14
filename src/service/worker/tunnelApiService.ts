@@ -68,8 +68,6 @@ export class TunnelApiService {
                     return true;
                 return false
             }
-
-
         };
         const response = await Axios.get(url.toString() + 'api/test', options)
         if (response.status == 302 || response.status == 301)
@@ -135,15 +133,6 @@ export class TunnelApiService {
         return response.data as {};
 
     }
-    private urlPort(url: URL) {
-        if (url.port)
-            return Number(url.port);
-
-        if (url.protocol.startsWith('https')) return 443;
-        return 80;
-
-
-    }
 
 
     public async getNetworks(accessToken: string) {
@@ -182,7 +171,6 @@ export class TunnelApiService {
         };
         var data = { tunnelKey: tunnelKey, clientId: this.conf?.id }
         const response = await Axios.post(url.toString() + 'api/client/tunnel', { tunnelKey: tunnelKey, clientId: this.conf?.id }, options);
-        //return response.data as {}
         return data;
     }
 

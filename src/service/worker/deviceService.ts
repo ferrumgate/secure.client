@@ -148,7 +148,11 @@ export class DeviceService {
                         }
                         if (x.startsWith('OS Version:')) {
                             osversion = x.split(' ')[1];
+                        }else
+                        if (x.startsWith('ProductVersion:')) {
+                            osversion = x.split(' ')[1];
                         }
+
                     })
                     return { name: osname?.trim(), version: osversion?.trim() };
                 }
@@ -301,11 +305,11 @@ export class DeviceService {
                     const lines = output.replace(/\r/g, '').split('\n');
                     let isEncrytped = false;
                     for (const line of lines) {
-                        if (line.includes('Lock Status')) {
+                        if (line.includes('Conversion Status')) {
                             let tmp = line.split(':')[1];
                             if (tmp)
                                 tmp = tmp.trim();
-                            if (tmp != 'Unlocked')
+                            if (tmp != 'Decrypted')
                                 isEncrytped = true;
                         }
 

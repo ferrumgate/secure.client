@@ -230,8 +230,10 @@ export class TunnelController {
             this.lastErrorCount++;
             console.log(err);
             this.lastErrorOccured = new Date().getTime();
-
             this.logError(err.message || err.toString());
+            if (this.lastErrorCount % 30 == 0 || err.message.includes('Request failed with status code')) {
+                await this.writeToParent({ type: 'notify', data: { type: 'error', message: err.message || err.toString() } });
+            }
 
         } finally {
 

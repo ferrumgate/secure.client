@@ -2,15 +2,9 @@ import { EventEmitter } from 'events';
 import { BaseHttpService, BaseService } from './baseService';
 import { ConfigService } from './cross/configService';
 import { EventService } from './eventsService';
-import child_process from 'child_process';
-
-import { TouchSequence } from 'selenium-webdriver';
 import { ApiService } from './apiService';
 import { SudoService } from './sudoService';
 import { Util } from './util';
-import { TunnelService } from './worker/tunnelService';
-import { UnixTunnelService } from './unix/unixTunnelService';
-import { Win32TunnelService } from './win32/win32TunnelService';
 import path from 'path';
 
 import net from 'net';
@@ -369,8 +363,8 @@ export class SessionService extends BaseHttpService {
 
         } catch (err: any) {
             this.logError("authenticateWithCert:" + err.message || err.toString());
-            if(err.message == 'http response status code: 401'){
-                this.events.emit('certChanged',{cert:''})
+            if (err.message == 'http response status code: 401') {
+                this.events.emit('certChanged', { cert: '' })
             }
             return false;
         }
@@ -392,7 +386,7 @@ export class SessionService extends BaseHttpService {
             }
 
         } catch (err: any) {
-            this.logError("downloadCertificate:"+ err.message || err.toString());
+            this.logError("downloadCertificate:" + err.message || err.toString());
         }
     }
     async continueToOpenSession() {
@@ -406,7 +400,7 @@ export class SessionService extends BaseHttpService {
                 if (!authenticated) {
                     await this.openWebPageForLogin();
                 }
-                
+
             }
             if (this.tokenCheckInterval)
                 clearIntervalAsync(this.tokenCheckInterval);

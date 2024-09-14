@@ -22,6 +22,7 @@ export class UnixTunnelService extends TunnelService {
     isInitted = false;
     processPID = '';
     isTunnelCreated = false;
+    errorCount = 0;
     iamAliveInterval: any;
     pingCheckInterval: any;
     dnsCheckInterval: any;
@@ -118,7 +119,6 @@ export class UnixTunnelService extends TunnelService {
         this.onstderr = async (data: string) => {
             this.processLastOutput = data.toString();
             this.logError(data.toString());
-
         }
 
         this.onstdout = async (data: string) => {
@@ -174,6 +174,7 @@ export class UnixTunnelService extends TunnelService {
 
                         this.isTunnelCreated = true;
                         this.isWorking = true;
+                        this.errorCount = 0;
                         this.logInfo(`tunnel ${tun} created and configured successfully`);
 
                         if (this.isTunnelStarting)
@@ -186,16 +187,29 @@ export class UnixTunnelService extends TunnelService {
 
                     }
                 }
-                if (data.includes('ferrum_exit:') || data.includes('Terminated') || data.includes('No route to host') || data.includes('Connection refused')) {
+                if (data.includes('ferrum_exit:') || data.includes('Terminated') || data.includes('No route to host') || data.includes('Connection refused') || data.includes('could not connect')) {
+                    let error = 'Tunnel Closed';
+                    if (data.includes('Connection refused'))
+                        error = 'Connection refused';
+                    else if (data.includes('No route to host'))
+                        error = 'No route to host';
+                    else if (data.includes('Terminated'))
+                        error = 'Terminated';
+                    else if (data.includes('could not connect'))
+                        error = 'Could not connect';
                     const wasWorking = this.isWorking;
                     this.processPID = '';
                     this.isTunnelCreated = false;
                     this.isWorking = false;
                     this.logInfo(`tunnel closed`);
+                    this.errorCount++;
+                    if (!wasWorking && this.errorCount % 5 == 0) {
+                        this.events.emit('tunnelFailed', error);
+                    }
                     if (this.isTunnelStarting)
                         clearTimeout(this.isTunnelStarting);
                     this.isTunnelStarting = null;
-                    this.lastError = data.includes('ferrum_exit') ? 'Closed' : data;
+                    this.lastError = data.includes('ferrum_exit') ? 'Tunnel Closed' : data;
                     if (wasWorking)
                         this.events.emit('tunnelClosed', this.net);
 
@@ -428,10 +442,6 @@ export class UnixTunnelService extends TunnelService {
         }
     }
 
-
-
-
-
     public async startFerrumTunnel() {
         //this.logInfo(`starting new tunnel ${this.sshCommand}`);
         await this.tryKillProcess();
@@ -443,11 +453,11 @@ export class UnixTunnelService extends TunnelService {
     }
 
 
-
     public override async closeTunnel(): Promise<void> {
         await this.tryKillProcess();
         await this.flushDnsCache();
     }
+
     public async flushDnsCache() {
         try {
             await this.execOnShell(`resolvectl flush-caches`);
@@ -502,7 +512,7 @@ export class UnixTunnelService extends TunnelService {
             useQuic ? this.quicCommands.slice(1) : this.sshCommands.slice(1))
         this.logInfo(`process started with pid: ${child.pid}`);
         let outputData = '';
-        child.stdout?.on('data', (data: Buffer) => {
+        child.stdout?.on('data', async (data: Buffer) => {
             this.newLineBufferStdout += data.toString();
             outputData += data.toString();
             while (true) {
@@ -510,11 +520,11 @@ export class UnixTunnelService extends TunnelService {
                 if (index < 0)
                     break;
 
-                this.onstdout(this.newLineBufferStdout.substring(0, index + 1));
+                await this.onstdout(this.newLineBufferStdout.substring(0, index + 1));
                 this.newLineBufferStdout = this.newLineBufferStdout.substring(index + 1);
             }
         });
-        child.stderr?.on('data', (data: Buffer) => {
+        child.stderr?.on('data', async (data: Buffer) => {
             outputData += data.toString();
             this.newLineBufferStderr += data.toString();
             while (true) {
@@ -522,7 +532,7 @@ export class UnixTunnelService extends TunnelService {
                 if (index < 0)
                     break;
 
-                this.onstdout(this.newLineBufferStderr.substring(0, index + 1));
+                await this.onstdout(this.newLineBufferStderr.substring(0, index + 1));
                 this.newLineBufferStderr = this.newLineBufferStderr.substring(index + 1);
             }
         });
