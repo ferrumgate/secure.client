@@ -20,27 +20,15 @@ export class TrayUI {
 
     private createTray() {
 
-        /* let logored =   'logo-red-32-2.png';
-        let logogreen = 'logo-green-32-2.png';
-        let logoyellow = 'logo-yellow-32-2.png';
+        let logored = 'logo-blue-not-32.png';// nativeTheme.shouldUseDarkColors ? 'logo-white-not-32.png' : 'logo-black-not-32.png';
+        let logogreen = 'logo-blue-32.png';// nativeTheme.shouldUseDarkColors ? 'logo-white-32.png' : 'logo-black-32.png';
+        let logoyellow = 'logo-blue-not-32.png';// nativeTheme.shouldUseDarkColors ? 'logo-white-not-32.png' : 'logo-black-not-32.png';
         const platform = Util.getPlatform()
         switch (platform) {
             case 'darwin':
-                logored = 'logo-red-16-2.png';
-                logogreen = 'logo-green-16-2.png';
-                logoyellow = 'logo-yellow-16-2.png'; break;
-            default:
-                break;
-        } */
-        let logored = nativeTheme.shouldUseDarkColors ? 'logo-white-not-32.png' : 'logo-black-not-32.png';
-        let logogreen = nativeTheme.shouldUseDarkColors ? 'logo-white-32.png' : 'logo-black-32.png';
-        let logoyellow = nativeTheme.shouldUseDarkColors ? 'logo-white-not-32.png' : 'logo-black-not-32.png';
-        const platform = Util.getPlatform()
-        switch (platform) {
-            case 'darwin':
-                logored = nativeTheme.shouldUseDarkColors ? 'logo-white-not-16.png' : 'logo-black-not-16.png';
-                logogreen = nativeTheme.shouldUseDarkColors ? 'logo-white-16.png' : 'logo-black-16.png';
-                logoyellow = nativeTheme.shouldUseDarkColors ? 'logo-white-not-16.png' : 'logo-black-not-16.png';
+                logored = 'logo-blue-not-16.png';//  nativeTheme.shouldUseDarkColors ? 'logo-white-not-16.png' : 'logo-black-not-16.png';
+                logogreen = 'logo-blue-16.png';// nativeTheme.shouldUseDarkColors ? 'logo-white-16.png' : 'logo-black-16.png';
+                logoyellow = 'logo-blue-not-16.png';// nativeTheme.shouldUseDarkColors ? 'logo-white-not-16.png' : 'logo-black-not-16.png';
                 break;
             default:
                 break;
