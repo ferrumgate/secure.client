@@ -1,6 +1,6 @@
+import yargs from 'yargs';
 import { EventService } from './service/eventsService';
 import { TunnelController } from './service/worker/tunnelController';
-import yargs from 'yargs';
 import { TunnelApiService } from './service/worker/tunnelApiService';
 
 

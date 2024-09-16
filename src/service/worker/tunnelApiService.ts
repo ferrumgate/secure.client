@@ -1,9 +1,9 @@
 
+import https from 'https';
+import http from 'http'
 import Axios, { AxiosRequestConfig } from "axios";
 import { EventService } from "../eventsService";
 import { ClientDevicePosture, DevicePostureParameter, NetworkEx } from "./models";
-import https from 'https';
-import http from 'http'
 import { Config } from "../cross/configService";
 /**
  * @summary http requests

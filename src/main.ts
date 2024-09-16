@@ -1,4 +1,4 @@
-import electron, { app, BrowserWindow, ipcMain, Tray, screen, Menu, shell, Notification, ipcRenderer } from 'electron';
+import electron, { app, BrowserWindow, ipcMain, Tray, screen, Menu, shell, Notification, ipcRenderer, safeStorage } from 'electron';
 
 import path from 'path';
 import { EventService } from './service/eventsService';
@@ -162,9 +162,10 @@ export async function init(token: string) {
         throw new Error(msg);
     })
 
+
     ipcMain.on('systemInfo', async (event: Electron.IpcMainEvent, ...args: any[]) => {
         const platform = Util.getPlatform();
-        const isEncryptionSupport = Util.isEncryptionSupport();
+        const isEncryptionSupport = safeStorage.isEncryptionAvailable();
         event.reply('systemInfoReply', { platform, isEncryptionSupport });
     })
     app.setName('FerrumGate');

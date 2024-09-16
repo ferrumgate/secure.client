@@ -1,9 +1,4 @@
 import { EventEmitter } from 'events';
-import { ipcMain, ipcRenderer } from 'electron';
-
-
-
-
 
 /**
  * @summary inherits @EventEmitter nodejs class for supporting determined event names,
@@ -19,7 +14,7 @@ export class EventService extends EventEmitter {
         'closeTunnel', 'showOptionsWindow', 'closeOptionsWindow', 'showStatusWindow', 'closeStatusWindow',
         "openLink", "notify", "appVersion", "config", "configChanged", "saveConfig", "log", "throwError", 'release',
         'confRequest', 'confResponse', 'checkingDevice',
-        'loadingWindowClosed', 'openTunnel', 'sudoIsReady', 'sudoFailed', 'workerConnected', 'workerDisconnected', 'networkStatusReply', 'networkStatusRequest', 'logFile','certChanged'];
+        'loadingWindowClosed', 'openTunnel', 'sudoIsReady', 'sudoFailed', 'workerConnected', 'workerDisconnected', 'networkStatusReply', 'networkStatusRequest', 'logFile', 'certChanged'];
     /**
      *
      */

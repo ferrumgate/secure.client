@@ -82,11 +82,4 @@ export class Util {
         return randomstring;
     }
 
-
-    static isEncryptionSupport() {
-        return safeStorage.isEncryptionAvailable();
-    }
-
-
-
 }

@@ -1,6 +1,6 @@
 import net from 'net';
-import { Util } from '../util';
 import path from 'path';
+import { Util } from '../util';
 
 export class PipeClient {
     private buffer: Buffer = Buffer.from([]);
