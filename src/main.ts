@@ -81,7 +81,7 @@ export async function init(token: string) {
     }
     setAutoStart(conf?.autoStart || false);
 
-    ipcMain.on('ele',()=>{});
+    ipcMain.on('ele', () => { });
     api = new ApiService(conf?.host || 'http://localhost', events, (conf?.certLogin) ? conf.cert : '');
     sudo = new SudoService(events);
     sudo.setToken(token || '');
@@ -146,11 +146,11 @@ export async function init(token: string) {
         setAutoStart(data.autoStart || false);
         events.emit('configChanged', data);
     })
-    events.on('certChanged', async (data: {cert:string,apiKey:string}) => {
+    events.on('certChanged', async (data: { cert: string, apiKey: string }) => {
         const conf = await config.getConfig();
-        if(!conf) return;
+        if (!conf) return;
 
-        if(conf.cert == data.cert) return;
+        if (conf.cert == data.cert) return;
 
         conf.cert = data.cert;
         await config.saveConfig(conf);
@@ -163,9 +163,9 @@ export async function init(token: string) {
     })
 
     ipcMain.on('systemInfo', async (event: Electron.IpcMainEvent, ...args: any[]) => {
-        const platform=Util.getPlatform();
+        const platform = Util.getPlatform();
         const isEncryptionSupport = Util.isEncryptionSupport();
-        event.reply('systemInfoReply', {platform,isEncryptionSupport});
+        event.reply('systemInfoReply', { platform, isEncryptionSupport });
     })
     app.setName('FerrumGate');
     events.emit("log", 'info', 'starting app with token:' + token);
@@ -213,7 +213,7 @@ app.on('ready', async () => {
     //     app.quit()
     // } else
 
-    
+
 
     if (process.platform === 'win32') {
 
@@ -293,7 +293,7 @@ async function trigger_win32_svc_config() {
 
 }
 
-
+/*
 
 async function trigger_win32_svc() {
 
@@ -328,6 +328,7 @@ async function trigger_win32_svc() {
     await pipe.connect();
 
 }
+    */
 
 // Quit the app when the window is closed
 app.on('window-all-closed', () => {

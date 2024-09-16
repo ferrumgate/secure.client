@@ -2,8 +2,6 @@ import { app, BrowserWindow, ipcMain, Tray, screen, Menu, MenuItem, nativeImage,
 import path from 'path';
 import { Util } from '../service/util';
 import { EventService } from '../service/eventsService';
-import { ConfigUI } from './configUI';
-import { StatusUI } from './statusUI';
 import os from 'os';
 
 /**

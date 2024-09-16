@@ -1,7 +1,7 @@
 import path from 'path';
 import fspromise from 'fs/promises';
 import fs from 'fs';
-import { app, safeStorage } from 'electron';
+import { safeStorage } from 'electron';
 import childprocess from 'child_process';
 import crypto from 'crypto';
 /**
@@ -84,7 +84,7 @@ export class Util {
 
 
     static isEncryptionSupport() {
-        return  safeStorage.isEncryptionAvailable();
+        return safeStorage.isEncryptionAvailable();
     }
 
 

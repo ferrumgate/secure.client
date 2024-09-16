@@ -1,14 +1,11 @@
-import { EventEmitter } from 'events';
-import { BaseHttpService, BaseService } from './baseService';
+import { BaseHttpService } from './baseService';
 import { ConfigService } from './cross/configService';
 import { EventService } from './eventsService';
 import { ApiService } from './apiService';
 import { SudoService } from './sudoService';
 import { Util } from './util';
 import path from 'path';
-
 import net from 'net';
-import { Logger } from 'selenium-webdriver/lib/logging';
 import { Cmd, NetworkEx } from './worker/models';
 import { clearIntervalAsync, setIntervalAsync } from 'set-interval-async';
 import { app, safeStorage } from 'electron';

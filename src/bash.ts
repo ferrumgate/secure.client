@@ -1,11 +1,7 @@
-import { app } from 'electron';
 import { EventService } from './service/eventsService';
-import { TunnelController } from './service/worker/tunnelController';
 import yargs from 'yargs';
-import { TunnelApiService } from './service/worker/tunnelApiService';
 import { PipeClient } from './service/cross/pipeClient';
 import child_process from 'child_process';
-import fs from 'fs';
 
 
 export async function init(pipename: string) {

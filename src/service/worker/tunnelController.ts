@@ -327,10 +327,10 @@ export class TunnelController {
                 //we need to write more log, for debug
                 if (needsToChangePrimaryDns) {
                     workingTunnels.forEach(y => {
-                        this.logInfo(`network ${y.name} resolution times ${y.tunnel.dnsTimes.join(', ')}`);
+                        this.logInfo(`network ${y.name} resolution times ${y.tunnel.dnsTimes.map(_ => _.toFixed(2)).join(', ')}`);
                     })
                     sortedList.forEach(x => {
-                        this.logInfo(`network ${x.net.name} resolution median is ${x.median}`);
+                        this.logInfo(`network ${x.net.name} resolution median is ${x.median.toFixed(2)}`);
                     })
                 }
             }

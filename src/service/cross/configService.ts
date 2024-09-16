@@ -11,9 +11,9 @@ export interface Config {
     id: string;
     sslVerify?: boolean;
     protocol?: string;
-    cert?:string;
-    certLogin?:boolean;
-    autoStart?:boolean;
+    cert?: string;
+    certLogin?: boolean;
+    autoStart?: boolean;
 }
 
 /**
