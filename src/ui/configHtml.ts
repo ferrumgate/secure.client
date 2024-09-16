@@ -13,7 +13,7 @@
 
 
 
-    let config: { host: string, id: string, sslVerify: boolean, protocol: string, certLogin:boolean, autoStart: boolean } = { host: '', id: '', sslVerify: true, protocol: '' ,certLogin:false, autoStart: false };
+    let config: { host: string, id: string, sslVerify: boolean, protocol: string, certLogin: boolean, autoStart: boolean } = { host: '', id: '', sslVerify: true, protocol: '', certLogin: false, autoStart: false };
     function configInit() {
 
         document.querySelector('#myform')?.addEventListener('keypress', (e: any) => {
@@ -66,11 +66,11 @@
             if (versionEl)
                 versionEl.textContent = data;
         })
-        windowx.electronAPI.on('systemInfoReply',(data:{platform:string,isEncryptionSupport:boolean})=>{
-            if(!data.isEncryptionSupport){
+        windowx.electronAPI.on('systemInfoReply', (data: { platform: string, isEncryptionSupport: boolean }) => {
+            if (!data.isEncryptionSupport) {
                 document.querySelector('#el-cert-login-container')?.classList.add('ferrum-hide');
             }
-            if(data.platform != 'win32' && data.platform != 'darwin'){
+            if (data.platform != 'win32' && data.platform != 'darwin') {
                 document.querySelector('#el-autostart-container')?.classList.add('ferrum-hide');
             }
         });
@@ -86,7 +86,7 @@
             return 1;
         }
 
-        windowx.electronAPI.on('configReply', (data: { host: string, id: string, sslVerify: boolean, protocol: string, certLogin:boolean,autoStart:boolean }) => {
+        windowx.electronAPI.on('configReply', (data: { host: string, id: string, sslVerify: boolean, protocol: string, certLogin: boolean, autoStart: boolean }) => {
             console.log('reply config ' + new Date().toISOString());
             config = data;
             const inputServer = document.querySelector('#el-login') as HTMLInputElement;
@@ -96,6 +96,14 @@
             const inputSSLVerify = document.querySelector('#el-ssl-verify') as HTMLInputElement;
             if (inputSSLVerify && config)
                 inputSSLVerify.checked = config.sslVerify;
+
+            const inputCertLogin = document.querySelector('#el-cert-login') as HTMLInputElement;
+            if (inputCertLogin && config)
+                inputCertLogin.checked = config.certLogin;
+
+            const inputAutoStart = document.querySelector('#el-autostart') as HTMLInputElement;
+            if (inputAutoStart && config)
+                inputAutoStart.checked = config.autoStart;
 
 
             const inputProtocol = document.querySelector('#el-protocol') as HTMLSelectElement;
@@ -111,7 +119,7 @@
                 x.classList.add('ferrum-display-none');
             })
         }
-        
+
     }
 
     function testError() {
