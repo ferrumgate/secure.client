@@ -1,9 +1,6 @@
-import { app } from 'electron';
-import { EventService } from './service/eventsService';
-import { Util } from './service/util';
-import { TunnelController } from './service/worker/tunnelController';
 import yargs from 'yargs';
-import { UnixTunnelService } from './service/unix/unixTunnelService';
+import { EventService } from './service/eventsService';
+import { TunnelController } from './service/worker/tunnelController';
 import { TunnelApiService } from './service/worker/tunnelApiService';
 
 

@@ -1,6 +1,6 @@
 import net from 'net';
-import { Util } from '../util';
 import path from 'path';
+import { Util } from '../util';
 
 export class PipeClient {
     private buffer: Buffer = Buffer.from([]);
@@ -33,7 +33,7 @@ export class PipeClient {
         this.isDisconnected = false;
         this.socket = net.connect({
             path: filepath,
-            writable: true, readable: true,
+            writable: true, readable: true
         })
         this.socket.on('close', () => {
             if (!this.isDisconnected) {
@@ -86,7 +86,6 @@ export class PipeClient {
         let len = data.length;
         enhancedData.writeInt32BE(len);//write how many bytes
         this.socket?.write(enhancedData);
-
     }
     async close() {
         this.socket?.destroy()

@@ -44,6 +44,7 @@ export class DarwinTunnelService extends UnixTunnelService {
 
         await this.execOnShell(`route add -net ${conf.serviceNetwork} -interface ${tun}`)
         await this.configureDns(tun, conf);
+        await this.flushDnsCache();
     }
 
     public async getMacNetworkList() {

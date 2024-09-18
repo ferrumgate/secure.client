@@ -1,14 +1,13 @@
+import child_process from 'child_process';
+import os from 'os';
+import fs from 'fs';
 import { EventService } from "../eventsService";
-import net from 'net';
 import { Cmd, DevicePostureParameter, NetworkEx } from "./models";
 import { setIntervalAsync, clearIntervalAsync } from 'set-interval-async';
 import { UnixTunnelService } from "../unix/unixTunnelService";
-import child_process from 'child_process';
 import { TunnelApiService } from "./tunnelApiService";
 import { PipeClient } from "../cross/pipeClient";
-import os from 'os';
 import { Win32TunnelService } from "../win32/win32TunnelService";
-import fs from 'fs';
 import { DarwinTunnelService } from "../darwin/darwinTunnelService";
 import { TunnelService } from "./tunnelService";
 import { Config } from "../cross/configService";
@@ -194,7 +193,10 @@ export class TunnelController {
                 this.networks = data.items;
                 this.networks.sort((a, b) => {
                     return a.name.localeCompare(b.name);
-                })
+                });
+                if (this.networks.length == 0) {
+                    await this.writeToParent({ type: 'notify', data: { type: 'error', message: 'No network found, please contact with your administrator' } });
+                }
                 this.networksLastCheck = new Date().getTime();
 
 
@@ -227,8 +229,10 @@ export class TunnelController {
             this.lastErrorCount++;
             console.log(err);
             this.lastErrorOccured = new Date().getTime();
-
             this.logError(err.message || err.toString());
+            if (this.lastErrorCount % 30 == 0 || err.message.includes('Request failed with status code')) {
+                await this.writeToParent({ type: 'notify', data: { type: 'error', message: err.message || err.toString() } });
+            }
 
         } finally {
 
@@ -322,10 +326,10 @@ export class TunnelController {
                 //we need to write more log, for debug
                 if (needsToChangePrimaryDns) {
                     workingTunnels.forEach(y => {
-                        this.logInfo(`network ${y.name} resolution times ${y.tunnel.dnsTimes.join(', ')}`);
+                        this.logInfo(`network ${y.name} resolution times ${y.tunnel.dnsTimes.map(_ => _.toFixed(2)).join(', ')}`);
                     })
                     sortedList.forEach(x => {
-                        this.logInfo(`network ${x.net.name} resolution median is ${x.median}`);
+                        this.logInfo(`network ${x.net.name} resolution median is ${x.median.toFixed(2)}`);
                     })
                 }
             }

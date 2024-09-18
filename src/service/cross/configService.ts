@@ -11,6 +11,9 @@ export interface Config {
     id: string;
     sslVerify?: boolean;
     protocol?: string;
+    cert?: string;
+    certLogin?: boolean;
+    autoStart?: boolean;
 }
 
 /**
@@ -26,6 +29,7 @@ export class ConfigService {
     constructor() {
         this._baseDirectory = path.join(getAppDataPath('ferrumgate'));
         this._filename = 'ferrum.json';
+        console.log(`config file path: ${this.filename}`);
     }
 
     get filename() {

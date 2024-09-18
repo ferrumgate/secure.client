@@ -139,3 +139,7 @@
 .ferrum-status-network-list .skipped {
     background-color: #f9f0af;
 }
+
+.ferrum-hide {
+    display: none;
+}

@@ -18,8 +18,10 @@ export class LogService {
         //init log options
         log.transports.file.sync = true;
         log.transports.file.resolvePath = (variables) => {
+            if (this._filename) return this._filename;
             const logfilename = path.join(variables.appData, 'ferrumgate', 'logs', 'ferrumgate.log');
             this._filename = logfilename;
+            console.log(`log file path: ${logfilename}`);
             return logfilename;
         }
         setTimeout(() => {

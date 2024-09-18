@@ -1,9 +1,7 @@
-import { app, BrowserWindow, ipcMain, Tray, screen, Menu, MenuItem, nativeImage } from 'electron';
+import { app, BrowserWindow, ipcMain, Tray, screen, Menu, MenuItem, nativeImage, nativeTheme } from 'electron';
 import path from 'path';
 import { Util } from '../service/util';
 import { EventService } from '../service/eventsService';
-import { ConfigUI } from './configUI';
-import { StatusUI } from './statusUI';
 import os from 'os';
 
 /**
@@ -20,15 +18,16 @@ export class TrayUI {
 
     private createTray() {
 
-        let logored = 'logo-red-32-2.png';
-        let logogreen = 'logo-green-32-2.png';
-        let logoyellow = 'logo-yellow-32-2.png';
+        let logored = 'logo-blue-not-32.png';// nativeTheme.shouldUseDarkColors ? 'logo-white-not-32.png' : 'logo-black-not-32.png';
+        let logogreen = 'logo-blue-32.png';// nativeTheme.shouldUseDarkColors ? 'logo-white-32.png' : 'logo-black-32.png';
+        let logoyellow = 'logo-blue-not-32.png';// nativeTheme.shouldUseDarkColors ? 'logo-white-not-32.png' : 'logo-black-not-32.png';
         const platform = Util.getPlatform()
         switch (platform) {
             case 'darwin':
-                logored = 'logo-red-16-2.png';
-                logogreen = 'logo-green-16-2.png';
-                logoyellow = 'logo-yellow-16-2.png'; break;
+                logored = 'logo-blue-not-16.png';//  nativeTheme.shouldUseDarkColors ? 'logo-white-not-16.png' : 'logo-black-not-16.png';
+                logogreen = 'logo-blue-16.png';// nativeTheme.shouldUseDarkColors ? 'logo-white-16.png' : 'logo-black-16.png';
+                logoyellow = 'logo-blue-not-16.png';// nativeTheme.shouldUseDarkColors ? 'logo-white-not-16.png' : 'logo-black-not-16.png';
+                break;
             default:
                 break;
         }
@@ -39,13 +38,13 @@ export class TrayUI {
         //some menu items
         const connect: MenuItem = {
             id: 'connect',
-            label: 'Connect', type: 'normal', icon: path.join(assetsDirectory, 'img', 'connect.png'),
+            label: 'Connect', type: 'normal', icon: path.join(assetsDirectory, 'img', nativeTheme.shouldUseDarkColors ? 'connect-white.png' : 'connect.png'),
             click: () => { this.events.emit('openSession') }
 
         } as unknown as MenuItem;
         const connecting: MenuItem = {
             id: 'connect',
-            label: 'Connecting', type: 'normal', icon: path.join(assetsDirectory, 'img', 'connect.png'),
+            label: 'Connecting', type: 'normal', icon: path.join(assetsDirectory, 'img', nativeTheme.shouldUseDarkColors ? 'connect-white.png' : 'connect.png'),
             click: () => { }
 
         } as unknown as MenuItem;
@@ -54,7 +53,7 @@ export class TrayUI {
         const disconnect: MenuItem = {
             id: 'disconnect',
             label: 'Disconnect', type: 'normal', visible: false,
-            icon: path.join(assetsDirectory, 'img', 'disconnect.png'),
+            icon: path.join(assetsDirectory, 'img', nativeTheme.shouldUseDarkColors ? 'disconnect-white.png' : 'disconnect.png'),
             click: () => { this.events.emit('closeSession') }
         } as unknown as MenuItem;
         const update: MenuItem = {
@@ -67,7 +66,7 @@ export class TrayUI {
 
         const status: MenuItem = {
             id: 'status',
-            label: 'Status', type: 'normal', icon: path.join(assetsDirectory, 'img', 'status.png'),
+            label: 'Status', type: 'normal', icon: path.join(assetsDirectory, 'img', nativeTheme.shouldUseDarkColors ? 'status-white.png' : 'status.png'),
             click: () => {
                 this.events.emit("showStatusWindow");
             }
@@ -76,13 +75,13 @@ export class TrayUI {
 
         const options = {
             label: 'Options', type: 'normal',
-            icon: path.join(assetsDirectory, 'img', 'settings-14.png'), click: () => {
+            icon: path.join(assetsDirectory, 'img', nativeTheme.shouldUseDarkColors ? 'settings-white-14.png' : 'settings-14.png'), click: () => {
                 this.events.emit("showOptionsWindow");
             }
         } as unknown as MenuItem;
         const quit = {
             label: 'Quit', type: 'normal',
-            icon: path.join(assetsDirectory, 'img', 'close-14.png'), click: () => {
+            icon: path.join(assetsDirectory, 'img', nativeTheme.shouldUseDarkColors ? 'close-white-14.png' : 'close-14.png'), click: () => {
                 this.events.emit("appExit");
             }
         } as unknown as MenuItem;
@@ -157,7 +156,10 @@ export class TrayUI {
         })
 
         tray.setToolTip('Zero trust access')
-        tray.setTitle('FerrumGate')
+        if (platform != 'darwin') {
+            tray.setTitle('FerrumGate')
+        }
+
         tray.setContextMenu(contextMenu);
         tray.setIgnoreDoubleClickEvents(true);
 

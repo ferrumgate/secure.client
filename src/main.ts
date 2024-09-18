@@ -1,4 +1,4 @@
-import electron, { app, BrowserWindow, ipcMain, Tray, screen, Menu, shell, Notification, ipcRenderer } from 'electron';
+import electron, { app, BrowserWindow, ipcMain, Tray, screen, Menu, shell, Notification, ipcRenderer, safeStorage } from 'electron';
 
 import path from 'path';
 import { EventService } from './service/eventsService';
@@ -7,7 +7,7 @@ import { ConfigUI } from './ui/configUI';
 import fs from 'fs';
 import fspromise from 'fs/promises';
 import { Config, ConfigService } from './service/cross/configService';
-import * as unhandled from 'electron-unhandled';
+import unhandled from 'electron-unhandled';
 import { LogService } from './service/logService';
 import { Util } from './service/util';
 import { LoadingUI } from './ui/loadingUI';
@@ -73,16 +73,23 @@ export async function init(token: string) {
                 callback(0); // All good
         }
     )
+    function setAutoStart(value: boolean) {
+        app.setLoginItemSettings({
+            openAtLogin: value,
+            openAsHidden: true
+        });
+    }
+    setAutoStart(conf?.autoStart || false);
 
-
-    api = new ApiService(conf?.host || 'http://localhost', events);
+    ipcMain.on('ele', () => { });
+    api = new ApiService(conf?.host || 'http://localhost', events, (conf?.certLogin) ? conf.cert : '');
     sudo = new SudoService(events);
     sudo.setToken(token || '');
 
     session = new SessionService(events, config, api, sudo);
 
-    // catch all unhandled exceptions
-    unhandled.default({
+    // // catch all unhandled exceptions
+    unhandled({
         logger: (error) => {
             console.log(`unhandled error: ${error}`);
             log.write('error', error.stack || error.message || 'unknown');
@@ -92,17 +99,10 @@ export async function init(token: string) {
     })
 
 
-    //write all logs 
-
-
-
     events.on("appExit", () => {
         events.emit("log", 'info', 'closing app');
         events.emit("closeSession", true);
         events.emit("closeWindow");
-
-
-
     });
 
     events.on("openLink", (link: string) => {
@@ -110,14 +110,11 @@ export async function init(token: string) {
     })
     events.on("notify", (data: { type: string, msg: string }) => {
         new Notification({ title: 'FerrumGate', body: data.msg }).show();
-
     })
 
     ipcMain.on('appVersion', async (event: Electron.IpcMainEvent, ...args: any[]) => {
-
         const version = await Util.getAppVersion();
         event.reply('appVersionReply', version || 'unknown');
-
     })
 
     events.on("log", (type: string, msg: string) => {
@@ -146,17 +143,33 @@ export async function init(token: string) {
         events.emit('closeOptionsWindow');
         events.emit("log", 'info', 'saving config');
         api.setUrl(data.host || 'http://localhost')
+        setAutoStart(data.autoStart || false);
         events.emit('configChanged', data);
+    })
+    events.on('certChanged', async (data: { cert: string, apiKey: string }) => {
+        const conf = await config.getConfig();
+        if (!conf) return;
+
+        if (conf.cert == data.cert) return;
+
+        conf.cert = data.cert;
+        await config.saveConfig(conf);
+        //new Notification({ title: 'FerrumGate', body: 'Certificate downloaded' }).show();
+        events.emit("log", 'info', 'saving config');
+        events.emit('configChanged', conf);
     })
     events.on('throwError', (msg: string) => {
         throw new Error(msg);
     })
 
 
+    ipcMain.on('systemInfo', async (event: Electron.IpcMainEvent, ...args: any[]) => {
+        const platform = Util.getPlatform();
+        const isEncryptionSupport = safeStorage.isEncryptionAvailable();
+        event.reply('systemInfoReply', { platform, isEncryptionSupport });
+    })
     app.setName('FerrumGate');
     events.emit("log", 'info', 'starting app with token:' + token);
-
-
 
     tray = new TrayUI(events);
     configUI = new ConfigUI(events, config, tray.tray);
@@ -190,7 +203,6 @@ export async function init(token: string) {
     return { log, events };
 
 }
-
 
 
 
@@ -282,7 +294,7 @@ async function trigger_win32_svc_config() {
 
 }
 
-
+/*
 
 async function trigger_win32_svc() {
 
@@ -317,6 +329,7 @@ async function trigger_win32_svc() {
     await pipe.connect();
 
 }
+    */
 
 // Quit the app when the window is closed
 app.on('window-all-closed', () => {

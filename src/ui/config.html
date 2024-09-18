@@ -14,7 +14,7 @@
     <!-- <div class="header-arrow"></div> -->
     <div class="window">
         <header class="toolbar toolbar-header">
-            <h1 class="title" id="ferrumgate_config">FerrumGate<span class="js-update-time"></span></h1>
+            <!-- <h1 class="title" id="ferrumgate_config">FerrumGate<span class="js-update-time"></span></h1> -->
             <div class="toolbar-actions pull-right">
                 <div class="btn-group">
                     <button class="btn btn-default js-quit-action" id="el-close-window">
@@ -37,7 +37,7 @@
                 <div class="tab-content">
                     <form id="myform">
                         <div class="form-group ferrum-form-group">
-                            <label>Login</label>
+                            <label>Server Url</label>
                             <input type="text" id="el-login" class="form-control"
                                 placeholder="https://secure.ferrumgate.com">
                             <div class="ferrum-error ferrum-display-none"
@@ -60,8 +60,34 @@
                                 </span>
                             </div>
                         </div>
+                        <div class="form-group ferrum-form-group" id="el-cert-login-container">
+                            <label>
+                                Login with Certificate <input type="checkbox" id="el-cert-login"
+                                    class="form-control-ssl" style="margin-left:5px">
+
+                            </label>
+                            <div class="ferrum-error ferrum-display-none"
+                                style="padding-top: 10px; padding-left: 10px;">
+                                <span class="icon icon-alert">
+                                    <span id="ssl-verify-error">error</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group ferrum-form-group" id="el-autostart-container">
+                            <label>
+                                Auto start <input type="checkbox" id="el-autostart" class="form-control-ssl"
+                                    style="margin-left:5px">
+
+                            </label>
+                            <div class="ferrum-error ferrum-display-none"
+                                style="padding-top: 10px; padding-left: 10px;">
+                                <span class="icon icon-alert">
+                                    <span id="ssl-verify-error">error</span>
+                                </span>
+                            </div>
+                        </div>
                         <div class="form-group ferrum-form-group">
-                            <label style="padding-top: 10px; padding-bottom: 0px; padding-right: 5px;"
+                            <label style="padding-top: 15px; padding-bottom: 0px; padding-right: 5px;"
                                 for="protocol-select">Protocol</label>
 
                             <select id="el-protocol" name="protocols" id="protocol-select">

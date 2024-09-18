@@ -13,7 +13,7 @@
 
 
 
-    let config: { host: string, id: string, sslVerify: boolean, protocol: string } = { host: '', id: '', sslVerify: true, protocol: '' };
+    let config: { host: string, id: string, sslVerify: boolean, protocol: string, certLogin: boolean, autoStart: boolean } = { host: '', id: '', sslVerify: true, protocol: '', certLogin: false, autoStart: false };
     function configInit() {
 
         document.querySelector('#myform')?.addEventListener('keypress', (e: any) => {
@@ -32,6 +32,16 @@
 
             config.sslVerify = e.target.checked;
             windowx.electronAPI.emit('notify', { type: 'info', msg: 'Needs restart for applying verification' });
+        })
+
+        document.querySelector('#el-cert-login')?.addEventListener('click', (e: any) => {
+
+            config.certLogin = e.target.checked;
+        })
+
+        document.querySelector('#el-autostart')?.addEventListener('click', (e: any) => {
+
+            config.autoStart = e.target.checked;
         })
 
 
@@ -56,8 +66,19 @@
             if (versionEl)
                 versionEl.textContent = data;
         })
+        windowx.electronAPI.on('systemInfoReply', (data: { platform: string, isEncryptionSupport: boolean }) => {
+            if (!data.isEncryptionSupport) {
+                document.querySelector('#el-cert-login-container')?.classList.add('ferrum-hide');
+            }
+            if (data.platform != 'win32' && data.platform != 'darwin') {
+                document.querySelector('#el-autostart-container')?.classList.add('ferrum-hide');
+            }
+        });
+
 
         windowx.electronAPI.emit('appVersion');
+        windowx.electronAPI.emit('systemInfo');
+
         function findProtocolIndex(val: string) {
             if (val == 'auto') return 0;
             if (val == 'udp') return 1;
@@ -65,7 +86,7 @@
             return 1;
         }
 
-        windowx.electronAPI.on('configReply', (data: { host: string, id: string, sslVerify: boolean, protocol: string }) => {
+        windowx.electronAPI.on('configReply', (data: { host: string, id: string, sslVerify: boolean, protocol: string, certLogin: boolean, autoStart: boolean }) => {
             console.log('reply config ' + new Date().toISOString());
             config = data;
             const inputServer = document.querySelector('#el-login') as HTMLInputElement;
@@ -75,6 +96,14 @@
             const inputSSLVerify = document.querySelector('#el-ssl-verify') as HTMLInputElement;
             if (inputSSLVerify && config)
                 inputSSLVerify.checked = config.sslVerify;
+
+            const inputCertLogin = document.querySelector('#el-cert-login') as HTMLInputElement;
+            if (inputCertLogin && config)
+                inputCertLogin.checked = config.certLogin;
+
+            const inputAutoStart = document.querySelector('#el-autostart') as HTMLInputElement;
+            if (inputAutoStart && config)
+                inputAutoStart.checked = config.autoStart;
 
 
             const inputProtocol = document.querySelector('#el-protocol') as HTMLSelectElement;
@@ -90,6 +119,7 @@
                 x.classList.add('ferrum-display-none');
             })
         }
+
     }
 
     function testError() {
